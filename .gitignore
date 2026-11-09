@@ -1,0 +1,19 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# Local logs, editor backups and Python caches.
+*.log
+*.blend[0-9]
+*.kra~
+__pycache__/
+*.pyc
+
+# Local credentials and export signing material.
+.env
+.env.*
+!.env.example
+export_credentials.cfg
+*.p12
+*.pfx
+*.keystore

@@ -1,0 +1,69 @@
+extends Node2D
+# Bola de fuego: viaja en línea recta sin límite de alcance hasta chocar con el borde del suelo o un obstáculo.
+
+signal hit(ground_pos: Vector2)
+
+var main: Node            # main.gd: expone SCALE, fx_frames, floor_contains() y hits_obstacle()
+var dir := Vector2.RIGHT
+var speed := 260.0
+var radius := 6.0         # px del suelo original
+var height := 40.0        # altura de la mano sobre el suelo, en px del sprite
+var ground := Vector2.ZERO  # posición en el suelo, px del suelo original (misma unidad que `pos` del héroe)
+var source := "hero"       # quién disparó: "hero" daña al dragón, "dragon" daña al héroe
+var damage := 0
+var tint := Color.WHITE
+var scale_mult := 1.0       # tamaño del sprite (la esfera pesada es más grande)
+var aoe := 0.0              # radio de explosión en px de suelo; 0 = daño solo por impacto directo
+var sprite: AnimatedSprite2D
+var dead := false
+
+func _ready() -> void:
+	sprite = AnimatedSprite2D.new()
+	sprite.sprite_frames = main.fx_frames
+	sprite.scale = Vector2.ONE * main.SCALE * scale_mult
+	sprite.rotation = dir.angle()
+	sprite.modulate = tint
+	add_child(sprite)
+	sprite.play("fly")
+	_sync()
+
+func _sync() -> void:
+	position = (ground - Vector2(0, height)) * main.SCALE
+	z_index = int(ground.y) + 5
+
+func _physics_process(delta: float) -> void:
+	if dead:
+		return
+	var step := dir * speed * delta
+	# subdivide para no atravesar obstáculos a velocidad alta
+	var n := maxi(1, ceili(step.length() / 4.0))
+	for i in n:
+		ground += step / n
+		if not main.floor_contains(ground) or main.hits_obstacle(ground):
+			_explode()
+			return
+		if source == "hero":
+			for e in main.enemies:
+				if e.alive and ground.distance_to(e.pos) < e.radius + radius:
+					if aoe == 0.0:
+						e.take_damage(damage)
+					_explode()
+					return
+		elif not main.dashing and ground.distance_to(main.pos) < main.HERO_RADIUS + radius:  # en dash la bola lo atraviesa
+			main.damage_hero(damage)
+			_explode()
+			return
+	_sync()
+
+func _explode() -> void:
+	dead = true
+	if aoe > 0.0 and source == "hero":
+		for e in main.enemies:  # explosión en área: alcanza a los enemigos cercanos aunque no sean impacto directo
+			if e.alive and ground.distance_to(e.pos) < aoe + e.radius:
+				e.take_damage(damage)
+	sprite.rotation = 0.0
+	sprite.scale = Vector2.ONE * main.SCALE * maxf(1.5, aoe / 20.0)
+	sprite.play("impact")
+	sprite.animation_finished.connect(queue_free)
+	hit.emit(ground)
+	_sync()

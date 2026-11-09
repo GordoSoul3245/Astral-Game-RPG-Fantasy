@@ -1,0 +1,94 @@
+{
+	"katana_ceniza": {
+		"name": "Katana Ceniza",
+		"slot": "weapon",
+		"icon": "res://art/katana/katana_icon.png",
+		"light": {
+			"type": "melee",
+			"name": "Tajo ligero",
+			"damage": 15,
+			"stamina": 8.0,
+			"reach": 50.0,
+			"arc": 110.0,
+			"cooldown": 0.4,
+			"anim": "slash_light",
+			"fps": 16.0,
+			"trail_frame": 2,
+			"strike_frame": 3,
+			"trail_time": 0.16,
+			"trail_radius": 46.0,
+			"trail_color": "#8fd0ff"
+		},
+		"heavy": {
+			"type": "melee",
+			"name": "Tajo pesado",
+			"damage": 40,
+			"stamina": 22.0,
+			"reach": 64.0,
+			"arc": 170.0,
+			"cooldown": 0.8,
+			"anim": "slash_heavy",
+			"fps": 11.0,
+			"trail_frame": 4,
+			"strike_frame": 5,
+			"trail_time": 0.22,
+			"trail_radius": 58.0,
+			"trail_color": "#ffb347"
+		},
+		"ultimate": {
+			"type": "flame_dash",
+			"name": "Estocada ígnea",
+			"distance_tiles": 6.0,
+			"duration": 0.45,
+			"damage": 70,
+			"burn_time": 8.0,
+			"burn_mult": 1.6
+		}
+	},
+	"grimorio_ignis": {
+		"name": "Grimorio de Ignis",
+		"slot": "grimoire",
+		"icon": "res://art/grimorio/grimorio_icon.png",
+		"light": {
+			"type": "projectile",
+			"name": "Bola de fuego",
+			"anim": "cast",
+			"fps": 26.0,
+			"strike_frame": 3,
+			"speed": 260.0,
+			"cooldown": 0.35,
+			"damage": 10,
+			"mana": 6.0,
+			"radius": 6.0,
+			"muzzle_height": 40.0
+		},
+		"heavy": {
+			"type": "projectile",
+			"name": "Esfera ígnea",
+			"anim": "cast",
+			"fps": 12.0,
+			"strike_frame": 4,
+			"speed": 130.0,
+			"cooldown": 1.6,
+			"damage": 35,
+			"mana": 30.0,
+			"radius": 12.0,
+			"muzzle_height": 40.0,
+			"scale": 2.2,
+			"aoe": 42.0,
+			"tint": "#ffb060"
+		},
+		"ultimate": {
+			"type": "meteor",
+			"name": "Meteoro",
+			"anim": "cast",
+			"fps": 12.0,
+			"strike_frame": 4,
+			"cooldown": 1.0,
+			"range_tiles": 10.0,
+			"aoe_tiles": 3.0,
+			"fall_time": 0.7,
+			"damage": 90
+		}
+	}
+}

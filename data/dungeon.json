@@ -1,0 +1,19 @@
+{
+	"floors": [
+		{
+			"name": "Piso 1",
+			"enemies": {"slime": 4, "skeleton_archer": 3, "cyclops": 1},
+			"chest": {"coins": [40, 60], "xp": 120, "items": 1, "pool": ["armadura_cuero", "anillo_vigor", "collar_hueso", "anillo_furia"]}
+		},
+		{
+			"name": "Piso 2",
+			"enemies": {"slime": 5, "skeleton_archer": 4, "cyclops": 1},
+			"chest": {"coins": [70, 100], "xp": 200, "items": 1, "pool": ["armadura_malla", "katana_obsidiana", "grimorio_brasas", "anillo_arcano", "collar_viento"]}
+		},
+		{
+			"name": "Piso 3 · Cámara de la tormenta",
+			"enemies": {"cyclops": 2, "storm_mage": 1},
+			"chest": {"coins": [250, 320], "xp": 500, "items": 2, "final": true, "pool": ["armadura_dorada", "katana_tormenta", "grimorio_inferno", "amuleto_tormenta"]}
+		}
+	]
+}
