@@ -78,6 +78,7 @@
 			"aoe": 42.0,
 			"tint": "#ffb060"
 		},
+		"mark": {"duration": 4.0, "damage": 22, "radius": 40.0},
 		"ultimate": {
 			"type": "meteor",
 			"name": "Meteoro",

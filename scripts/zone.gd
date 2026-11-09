@@ -22,7 +22,8 @@ func _process(delta: float) -> void:
 		var d: Vector2 = main.pos - center
 		if Vector2(d.x, d.y / 0.6).length() < radius + main.HERO_RADIUS:  # el suelo está aplastado en Y por la vista isométrica
 			main.damage_hero(damage)
-		main.shake(10.0 if bolt else 8.0)
+		main.shake((10.0 if bolt else 8.0) * clampf(1.5 - d.length() / (radius * 3.0), 0.0, 1.0))  # tiembla solo si estás cerca
+		main.combat.flash(center, color, 1.6 if bolt else 0.9, radius / 18.0, 0.35)
 	if fired and t >= delay + 0.3:
 		queue_free()
 	queue_redraw()

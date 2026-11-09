@@ -16,6 +16,11 @@ var scale_mult := 1.0       # tamaño del sprite (la esfera pesada es más grand
 var aoe := 0.0              # radio de explosión en px de suelo; 0 = daño solo por impacto directo
 var sprite: AnimatedSprite2D
 var dead := false
+var glow: PointLight2D
+
+func _burn(e: Node) -> void:  # golpe de fuego del héroe: daña y deja la marca de Ignis si sobrevive
+	main.combat.hit(e, damage, "magic", ground)
+	main.combat.mark(e)
 
 func _ready() -> void:
 	sprite = AnimatedSprite2D.new()
@@ -25,6 +30,9 @@ func _ready() -> void:
 	sprite.modulate = tint
 	add_child(sprite)
 	sprite.play("fly")
+	glow = main.combat.light(tint if tint != Color.WHITE else Color(1.0, 0.6, 0.25), 0.5 * scale_mult, 0.9 * scale_mult)
+	glow.position = Vector2(0, height * 0.6) * main.SCALE  # ilumina el suelo bajo la bola
+	add_child(glow)
 	_sync()
 
 func _sync() -> void:
@@ -46,7 +54,7 @@ func _physics_process(delta: float) -> void:
 			for e in main.enemies:
 				if e.alive and ground.distance_to(e.pos) < e.radius + radius:
 					if aoe == 0.0:
-						e.take_damage(damage)
+						_burn(e)
 					_explode()
 					return
 		elif not main.dashing and ground.distance_to(main.pos) < main.HERO_RADIUS + radius:  # en dash la bola lo atraviesa
@@ -60,10 +68,11 @@ func _explode() -> void:
 	if aoe > 0.0 and source == "hero":
 		for e in main.enemies:  # explosión en área: alcanza a los enemigos cercanos aunque no sean impacto directo
 			if e.alive and ground.distance_to(e.pos) < aoe + e.radius:
-				e.take_damage(damage)
+				_burn(e)
 	sprite.rotation = 0.0
 	sprite.scale = Vector2.ONE * main.SCALE * maxf(1.5, aoe / 20.0)
 	sprite.play("impact")
+	glow.create_tween().tween_property(glow, "energy", 0.0, 0.3)
 	sprite.animation_finished.connect(queue_free)
 	hit.emit(ground)
 	_sync()

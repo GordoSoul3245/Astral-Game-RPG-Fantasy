@@ -51,8 +51,9 @@ func _explode() -> void:
 			continue
 		var tt: Vector2 = main.ground_to_tile(e.pos)
 		if absf(tt.x - center.x) <= n / 2.0 + 0.35 and absf(tt.y - center.y) <= n / 2.0 + 0.35:
-			e.take_damage(roundi(spec["damage"] * main.prog.magic_mult()), false)
+			main.combat.hit(e, roundi(spec["damage"] * main.prog.magic_mult()), "blast", target, false)
 	main.shake(14.0)
+	main.combat.flash(target, Color(1.0, 0.5, 0.15), 2.0, 6.0, 0.7)
 	marker.queue_free()
 	fall.rotation = 0.0
 	fall.scale = Vector2.ONE * main.SCALE * n

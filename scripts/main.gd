@@ -87,6 +87,7 @@ var aim_cell := Vector2.ZERO
 var aim_valid := false
 var burn_fx: CPUParticles2D
 var fx_frames: SpriteFrames      # bola de fuego: "fly" e "impact"
+var combat: Node2D               # combat.gd: feedback de golpes, marca de Ignis y luces
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color("#0f1a2a"))  # mar alrededor de la isla
@@ -172,8 +173,13 @@ func _ready() -> void:
 	add_child(cam)
 	_build_fx()
 	_build_burn_fx()
+	combat = Node2D.new()
+	combat.set_script(load("res://scripts/combat.gd"))
+	combat.main = self
+	add_child(combat)
 	_spawn_dragon()
 	_load_inventory()
+	combat.mark_spec = items["grimorio_ignis"].get("mark", combat.mark_spec)
 	_build_prompt()
 	_build_menu()
 	_apply_stats()
@@ -312,6 +318,7 @@ func _enter_dungeon() -> void:
 	TILES = DUNGEON_TILES
 	C1 = -(E1 + E2) / 2.0           # el piso queda centrado en el origen
 	RenderingServer.set_default_clear_color(Color("#05060d"))
+	combat.set_zone(true)
 	dungeon_node = Node2D.new()
 	dungeon_node.set_script(load("res://scripts/dungeon.gd"))
 	dungeon_node.main = self
@@ -355,6 +362,7 @@ func _exit_dungeon() -> void:
 	dragon.visible = true
 	dragon.alive = overworld["dragon_alive"]
 	RenderingServer.set_default_clear_color(Color("#0f1a2a"))
+	combat.set_zone(false)
 	cam.position = (pos - Vector2(0, 40)) * SCALE
 
 # --- enemigos, botín y progresión (progress.gd)
@@ -790,7 +798,8 @@ func _strike() -> void:
 			add_child(m)
 		"melee":
 			var dmg: float = current["damage"] * (burn_mult if burn_t > 0.0 else 1.0) * prog.melee_mult()
-			for e in enemies:
+			var blasts: Array[Vector2] = []
+			for e in enemies.duplicate():
 				if not e.alive:
 					continue
 				var to: Vector2 = e.pos - pos
@@ -798,7 +807,11 @@ func _strike() -> void:
 					continue
 				if absf(angle_difference(aim_dir.angle(), to.angle())) > deg_to_rad(current["arc"]) / 2.0:
 					continue
-				e.take_damage(roundi(dmg))
+				if current_mode == "heavy" and combat.consume(e):  # el pesado detona la marca de Ignis
+					blasts.append(e.pos)
+				combat.hit(e, roundi(dmg), current_mode, pos)
+			for b in blasts:
+				combat.detonate(b)
 
 func _spawn_trail() -> void:
 	var t := Node2D.new()
@@ -986,7 +999,7 @@ func _physics_process(delta: float) -> void:
 			for e in enemies:  # el mega dash daña (una vez) a todo lo que atraviesa
 				if e.alive and not mega_hits.has(e) and pos.distance_to(e.pos) < 12.0 + e.radius:
 					mega_hits.append(e)
-					e.take_damage(roundi(mega_spec["damage"] * prog.melee_mult()), false)
+					combat.hit(e, roundi(mega_spec["damage"] * prog.melee_mult()), "heavy", pos, false)
 					shake(8.0)
 		if dash_t >= dash_time_cur:
 			dashing = false

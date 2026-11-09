@@ -62,6 +62,13 @@ Lee este archivo y sigue desde "Pendiente". Lo que está escrito aquí es la fue
 - **Katana/hechicero:** `build_katana.py` → `render_slash`, `render_cast`, `render_dash`, `render_megadash`, `render_icon`.
 - **Probar en Godot 4.7:** `Godot_v4.7.2-stable_win64_console.exe --path <proyecto>`; para probar sin ratón, usa un gancho temporal y quítalo después.
 - **Regla:** no edites `data/map.json` a mano; se regenera desde `build_map.py`.
+- **Combate:** `tests/test_combat.gd` (headless) y `tests/capture_combat.gd` (sin `--headless`, capturas en `docs/previews/`).
+
+## 5b. Combate e iluminación
+- Todo daño del héroe pasa por `combat.hit()` (scripts/combat.gd): sonido, chispa, luz y empuje por tipo (ligero/pesado/magia/explosión).
+- Enemigos: dirección fijada al avisar, `recover` castigable, `knock_resist`/`staggerable` en `data/creatures.json`; jefes no se interrumpen.
+- Marca de Ignis: el fuego del grimorio marca 4 s; el tajo pesado de la katana la consume y explota (sin cadenas). `data/items.json` → `grimorio_ignis.mark`.
+- Luz: CanvasModulate por zona + PointLight2D locales; sin sombras (sprites con luz horneada). Detalle en `docs/COMBAT_LIGHTING_REPORT.md`.
 
 ## 6. Preferencias del usuario
 - Español, tono directo.

@@ -23,6 +23,18 @@ var flash_tw: Tween
 var spr: AnimatedSprite2D    # sprites de Blender (si data["sprites"]); si no, se dibuja por código
 var look := Vector2.DOWN
 var adir := "S"              # dirección fija durante el ataque
+var aim := Vector2.DOWN      # dirección del disparo, fijada al empezar el aviso (no persigue al héroe)
+var kb := Vector2.ZERO       # empuje recibido, px de suelo/s
+var zones: Array = []        # avisos pendientes: se cancelan si muere antes del golpe
+
+func knock(v: Vector2, heavy: bool) -> void:  # empuje (menos en los pesados) y, en los ligeros, interrumpe el aviso
+	kb = v * (1.0 - data.get("knock_resist", 0.0))
+	if heavy and data.get("staggerable", false) and state == "windup":
+		state = "recover"
+		t = data.get("recover", 0.4)
+		if spr:
+			spr.stop()
+			_anim("idle")
 
 func _ready() -> void:
 	hp = data["hp"]
@@ -79,7 +91,14 @@ func _physics_process(delta: float) -> void:
 	var dist := to.length()
 	if state == "idle" and dist < data["detect_range"]:
 		state = "chase"
-	if state != "idle":
+	if kb.length() > 5.0:
+		pos = main.world.move_collide(pos, pos + kb * delta * Vector2(1, 0.6), data["r_t"])
+		kb = kb.move_toward(Vector2.ZERO, 900.0 * delta)
+	if state == "recover":  # recuperación castigable: no se mueve ni ataca
+		t -= delta
+		if t <= 0.0:
+			state = "chase"
+	elif state != "idle":
 		if absf(to.x) > 2.0 and state != "windup":
 			face = signf(to.x)
 		if state != "windup" and state != "recover":
@@ -121,6 +140,7 @@ func _spawn_zone(center: Vector2, r: float, delay: float, dmg: int, bolt: bool, 
 	z.bolt = bolt
 	z.color = col
 	main.add_child(z)
+	zones.append(z)
 
 func _slime(to: Vector2, dist: float, delta: float) -> void:
 	t -= delta
@@ -146,10 +166,10 @@ func _archer(to: Vector2, dist: float, delta: float) -> void:
 	if state == "windup":
 		t -= delta
 		if t <= 0.0:
-			var dir := to.normalized()
-			main.spawn_projectile("enemy", pos + dir * 10.0, dir, data["projectile"])
+			main.spawn_projectile("enemy", pos + aim * 10.0, aim, data["projectile"])
 			cd = data["attack_cooldown"]
-			state = "chase"
+			state = "recover"
+			t = data.get("recover", 0.4)
 		return
 	if dist < data["flee_distance"]:
 		_move(-to.normalized(), 1.1, delta)
@@ -162,14 +182,15 @@ func _archer(to: Vector2, dist: float, delta: float) -> void:
 	if cd == 0.0:
 		state = "windup"
 		t = data["windup"]
+		aim = to.normalized()
 		_play_attack(to, 4, t)  # la flecha sale en el fotograma 4
 
 func _brute(to: Vector2, dist: float, delta: float) -> void:
-	if state == "windup" or state == "recover":
+	if state == "windup":
 		t -= delta
 		if t <= 0.0:
-			state = "recover" if state == "windup" else "chase"
-			t = 0.7
+			state = "recover"
+			t = data.get("recover", 0.7)
 		return
 	if dist > data["attack_range"]:
 		_move(to.normalized(), 1.0, delta)
@@ -187,8 +208,9 @@ func _mage(to: Vector2, dist: float, delta: float) -> void:
 	if state == "windup":
 		t -= delta
 		if t <= 0.0:
-			_cast(to)
-			state = "chase"
+			_cast(aim)
+			state = "recover"
+			t = data.get("recover", 0.5)
 		return
 	var keep: float = data["keep_distance"]
 	if dist < keep - 30.0:
@@ -201,7 +223,8 @@ func _mage(to: Vector2, dist: float, delta: float) -> void:
 		_anim("idle")
 	if cd == 0.0:
 		state = "windup"
-		t = 0.7
+		t = data.get("windup", 0.7)
+		aim = to.normalized()
 		_play_attack(to, 5, t)  # el hechizo sale en el fotograma 5
 
 func _cast(to: Vector2) -> void:  # cada tercer hechizo es un rayo; el resto, bolas eléctricas; con poca vida lanza más
@@ -234,6 +257,9 @@ func take_damage(n: int, charge := true) -> void:
 	flash_tw.tween_property(self, "modulate", Color.WHITE, 0.15)
 	if hp <= 0:
 		alive = false
+		for z in zones:
+			if is_instance_valid(z) and not z.fired:
+				z.queue_free()
 		main.on_kill(self)
 		flash_tw.kill()
 		modulate = Color.WHITE
@@ -276,6 +302,9 @@ func _draw() -> void:
 			if spr == null:
 				_draw_mage(S)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE * S)
+	if state == "windup" and data["kind"] in ["archer", "mage"]:  # línea de tiro fijada: el héroe puede salirse
+		var k := 1.0 - clampf(t / data.get("windup", 0.7), 0.0, 1.0)
+		draw_line(aim * radius, aim * (radius + 40.0 + 120.0 * k), Color(1.0, 0.3, 0.2, 0.35 + 0.5 * k), 1.5)
 	var w := maxf(radius * 2.2, 26.0)
 	draw_rect(Rect2(-w / 2.0, -body_h - 10.0, w, 3.0), Color(0.1, 0.1, 0.14, 0.85))
 	draw_rect(Rect2(-w / 2.0, -body_h - 10.0, w * clampf(float(hp) / data["hp"], 0.0, 1.0), 3.0), Color(0.85, 0.2, 0.2))
