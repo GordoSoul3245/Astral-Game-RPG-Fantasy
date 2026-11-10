@@ -189,6 +189,7 @@ func _ready() -> void:
 	combat.main = self
 	add_child(combat)
 	_spawn_dragon()
+	_spawn_fauna()
 	_load_inventory()
 	combat.mark_spec = items["grimorio_ignis"].get("mark", combat.mark_spec)
 	_build_prompt()
@@ -627,6 +628,25 @@ func _spawn_dragon() -> void:
 	dragon.pos = dragon_start
 	add_child(dragon)
 	enemies.append(dragon)
+
+var fauna: Array = []  # presas del exterior (critter.gd): no combaten ni bloquean
+
+func _spawn_fauna() -> void:  # 3 conejos con madriguera en casillas libres a 4–9 m del inicio
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7  # mismas madrigueras en cada partida
+	var tries := 0
+	while fauna.size() < 3 and tries < 200:
+		tries += 1
+		var home: Vector2 = start_pos + Vector2.from_angle(rng.randf() * TAU) * rng.randf_range(4.0, 9.0) / _tiles_per_px(Vector2.RIGHT)
+		if world.blocked(ground_to_tile(home), 0.6):
+			continue
+		var c := Node2D.new()
+		c.set_script(load("res://scripts/critter.gd"))
+		c.main = self
+		c.world = world
+		c.home = home
+		add_child(c)
+		fauna.append(c)
 
 const MAX_WINDUPS := 2  # preparaciones peligrosas simultáneas (punto de partida del estudio, no una cifra aprobada)
 
