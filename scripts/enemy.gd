@@ -26,6 +26,34 @@ var adir := "S"              # dirección fija durante el ataque
 var aim := Vector2.DOWN      # dirección del disparo, fijada al empezar el aviso (no persigue al héroe)
 var kb := Vector2.ZERO       # empuje recibido, px de suelo/s
 var zones: Array = []        # avisos pendientes: se cancelan si muere antes del golpe
+var last_seen := Vector2.ZERO  # última posición vista del héroe (px de suelo)
+var lost_t := 0.0            # segundos sin ver al héroe
+const SEARCH_TIME := 4.0     # busca en la última posición este tiempo y vuelve a idle
+const LOSE_MULT := 1.5       # umbral de pérdida = detect_range * esto (histéresis: no oscila en el borde)
+
+func _sees(dist: float) -> bool:  # alcance (más holgado si ya lo persigue) y línea libre de estructuras
+	if dist >= data["detect_range"] * (1.0 if state == "idle" else LOSE_MULT):
+		return false
+	var n := ceili(dist / 8.0)
+	for i in range(1, n):
+		if main.hits_obstacle(pos.lerp(main.pos, float(i) / n)):
+			return false
+	return true
+
+func _search(delta: float) -> void:  # sin ver al héroe: va a donde lo vio por última vez y, si no aparece, se rinde
+	lost_t += delta
+	var d := last_seen - pos
+	if data["kind"] == "slime":
+		_slime(d, d.length(), delta)
+	elif d.length() > 6.0:
+		look = d
+		_move(d.normalized(), 1.0, delta)
+		_anim("walk")
+	else:
+		_anim("idle")
+	if lost_t >= SEARCH_TIME:
+		state = "idle"
+		_anim("idle")
 
 func knock(v: Vector2, heavy: bool) -> void:  # empuje (menos en los pesados) y, en los ligeros, interrumpe el aviso
 	kb = v * (1.0 - data.get("knock_resist", 0.0))
@@ -89,8 +117,12 @@ func _physics_process(delta: float) -> void:
 	contact_cd = maxf(0.0, contact_cd - delta)
 	var to: Vector2 = main.pos - pos
 	var dist := to.length()
-	if state == "idle" and dist < data["detect_range"]:
-		state = "chase"
+	var sees := _sees(dist)
+	if sees:
+		last_seen = main.pos
+		lost_t = 0.0
+		if state == "idle":
+			state = "chase"
 	if kb.length() > 5.0:
 		pos = main.world.move_collide(pos, pos + kb * delta * Vector2(1, 0.6), data["r_t"])
 		kb = kb.move_toward(Vector2.ZERO, 900.0 * delta)
@@ -98,6 +130,8 @@ func _physics_process(delta: float) -> void:
 		t -= delta
 		if t <= 0.0:
 			state = "chase"
+	elif state == "chase" and not sees:
+		_search(delta)
 	elif state != "idle":
 		if absf(to.x) > 2.0 and state != "windup":
 			face = signf(to.x)
@@ -179,7 +213,7 @@ func _archer(to: Vector2, dist: float, delta: float) -> void:
 		_anim("walk")
 	else:
 		_anim("idle")
-	if cd == 0.0:
+	if cd == 0.0 and main.can_prepare(self):
 		state = "windup"
 		t = data["windup"]
 		aim = to.normalized()
@@ -195,7 +229,7 @@ func _brute(to: Vector2, dist: float, delta: float) -> void:
 	if dist > data["attack_range"]:
 		_move(to.normalized(), 1.0, delta)
 		_anim("walk")
-	elif cd == 0.0:
+	elif cd == 0.0 and main.can_prepare(self):
 		state = "windup"
 		t = data["windup"]
 		cd = data["attack_cooldown"]
@@ -221,7 +255,7 @@ func _mage(to: Vector2, dist: float, delta: float) -> void:
 		_anim("walk")
 	else:
 		_anim("idle")
-	if cd == 0.0:
+	if cd == 0.0 and main.can_prepare(self):
 		state = "windup"
 		t = data.get("windup", 0.7)
 		aim = to.normalized()
@@ -250,6 +284,8 @@ func take_damage(n: int, charge := true) -> void:
 	hp -= n
 	if state == "idle":
 		state = "chase"  # un golpe lo alerta
+		last_seen = main.pos
+		lost_t = 0.0
 	if flash_tw:
 		flash_tw.kill()
 	modulate = Color(1.8, 1.8, 1.8)

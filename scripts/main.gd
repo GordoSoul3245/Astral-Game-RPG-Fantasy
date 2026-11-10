@@ -73,6 +73,9 @@ var trailed := false
 var trail_flip := 1.0
 var dashing := false             # durante el dash: invulnerable y atraviesa entidades (no estructuras)
 var dash_t := 0.0
+const BUFFER_MS := 100          # punto de partida del estudio (probar 70/130)
+var buf := ""                   # una sola acción anticipada: "light", "heavy" o "dash"
+var buf_until := 0
 var dash_dir := Vector2.ZERO
 var dash_cd := 0.0
 var dash_time_cur := 0.55
@@ -89,7 +92,15 @@ var burn_fx: CPUParticles2D
 var fx_frames: SpriteFrames      # bola de fuego: "fly" e "impact"
 var combat: Node2D               # combat.gd: feedback de golpes, marca de Ignis y luces
 
+var touch_mode := false          # Android/iOS: controles táctiles en pantalla (scripts/touch_controls.gd)
+var touch: Node = null
+
 func _ready() -> void:
+	touch_mode = OS.has_feature("android") or OS.has_feature("ios")
+	if touch_mode:
+		touch = load("res://scripts/touch_controls.gd").new()
+		touch.main = self
+		add_child(touch)
 	RenderingServer.set_default_clear_color(Color("#0f1a2a"))  # mar alrededor de la isla
 	creatures = _read_json("res://data/creatures.json")
 	hero_data = creatures["hero"]
@@ -617,6 +628,15 @@ func _spawn_dragon() -> void:
 	add_child(dragon)
 	enemies.append(dragon)
 
+const MAX_WINDUPS := 2  # preparaciones peligrosas simultáneas (punto de partida del estudio, no una cifra aprobada)
+
+func can_prepare(e: Node) -> bool:  # un enemigo solo empieza su aviso si hay hueco; los demás siguen posicionándose
+	var n := 0
+	for o in enemies:
+		if o != e and o.alive and o.get("state") == "windup":
+			n += 1
+	return n < MAX_WINDUPS
+
 func blockers() -> Array:  # enemigos vivos: bloquean al héroe; las estructuras las maneja world
 	return enemies.filter(func(e: Node) -> bool: return e.alive)
 
@@ -696,21 +716,45 @@ func spawn_projectile(source: String, ground: Vector2, dir: Vector2, spec: Dicti
 	add_child(p)
 
 func _input_dir() -> Vector2:
+	if touch_mode:
+		return Vector2.ZERO if aiming else touch.stick
 	return Vector2(
 		float(_held([KEY_D, KEY_RIGHT])) - float(_held([KEY_A, KEY_LEFT])),
 		float(_held([KEY_S, KEY_DOWN])) - float(_held([KEY_W, KEY_UP])))
 
+func touch_default_aim() -> Vector2:  # táctil: apunta al enemigo más cercano; si no hay, hacia donde mira el héroe
+	var chest := pos - Vector2(0, 40)
+	var best: Node = null
+	var best_d := 220.0
+	for e in enemies:
+		if e.alive and e.pos.distance_to(pos) < best_d:
+			best = e
+			best_d = e.pos.distance_to(pos)
+	if best != null:
+		return best.pos - chest
+	return Vector2.from_angle(DIRS.find(facing) * PI / 4.0) * 60.0
+
 func _mouse() -> Vector2:
+	if touch_mode:
+		var aim: Vector2 = touch.aim_point if aiming else touch_default_aim()
+		return (pos - Vector2(0, 40) + aim) * SCALE
 	return get_global_mouse_position()
+
+func _mb(button: int) -> bool:  # clic mantenido (en táctil lo simulan los botones en pantalla)
+	if touch_mode:
+		return touch.held[button]
+	return Input.is_mouse_button_pressed(button)
 
 func _chest_aim() -> Vector2:  # dirección del pecho del héroe al cursor, en px de suelo
 	var aim := _mouse() / SCALE - (pos - Vector2(0, 40))
 	return aim.normalized() if aim.length() >= 1.0 else Vector2.from_angle(DIRS.find(facing) * PI / 4.0)
 
 # Espacio: dash hacia donde se mueve (o hacia donde mira si está quieto); cancela un ataque en curso
-func _dash() -> void:
+func _dash() -> bool:  # true si el dash empezó
 	if dashing or dash_cd > 0.0 or aiming or stamina < hero_data["dash_stamina"]:
-		return
+		return false
+	if attacking and (not struck or current_mode == "heavy"):  # cancelar: el ligero solo en su recuperación; el pesado, nunca (compromiso)
+		return false
 	stamina -= hero_data["dash_stamina"]
 	stamina_idle = 0.0
 	var d := _input_dir()
@@ -726,6 +770,7 @@ func _dash() -> void:
 	var key := "dash_" + facing
 	hero.sprite_frames.set_animation_speed(key, 6.0 / dash_time_cur)
 	hero.play(key)
+	return true
 
 func _push_out(list: Array) -> void:  # saca al héroe de los enemigos
 	for e in list:
@@ -746,14 +791,32 @@ func _pay(spec: Dictionary) -> void:
 		stamina_idle = 0.0
 
 # clic izquierdo = "light", clic derecho = "heavy" del objeto equipado (data/items.json)
-func _attack(mode: String) -> void:
+func _attack(mode: String) -> bool:  # true si el ataque empezó (y se cobró)
 	if attacking or dashing or aiming or cooldown > 0.0:
-		return
+		return false
 	var spec: Dictionary = items[hotbar[selected]][mode]
 	if not _afford(spec):
-		return
+		return false
 	_pay(spec)
 	_begin(spec, mode)
+	return true
+
+# pulsación anticipada: si no se puede actuar ahora, se guarda una sola acción durante BUFFER_MS
+func _press(action: String) -> void:
+	var started: bool = _dash() if action == "dash" else _attack(action)
+	if not started:
+		buf = action
+		buf_until = Time.get_ticks_msec() + BUFFER_MS
+
+func _try_buffer() -> void:
+	if buf == "":
+		return
+	if Time.get_ticks_msec() > buf_until:
+		buf = ""
+		return
+	var started: bool = _dash() if buf == "dash" else _attack(buf)
+	if started:
+		buf = ""
 
 # arranca un ataque o ultimate: orienta al héroe y reproduce su animación (o dispara al instante si no tiene)
 func _begin(spec: Dictionary, mode: String) -> void:
@@ -909,9 +972,11 @@ func _spawn_ghost() -> void:  # imagen residual de fuego: la estela del mega das
 func _unhandled_input(event: InputEvent) -> void:
 	if dying or reaction_time > 0.0:
 		return
+	if touch_mode and event is InputEventMouseButton:
+		return  # los toques emulan clics del ratón; aquí mandan los botones en pantalla
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.physical_keycode == KEY_SPACE:
-			_dash()
+			_press("dash")
 		elif event.physical_keycode == KEY_R:
 			_ultimate()
 		elif event.physical_keycode == KEY_E:
@@ -933,9 +998,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			elif event.button_index == MOUSE_BUTTON_RIGHT:
 				_cancel_aim()
 		elif event.button_index == MOUSE_BUTTON_LEFT:
-			_attack("light")
+			_press("light")
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
-			_attack("heavy")
+			_press("heavy")
 		var step := 0.0
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			step = ZOOM_STEP
@@ -969,6 +1034,7 @@ func _process(delta: float) -> void:
 
 func _physics_process(delta: float) -> void:
 	if reaction_time > 0.0:
+		buf = ""  # herido o muerto: la acción anticipada se pierde
 		reaction_time = maxf(0.0, reaction_time - delta)
 		if reaction_time == 0.0 and dying:
 			_respawn()
@@ -976,6 +1042,7 @@ func _physics_process(delta: float) -> void:
 		return
 	cooldown = maxf(0.0, cooldown - delta)
 	dash_cd = maxf(0.0, dash_cd - delta)
+	_try_buffer()
 	burn_t = maxf(0.0, burn_t - delta)
 	# regeneración tras una pausa sin gastar
 	stamina_idle += delta
@@ -1010,9 +1077,9 @@ func _physics_process(delta: float) -> void:
 			_push_out(blockers())  # si termina dentro del dragón, sale de él
 		_place()
 		return
-	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+	if _mb(MOUSE_BUTTON_LEFT):
 		_attack("light")  # mantener pulsado repite respetando el cooldown
-	elif Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+	elif _mb(MOUSE_BUTTON_RIGHT):
 		_attack("heavy")
 	if attacking:  # durante la animación de ataque el héroe no se mueve
 		_place()
@@ -1022,7 +1089,7 @@ func _physics_process(delta: float) -> void:
 		hero.play("idle_" + facing)
 		_place()
 		return
-	var sprint := _held([KEY_SHIFT]) and not exhausted
+	var sprint := (_held([KEY_SHIFT]) or (touch_mode and bool(touch.sprint))) and not exhausted
 	if sprint:  # correr gasta estamina; sin ella se camina
 		stamina = maxf(0.0, stamina - hero_data["sprint_drain"] * delta)
 		stamina_idle = 0.0
