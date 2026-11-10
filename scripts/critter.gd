@@ -39,7 +39,7 @@ func _physics_process(delta: float) -> void:
 		return
 	anim_t += delta
 	state_t += delta
-	var d: float = pos.distance_to(main.pos)
+	var d: float = _threat()
 	match state:
 		"graze":
 			if d < FLEE:
@@ -67,6 +67,17 @@ func _physics_process(delta: float) -> void:
 				_to("graze")
 	_place()
 	queue_redraw()
+
+func _threat() -> float:  # distancia a la amenaza más cercana: el héroe o un depredador activo
+	var d: float = pos.distance_to(main.pos)
+	for p in main.predators:
+		if p.dangerous():
+			d = minf(d, pos.distance_to(p.pos))
+	return d
+
+func caught() -> void:  # el depredador lo alcanzó: escapa por poco y se mete en la madriguera
+	pos = home
+	_to("hidden")
 
 func _graze(delta: float) -> void:
 	wait -= delta

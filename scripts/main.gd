@@ -629,24 +629,36 @@ func _spawn_dragon() -> void:
 	add_child(dragon)
 	enemies.append(dragon)
 
-var fauna: Array = []  # presas del exterior (critter.gd): no combaten ni bloquean
+var fauna: Array = []      # presas del exterior (critter.gd): no combaten ni bloquean
+var predators: Array = []  # zorro territorial (predator.gd)
+var villagers: Array = []  # civiles (villager.gd)
 
-func _spawn_fauna() -> void:  # 3 conejos con madriguera en casillas libres a 4–9 m del inicio
+func _free_spot(rng: RandomNumberGenerator, near: Vector2, min_m: float, max_m: float) -> Vector2:  # casilla libre a esa distancia (m)
+	for i in 200:
+		var p: Vector2 = near + Vector2.from_angle(rng.randf() * TAU) * rng.randf_range(min_m, max_m) / _tiles_per_px(Vector2.RIGHT)
+		if not world.blocked(ground_to_tile(p), 0.6):
+			return p
+	return near
+
+func _actor(script: String, props: Dictionary) -> Node2D:
+	var a := Node2D.new()
+	a.set_script(load(script))
+	a.main = self
+	a.world = world
+	for k: String in props:
+		a.set(k, props[k])
+	add_child(a)
+	return a
+
+# vida ambiental del exterior en sitios fijos (semilla): 3 conejos, un zorro lejos del inicio y un civil cerca
+func _spawn_fauna() -> void:
 	var rng := RandomNumberGenerator.new()
-	rng.seed = 7  # mismas madrigueras en cada partida
-	var tries := 0
-	while fauna.size() < 3 and tries < 200:
-		tries += 1
-		var home: Vector2 = start_pos + Vector2.from_angle(rng.randf() * TAU) * rng.randf_range(4.0, 9.0) / _tiles_per_px(Vector2.RIGHT)
-		if world.blocked(ground_to_tile(home), 0.6):
-			continue
-		var c := Node2D.new()
-		c.set_script(load("res://scripts/critter.gd"))
-		c.main = self
-		c.world = world
-		c.home = home
-		add_child(c)
-		fauna.append(c)
+	rng.seed = 7
+	for i in 3:
+		fauna.append(_actor("res://scripts/critter.gd", {"home": _free_spot(rng, start_pos, 4.0, 9.0)}))
+	predators.append(_actor("res://scripts/predator.gd", {"den": _free_spot(rng, start_pos, 13.0, 17.0)}))
+	var work := _free_spot(rng, start_pos, 3.0, 6.0)
+	villagers.append(_actor("res://scripts/villager.gd", {"work": work, "rest": _free_spot(rng, work, 3.0, 5.0)}))
 
 const MAX_WINDUPS := 2  # preparaciones peligrosas simultáneas (punto de partida del estudio, no una cifra aprobada)
 

@@ -24,8 +24,9 @@ func run_checks() -> void:
 		assert(not main.world.blocked(main.ground_to_tile(f.home), 0.2), "madriguera en casilla libre")
 		assert(not main.enemies.has(f), "la fauna no entra en combate")
 	var c: Node = main.fauna[0]
-	for f in main.fauna:
+	for f in main.fauna + main.predators + main.villagers:
 		f.set_physics_process(false)
+	assert(main.predators.size() == 1 and main.villagers.size() == 1)
 
 	# lejos: pasta cerca de casa
 	main.pos = c.home + Vector2(400, 0)
@@ -56,6 +57,82 @@ func run_checks() -> void:
 	main.pos = c.home + Vector2(400, 0)
 	_tick(c, c.SAFE_TIME + 0.2)
 	assert(c.state == "graze", "vuelve a pastar")
+
+	# --- zorro: caza un conejo visible, lo pierde en la madriguera, come y vuelve a descansar
+	var fox: Node = main.predators[0]
+	main.pos = fox.den + Vector2(600, 0)
+	c.pos = fox.pos + Vector2(20, 0)
+	c.state = "graze"
+	fox._physics_process(0.05)
+	assert(fox.state == "hunt" and fox.prey == c, "caza, estado %s" % fox.state)
+	c._physics_process(0.05)
+	assert(c.state == "flee", "el conejo huye del zorro")
+	c.state = "graze"  # quieto para que lo alcance
+	_tick(fox, 1.0)
+	assert(fox.state == "eat" and c.state == "hidden" and c.pos == c.home, "lo alcanza: escapa a la madriguera, estado %s" % fox.state)
+	_tick(fox, fox.EAT + 0.1)
+	assert(fox.state in ["home", "rest"])
+	fox.pos = fox.den
+	fox.state = "rest"
+	assert(fox._find_prey() == null or fox.cool > 0.0, "cansado: no vuelve a cazar enseguida")
+	# se rinde al agotar la energía
+	c.pos = fox.pos + Vector2(60, 0)
+	c.state = "graze"
+	fox.cool = 0.0
+	fox._physics_process(0.05)
+	fox.energy = 0.01
+	fox._physics_process(0.05)
+	assert(fox.state == "home" and fox.cool > 0.0, "se rinde y descansa")
+
+	# territorio: advierte, embiste si insistes, y lo deja fuera del territorio
+	fox.pos = fox.den
+	fox.state = "rest"
+	main.hero_hp = main.hero_max_hp
+	main.reaction_time = 0.0
+	main.pos = fox.den + Vector2(30, 0)
+	fox._physics_process(0.05)
+	assert(fox.state == "warn", "advierte primero")
+	_tick(fox, 0.5)
+	assert(fox.state == "warn" and main.hero_hp == main.hero_max_hp, "el aviso no daña")
+	_tick(fox, 0.9)
+	assert(fox.state in ["lunge", "recover"], "embiste si insistes, estado %s" % fox.state)
+	_tick(fox, 0.4)
+	assert(main.hero_hp < main.hero_max_hp, "la embestida muerde")
+	main.reaction_time = 0.0
+	main.pos = fox.den + Vector2(fox.LEAVE + 40.0, 0)
+	_tick(fox, 1.2)
+	assert(fox.state in ["home", "rest"], "fuera del territorio lo deja, estado %s" % fox.state)
+	main.hero_hp = main.hero_max_hp
+
+	# --- civil: va y viene, mira al héroe, retoma su destino, huye del peligro y vuelve
+	var v: Node = main.villagers[0]
+	main.pos = v.pos + Vector2(600, 0)
+	v.pos = v.goal
+	_tick(v, 0.1)
+	assert(v.state == "pause")
+	var g0: Vector2 = v.goal
+	_tick(v, 4.2)
+	assert(v.state == "walk" and v.goal != g0, "cambia de destino tras la pausa")
+	var g1: Vector2 = v.goal
+	main.pos = v.pos + Vector2(40, 0)
+	_tick(v, 0.6)
+	assert(v.state == "look", "mira al héroe, estado %s" % v.state)
+	main.pos = v.pos + Vector2(75, 0)
+	_tick(v, 0.6)
+	assert(v.state == "look", "histéresis al mirar")
+	main.pos = v.pos + Vector2(200, 0)
+	_tick(v, 0.6)
+	assert(v.state == "walk" and v.goal == g1, "retoma el destino pendiente")
+	fox.pos = v.pos + Vector2(50, 0)
+	fox.state = "warn"
+	v._physics_process(0.05)
+	assert(v.state == "flee", "huye del peligro")
+	_tick(v, 4.0)
+	assert(v.state == "hide" and v.pos.distance_to(v.rest) < 3.0, "se refugia, estado %s" % v.state)
+	fox.state = "rest"
+	fox.pos = fox.den
+	_tick(v, v.SAFE_TIME + 0.2)
+	assert(v.state in ["walk", "pause"] and v.goal == g1, "vuelve a su actividad, estado %s" % v.state)  # si su destino era el refugio, ya llegó
 
 	# en la dungeon se oculta y no actúa
 	main._enter_dungeon()
