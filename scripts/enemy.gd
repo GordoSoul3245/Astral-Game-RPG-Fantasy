@@ -40,18 +40,23 @@ func _sees(dist: float) -> bool:  # alcance (más holgado si ya lo persigue) y l
 			return false
 	return true
 
-const ALERT_RANGE := 110.0  # px de suelo: avisa solo a los compañeros cercanos
+const ALERT_RANGE := 170.0  # px de suelo: avisa solo a los compañeros cercanos
+const ALERT_MAX := 3         # como mucho avisa a los 3 más cercanos
+const ALERT_SHOW := 0.9      # s que se ve el "!" sobre quien se alerta
+var alert_t := 0.0
 
 # alerta compartida: pasa la posición aproximada del evento a los compañeros en reposo cercanos.
 # No encadena (los avisados no avisan) y no da acceso continuo al héroe: luego cada uno usa su propia vista.
 func _alert() -> void:
-	for o in main.enemies:
-		if o == self or not o.alive or not (o.get("state") is String) or o.state != "idle":
-			continue
-		if pos.distance_to(o.pos) < ALERT_RANGE:
-			o.state = "chase"
-			o.last_seen = last_seen
-			o.lost_t = 0.0
+	alert_t = ALERT_SHOW
+	var near: Array = main.enemies.filter(func(o: Node) -> bool:
+		return o != self and o.alive and o.get("state") is String and o.state == "idle" and pos.distance_to(o.pos) < ALERT_RANGE)
+	near.sort_custom(func(a: Node, b: Node) -> bool: return pos.distance_to(a.pos) < pos.distance_to(b.pos))
+	for o in near.slice(0, ALERT_MAX):
+		o.state = "chase"
+		o.last_seen = last_seen
+		o.lost_t = 0.0
+		o.alert_t = ALERT_SHOW
 
 func _search(delta: float) -> void:  # sin ver al héroe: va a donde lo vio por última vez y, si no aparece, se rinde
 	lost_t += delta
@@ -126,6 +131,7 @@ func _physics_process(delta: float) -> void:
 	if not alive:
 		return
 	anim_t += delta
+	alert_t = maxf(0.0, alert_t - delta)
 	cd = maxf(0.0, cd - delta)
 	contact_cd = maxf(0.0, contact_cd - delta)
 	var to: Vector2 = main.pos - pos
@@ -303,8 +309,9 @@ func take_damage(n: int, charge := true) -> void:
 		_alert()
 	if flash_tw:
 		flash_tw.kill()
-	modulate = Color(1.8, 1.8, 1.8)
+	modulate = Color(3.0, 3.0, 3.0)  # destello blanco claro, se sostiene un instante y se apaga
 	flash_tw = create_tween()
+	flash_tw.tween_interval(0.05)
 	flash_tw.tween_property(self, "modulate", Color.WHITE, 0.15)
 	if hp <= 0:
 		alive = false
@@ -356,6 +363,9 @@ func _draw() -> void:
 	if state == "windup" and data["kind"] in ["archer", "mage"]:  # línea de tiro fijada: el héroe puede salirse
 		var k := 1.0 - clampf(t / data.get("windup", 0.7), 0.0, 1.0)
 		draw_line(aim * radius, aim * (radius + 40.0 + 120.0 * k), Color(1.0, 0.3, 0.2, 0.35 + 0.5 * k), 1.5)
+	if alert_t > 0.0:  # aviso de alerta: forma ("!") además de color
+		var pop := 1.0 + 0.4 * clampf((alert_t - ALERT_SHOW + 0.15) / 0.15, 0.0, 1.0)
+		draw_string(ThemeDB.fallback_font, Vector2(-4 * pop, -body_h - 16), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, int(16 * pop), Color(1.0, 0.85, 0.2, clampf(alert_t / 0.3, 0.0, 1.0)))
 	var w := maxf(radius * 2.2, 26.0)
 	draw_rect(Rect2(-w / 2.0, -body_h - 10.0, w, 3.0), Color(0.1, 0.1, 0.14, 0.85))
 	draw_rect(Rect2(-w / 2.0, -body_h - 10.0, w * clampf(float(hp) / data["hp"], 0.0, 1.0), 3.0), Color(0.85, 0.2, 0.2))

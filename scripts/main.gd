@@ -679,6 +679,12 @@ func gain_ultimate(damage: float) -> void:  # la ultimate se carga golpeando ent
 func shake(amount: float) -> void:
 	shake_amp = maxf(shake_amp, amount)
 
+var kick_v := Vector2.ZERO  # empujón direccional de cámara (px de pantalla), vuelve solo al centro
+
+func kick(v: Vector2) -> void:
+	if v.length() > kick_v.length():
+		kick_v = v
+
 # --- casillas: el mapa es una cuadrícula de TILES x TILES (1 casilla = 1 m); coordenadas de casilla (0..TILES)
 func ground_to_tile(p: Vector2) -> Vector2:
 	var d := p - C1
@@ -1030,7 +1036,8 @@ func _process(delta: float) -> void:
 	# la cámara sigue al héroe (suavizada) y tiembla al impactar
 	cam.position = cam.position.lerp((pos - Vector2(0, 40)) * SCALE, 1.0 - exp(-8.0 * delta))
 	shake_amp = maxf(0.0, shake_amp - delta * 40.0)
-	cam.offset = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * shake_amp
+	kick_v = kick_v.move_toward(Vector2.ZERO, delta * 90.0)
+	cam.offset = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * shake_amp + kick_v
 
 func _physics_process(delta: float) -> void:
 	if reaction_time > 0.0:

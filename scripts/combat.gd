@@ -4,10 +4,10 @@ extends Node2D
 # Los PNG ya traen luz horneada: aquí solo hay ambiente por zona (CanvasModulate) y luces puntuales aditivas.
 
 const KINDS := {  # tipo de golpe -> sonido (Hz, s, ruido), color de chispa, tamaño, empuje en px/s
-	"light": {"hz": 900.0, "dur": 0.07, "noise": 0.55, "col": Color(0.65, 0.85, 1.0), "size": 0.9, "push": 60.0, "shake": 0.0},
-	"heavy": {"hz": 180.0, "dur": 0.18, "noise": 0.7, "col": Color(1.0, 0.7, 0.3), "size": 1.6, "push": 170.0, "shake": 3.5},
-	"magic": {"hz": 420.0, "dur": 0.14, "noise": 0.35, "col": Color(1.0, 0.5, 0.15), "size": 1.2, "push": 90.0, "shake": 0.0},
-	"blast": {"hz": 90.0, "dur": 0.35, "noise": 0.9, "col": Color(1.0, 0.45, 0.1), "size": 2.4, "push": 200.0, "shake": 6.0},
+	"light": {"hz": 900.0, "dur": 0.07, "noise": 0.55, "col": Color(0.65, 0.85, 1.0), "size": 0.9, "push": 60.0, "shake": 1.2, "kick": 3.0},
+	"heavy": {"hz": 180.0, "dur": 0.18, "noise": 0.7, "col": Color(1.0, 0.7, 0.3), "size": 1.6, "push": 170.0, "shake": 4.5, "kick": 9.0},
+	"magic": {"hz": 420.0, "dur": 0.14, "noise": 0.35, "col": Color(1.0, 0.5, 0.15), "size": 1.2, "push": 90.0, "shake": 0.0, "kick": 2.0},
+	"blast": {"hz": 90.0, "dur": 0.35, "noise": 0.9, "col": Color(1.0, 0.45, 0.1), "size": 2.4, "push": 200.0, "shake": 6.0, "kick": 6.0},
 }
 const AMBIENT_OUT := Color(0.93, 0.92, 1.0)    # exterior: atardecer suave, casi neutro
 const AMBIENT_DUNGEON := Color(0.58, 0.56, 0.72)  # dungeon: penumbra índigo; las luces locales recuperan el color
@@ -19,7 +19,7 @@ var lantern: PointLight2D          # luz tenue del héroe, solo en la dungeon
 var marks := {}                    # enemigo -> segundos restantes de marca de Ignis
 var mark_spec := {"duration": 4.0, "damage": 22, "radius": 40.0}
 var sounds := {}
-const HITSTOP := 0.03              # s; punto de partida del estudio (25–40 ms), solo golpes pesados
+const HITSTOP := 0.04             # s; punto de partida del estudio (25–40 ms), solo golpes pesados
 const HITSTOP_COOLDOWN_MS := 150
 var stop_until := 0
 
@@ -76,6 +76,7 @@ func hit(e: Node, dmg: int, kind: String, from: Vector2, charge := true) -> void
 	flash(e.pos, k["col"], 0.35 * k["size"], 0.8 * k["size"], 0.18)
 	if k["shake"] > 0.0:
 		main.shake(k["shake"])
+	main.kick((e.pos - from).normalized() * k["kick"])  # la cámara se empuja hacia donde va el golpe
 	if kind == "heavy":
 		_hitstop(e)
 

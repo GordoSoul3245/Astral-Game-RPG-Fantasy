@@ -16,6 +16,8 @@ func run_checks() -> void:
 
 	var e: Node2D = main.spawn_enemy("skeleton_archer", main.pos + Vector2(-120, 0))  # como test_combat: ese punto es transitable
 	e.set_physics_process(false)
+	e.data = e.data.duplicate()  # alcance propio y fijo: el test no depende del balance de creatures.json
+	e.data["detect_range"] = 200.0
 	var rng: float = e.data["detect_range"]
 	var dir := Vector2.LEFT  # dirección libre de colisión desde el punto de aparición
 	for c: Vector2 in [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]:
@@ -72,5 +74,16 @@ func run_checks() -> void:
 	assert(e.state == "chase" and e.last_seen == main.pos and e.lost_t == 0.0)
 	assert(near.state == "chase" and near.last_seen == e.last_seen, "el cercano queda alertado")
 	assert(far.state == "idle", "el lejano no se entera")
+	assert(near.alert_t > 0.0 and e.alert_t > 0.0, "se ve el aviso")
+	# como mucho ALERT_MAX compañeros, los más cercanos
+	var group: Array = []
+	for i in 5:
+		var o: Node2D = main.spawn_enemy("slime", e.pos + Vector2(0, 10.0 + 15.0 * i))
+		o.set_physics_process(false)
+		group.append(o)
+	e._alert()
+	var called := group.filter(func(o: Node) -> bool: return o.state == "chase")
+	assert(called.size() == e.ALERT_MAX, "avisados %d" % called.size())
+	assert(group[0].state == "chase" and group[4].state == "idle", "avisa a los más cercanos")
 	print("PASS perception: ve, pierde, busca en la última posición, vuelve a idle, histéresis")
 	quit()
