@@ -40,6 +40,19 @@ func _sees(dist: float) -> bool:  # alcance (más holgado si ya lo persigue) y l
 			return false
 	return true
 
+const ALERT_RANGE := 110.0  # px de suelo: avisa solo a los compañeros cercanos
+
+# alerta compartida: pasa la posición aproximada del evento a los compañeros en reposo cercanos.
+# No encadena (los avisados no avisan) y no da acceso continuo al héroe: luego cada uno usa su propia vista.
+func _alert() -> void:
+	for o in main.enemies:
+		if o == self or not o.alive or not (o.get("state") is String) or o.state != "idle":
+			continue
+		if pos.distance_to(o.pos) < ALERT_RANGE:
+			o.state = "chase"
+			o.last_seen = last_seen
+			o.lost_t = 0.0
+
 func _search(delta: float) -> void:  # sin ver al héroe: va a donde lo vio por última vez y, si no aparece, se rinde
 	lost_t += delta
 	var d := last_seen - pos
@@ -123,6 +136,7 @@ func _physics_process(delta: float) -> void:
 		lost_t = 0.0
 		if state == "idle":
 			state = "chase"
+			_alert()
 	if kb.length() > 5.0:
 		pos = main.world.move_collide(pos, pos + kb * delta * Vector2(1, 0.6), data["r_t"])
 		kb = kb.move_toward(Vector2.ZERO, 900.0 * delta)
@@ -286,6 +300,7 @@ func take_damage(n: int, charge := true) -> void:
 		state = "chase"  # un golpe lo alerta
 		last_seen = main.pos
 		lost_t = 0.0
+		_alert()
 	if flash_tw:
 		flash_tw.kill()
 	modulate = Color(1.8, 1.8, 1.8)

@@ -122,6 +122,19 @@ func run_checks() -> void:
 	await process_frame
 	assert(not is_instance_valid(pending))
 
+	# pausa de impacto: el pesado congela solo animaciones, poco tiempo, y no se acumula por objetivo
+	var hs := _enemy("skeleton_archer", Vector2(40, 0))
+	await create_timer(0.2).timeout
+	c.hit(hs, 1, "heavy", main.pos)
+	assert(main.hero.speed_scale == 0.0 and hs.spr.speed_scale == 0.0, "pausa de impacto activa")
+	var until: int = c.stop_until
+	c.hit(hs, 1, "heavy", main.pos)
+	assert(c.stop_until == until, "un segundo objetivo no acumula pausa")
+	await create_timer(0.1).timeout
+	assert(main.hero.speed_scale == 1.0 and hs.spr.speed_scale == 1.0, "la pausa termina")
+	c.hit(hs, 1, "light", main.pos)
+	assert(main.hero.speed_scale == 1.0, "el ligero no pausa")
+
 	# luces: los destellos se borran solos y el ambiente cambia con el mapa
 	await create_timer(1.2).timeout
 	var lights := main.find_children("*", "PointLight2D", true, false).size()

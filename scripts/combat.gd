@@ -19,6 +19,9 @@ var lantern: PointLight2D          # luz tenue del héroe, solo en la dungeon
 var marks := {}                    # enemigo -> segundos restantes de marca de Ignis
 var mark_spec := {"duration": 4.0, "damage": 22, "radius": 40.0}
 var sounds := {}
+const HITSTOP := 0.03              # s; punto de partida del estudio (25–40 ms), solo golpes pesados
+const HITSTOP_COOLDOWN_MS := 150
+var stop_until := 0
 
 func _ready() -> void:
 	z_index = 3500
@@ -73,6 +76,25 @@ func hit(e: Node, dmg: int, kind: String, from: Vector2, charge := true) -> void
 	flash(e.pos, k["col"], 0.35 * k["size"], 0.8 * k["size"], 0.18)
 	if k["shake"] > 0.0:
 		main.shake(k["shake"])
+	if kind == "heavy":
+		_hitstop(e)
+
+# pausa de impacto: solo presentación (animaciones); el reloj lógico —cooldowns, proyectiles, zonas— sigue corriendo
+func _hitstop(e: Node) -> void:
+	var now := Time.get_ticks_msec()
+	if now < stop_until:  # un tajo que golpea a varios no acumula pausas
+		return
+	stop_until = now + HITSTOP_COOLDOWN_MS
+	var sprites: Array = [main.hero]
+	var s: Variant = e.get("spr")
+	if s:
+		sprites.append(s)
+	for a: AnimatedSprite2D in sprites:
+		a.speed_scale = 0.0
+	await get_tree().create_timer(HITSTOP, true, false, true).timeout
+	for a: AnimatedSprite2D in sprites:
+		if is_instance_valid(a):
+			a.speed_scale = 1.0
 
 func play(kind: String) -> void:
 	var p := AudioStreamPlayer.new()

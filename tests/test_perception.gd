@@ -63,8 +63,14 @@ func run_checks() -> void:
 		e._physics_process(0.5)
 	assert(e.state == "idle", "tras SEARCH_TIME vuelve a idle, estado %s" % e.state)
 
-	# un golpe recibido lo alerta con la posición del golpeador
+	# un golpe recibido lo alerta con la posición del golpeador y avisa solo a los compañeros cercanos
+	var near: Node2D = main.spawn_enemy("slime", e.pos + Vector2(e.ALERT_RANGE * 0.5, 0))
+	var far: Node2D = main.spawn_enemy("slime", e.pos + Vector2(e.ALERT_RANGE * 3.0, 0))
+	near.set_physics_process(false)
+	far.set_physics_process(false)
 	e.take_damage(1, false)
 	assert(e.state == "chase" and e.last_seen == main.pos and e.lost_t == 0.0)
+	assert(near.state == "chase" and near.last_seen == e.last_seen, "el cercano queda alertado")
+	assert(far.state == "idle", "el lejano no se entera")
 	print("PASS perception: ve, pierde, busca en la última posición, vuelve a idle, histéresis")
 	quit()
