@@ -285,6 +285,30 @@ func _interact() -> void:
 	var d := _near_door()
 	if d != null and not transitioning:
 		d.use()
+		return
+	var v := _near_villager()
+	if v != null:
+		say(v.talk(), 3.0)
+
+func _near_villager() -> Node2D:
+	if in_dungeon:
+		return null
+	for v: Node2D in villagers:
+		if v.pos.distance_to(pos) < 35.0 and v.can_talk():
+			return v
+	return null
+
+# ruido: golpes y explosiones dejan un evento breve que fauna y civiles perciben (no la posición del héroe)
+var noises: Array = []  # [posición de suelo, radio, segundos restantes]
+
+func noise(at: Vector2, radius: float) -> void:
+	noises.append([at, radius, 1.0])
+
+func noise_near(p: Vector2) -> bool:
+	for n: Array in noises:
+		if p.distance_to(n[0]) < n[1]:
+			return true
+	return false
 
 func _update_prompt(delta: float) -> void:
 	say_t = maxf(0.0, say_t - delta)
@@ -293,11 +317,16 @@ func _update_prompt(delta: float) -> void:
 		if loot_t <= 0.0:
 			for c in loot_box.get_children():
 				c.queue_free()
+	for n: Array in noises:
+		n[2] -= delta
+	noises = noises.filter(func(n: Array) -> bool: return n[2] > 0.0)
 	var d := _near_door()
 	if say_t > 0.0:
 		prompt.text = say_text
 	elif d != null and not transitioning:
 		prompt.text = ("[E] " + d.label) if not d.locked else d.lock_text
+	elif _near_villager() != null:
+		prompt.text = "[E] Hablar"
 	else:
 		prompt.text = ""
 
@@ -656,9 +685,16 @@ func _spawn_fauna() -> void:
 	rng.seed = 7
 	for i in 3:
 		fauna.append(_actor("res://scripts/critter.gd", {"home": _free_spot(rng, start_pos, 4.0, 9.0)}))
-	predators.append(_actor("res://scripts/predator.gd", {"den": _free_spot(rng, start_pos, 13.0, 17.0)}))
 	var work := _free_spot(rng, start_pos, 3.0, 6.0)
-	villagers.append(_actor("res://scripts/villager.gd", {"work": work, "rest": _free_spot(rng, work, 3.0, 5.0)}))
+	var rest := _free_spot(rng, work, 3.0, 5.0)
+	villagers.append(_actor("res://scripts/villager.gd", {"work": work, "rest": rest, "stroll": _free_spot(rng, rest, 6.0, 9.0)}))
+	# guarida cerca de algún conejo (caza a la vista) pero con el inicio y el refugio del civil fuera de su alcance
+	var den := Vector2.ZERO
+	for i in 60:
+		den = _free_spot(rng, fauna[i % 3].home, 6.0, 11.0)
+		if den.distance_to(start_pos) > 220.0 and den.distance_to(rest) > 220.0:
+			break
+	predators.append(_actor("res://scripts/predator.gd", {"den": den}))
 
 const MAX_WINDUPS := 2  # preparaciones peligrosas simultáneas (punto de partida del estudio, no una cifra aprobada)
 

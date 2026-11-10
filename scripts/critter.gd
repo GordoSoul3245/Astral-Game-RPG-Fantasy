@@ -43,7 +43,7 @@ func _physics_process(delta: float) -> void:
 	match state:
 		"graze":
 			if d < FLEE:
-				_to("flee")
+				_flee()
 			elif d < NOTICE and state_t > MIN_STATE:
 				_to("watch")
 			else:
@@ -52,7 +52,7 @@ func _physics_process(delta: float) -> void:
 			if absf(main.pos.x - pos.x) > 1.0:
 				face = signf(main.pos.x - pos.x)
 			if d < FLEE:
-				_to("flee")
+				_flee()
 			elif d > CALM and state_t > MIN_STATE:
 				_to("graze")
 		"flee":
@@ -68,7 +68,18 @@ func _physics_process(delta: float) -> void:
 	_place()
 	queue_redraw()
 
-func _threat() -> float:  # distancia a la amenaza más cercana: el héroe o un depredador activo
+const GROUP := 90.0  # al huir, los conejos cercanos que pastan levantan las orejas y miran
+
+func _flee() -> void:  # chillido y aviso al grupo (no los hace huir: solo ponerse alerta)
+	_to("flee")
+	main.combat.play_at("squeak", pos)
+	for f in main.fauna:
+		if f != self and f.state == "graze" and f.pos.distance_to(pos) < GROUP:
+			f._to("watch")
+
+func _threat() -> float:  # distancia a la amenaza más cercana: el héroe, un depredador activo o un ruido de combate
+	if main.noise_near(pos):
+		return 0.0
 	var d: float = pos.distance_to(main.pos)
 	for p in main.predators:
 		if p.dangerous():
@@ -127,7 +138,7 @@ func _draw() -> void:  # unidades: px de suelo, pies en el origen
 		hop = absf(sin(anim_t * 9.0)) * 2.0
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE * S)
 	_ell(Vector2.ZERO, 5.0, 2.2, Color(0, 0, 0, 0.3))  # sombra
-	draw_set_transform(Vector2(0, -hop) * S, 0.0, Vector2(S * face, S))
+	draw_set_transform(Vector2(0, -hop) * S, 0.0, Vector2(S * face, S) * 1.3)
 	var head_y := -6.0 if state == "graze" and not moving else -9.0  # baja la cabeza al pastar
 	_ell(Vector2(-1, -4), 5.5, 4.0, fur)                    # cuerpo
 	_ell(Vector2(-6, -5), 1.8, 1.8, Color("#efe6d8"))       # cola

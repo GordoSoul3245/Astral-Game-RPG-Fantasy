@@ -79,6 +79,27 @@ func hit(e: Node, dmg: int, kind: String, from: Vector2, charge := true) -> void
 	main.kick((e.pos - from).normalized() * k["kick"])  # la cámara se empuja hacia donde va el golpe
 	if kind == "heavy":
 		_hitstop(e)
+	main.noise(e.pos, 240.0 if kind == "heavy" or kind == "blast" else 150.0)  # el combate asusta a la fauna y a los civiles
+
+# señales de intención (gruñido, chillido, grito, alerta): suenan más bajo cuanto más lejos del héroe
+const CUES := {  # nombre -> (Hz, s, ruido)
+	"growl": [95.0, 0.55, 0.65], "squeak": [1700.0, 0.09, 0.1], "shout": [320.0, 0.28, 0.25], "alert": [760.0, 0.12, 0.2],
+}
+
+func play_at(cue: String, ground: Vector2) -> void:
+	var d: float = ground.distance_to(main.pos)
+	if d > 420.0:
+		return
+	if not sounds.has(cue):
+		var c: Array = CUES[cue]
+		sounds[cue] = _synth(c[0], c[1], c[2])
+	var p := AudioStreamPlayer.new()
+	p.stream = sounds[cue]
+	p.volume_db = -10.0 - d / 25.0
+	p.pitch_scale = randf_range(0.9, 1.1)
+	add_child(p)
+	p.finished.connect(p.queue_free)
+	p.play()
 
 # pausa de impacto: solo presentación (animaciones); el reloj lógico —cooldowns, proyectiles, zonas— sigue corriendo
 func _hitstop(e: Node) -> void:

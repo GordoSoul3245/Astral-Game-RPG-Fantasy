@@ -49,6 +49,7 @@ var alert_t := 0.0
 # No encadena (los avisados no avisan) y no da acceso continuo al héroe: luego cada uno usa su propia vista.
 func _alert() -> void:
 	alert_t = ALERT_SHOW
+	main.combat.play_at("alert", pos)
 	var near: Array = main.enemies.filter(func(o: Node) -> bool:
 		return o != self and o.alive and o.get("state") is String and o.state == "idle" and pos.distance_to(o.pos) < ALERT_RANGE)
 	near.sort_custom(func(a: Node, b: Node) -> bool: return pos.distance_to(a.pos) < pos.distance_to(b.pos))

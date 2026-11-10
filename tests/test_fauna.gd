@@ -27,6 +27,9 @@ func run_checks() -> void:
 	for f in main.fauna + main.predators + main.villagers:
 		f.set_physics_process(false)
 	assert(main.predators.size() == 1 and main.villagers.size() == 1)
+	var den: Vector2 = main.predators[0].den
+	assert(main.start_pos.distance_to(den) > main.predators[0].LEAVE, "el inicio queda fuera del territorio del zorro")
+	assert(main.villagers[0].rest.distance_to(den) > main.villagers[0].DANGER, "el refugio del civil queda lejos del zorro")
 
 	# lejos: pasta cerca de casa
 	main.pos = c.home + Vector2(400, 0)
@@ -133,6 +136,33 @@ func run_checks() -> void:
 	fox.pos = fox.den
 	_tick(v, v.SAFE_TIME + 0.2)
 	assert(v.state in ["walk", "pause"] and v.goal == g1, "vuelve a su actividad, estado %s" % v.state)  # si su destino era el refugio, ya llegó
+
+	# --- el mundo reacciona: ruido de combate asusta; huir alerta al grupo; hablar con el civil
+	var c2: Node = main.fauna[1]
+	for f in main.fauna:
+		f.state = "graze"
+		f.state_t = 1.0
+	main.pos = c.pos + Vector2(600, 0)
+	c2.pos = c.pos + Vector2(30, 0)
+	main.noise(c.pos, 100.0)
+	c._physics_process(0.05)
+	assert(c.state == "flee", "el ruido de combate lo espanta")
+	assert(c2.state == "watch", "el compañero cercano levanta las orejas")
+	_tick(c, 1.2)  # el ruido caduca en main._process; aquí lo limpiamos a mano
+	main.noises.clear()
+	v.state = "walk"
+	var g2: Vector2 = v.goal
+	main.pos = v.pos + Vector2(20, 0)
+	assert(main._near_villager() == v)
+	var line: String = v.talk()
+	assert(line != "" and v.state == "talk" and v.goal == g2, "habla sin perder su destino")
+	main.dragon.alive = false
+	v.goal = v.rest
+	assert(v._next_goal() == v.stroll, "sin dragón, pasea más lejos")
+	main.dragon.alive = true
+	assert(v._next_goal() == v.work, "con dragón, no pasea")
+	main.dragon.alive = false
+	main.pos = v.pos + Vector2(600, 0)
 
 	# en la dungeon se oculta y no actúa
 	main._enter_dungeon()

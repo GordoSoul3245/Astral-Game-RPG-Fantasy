@@ -18,6 +18,7 @@ const WALK := 30.0
 const RUN := 70.0
 const LUNGE := 160.0
 const R_T := 0.25
+const SIZE := 1.6         # escala del dibujo: legible junto al héroe
 
 var main: Node
 var world: Node
@@ -57,6 +58,7 @@ func _physics_process(delta: float) -> void:
 	if state in ["rest", "hunt", "eat", "home"] and hero_den < TERRITORY and not main.dying:
 		prey = null
 		_to("warn")
+		main.combat.play_at("growl", pos)
 	match state:
 		"rest":
 			if cool == 0.0:
@@ -141,7 +143,7 @@ func _draw() -> void:  # px de suelo, pies en el origen
 	_ell(Vector2.ZERO, 8.0, 3.0, Color(0, 0, 0, 0.3))
 	var low := 3.0 if state == "warn" else 0.0           # se agacha al advertir
 	var run := absf(sin(anim_t * 16.0)) * 2.5 if state in ["hunt", "lunge"] else 0.0
-	draw_set_transform(Vector2(0, low - run) * S, 0.0, Vector2(S * face, S))
+	draw_set_transform(Vector2(0, low - run) * S, 0.0, Vector2(S * face, S) * SIZE)
 	var fur := Color("#c8642a")
 	if state == "rest" or state == "eat":  # tumbado
 		_ell(Vector2(0, -3), 8.0, 3.2, fur)
@@ -160,4 +162,4 @@ func _draw() -> void:  # px de suelo, pies en el origen
 			draw_line(Vector2(11, -8.5), Vector2(13, -8.5), Color.WHITE, 0.8)
 	if state == "warn":  # aviso por forma, no solo color
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE * S)
-		draw_string(ThemeDB.fallback_font, Vector2(-3, -26), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(1.0, 0.85, 0.2))
+		draw_string(ThemeDB.fallback_font, Vector2(-3, -34), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(1.0, 0.85, 0.2))

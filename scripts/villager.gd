@@ -17,6 +17,13 @@ var main: Node
 var world: Node
 var work := Vector2.ZERO
 var rest := Vector2.ZERO   # también es su refugio
+var stroll := Vector2.ZERO # paseo más lejano: solo cuando el dragón ya no amenaza la zona
+const LINES := {
+	"dragon": ["¡Ten cuidado! El dragón ronda cerca del castillo.", "No salgo lejos mientras viva esa bestia."],
+	"calm": ["Desde que cayó el dragón, por fin puedo pasear.", "Gracias, viajero. Se respira otra cosa."],
+	"fox": ["Ese zorro no deja en paz a los conejos.", "No te acerques a la guarida del zorro: muerde."],
+}
+var talk_i := 0
 var pos := Vector2.ZERO
 var state := "walk"        # walk, pause, look, flee, hide
 var state_t := 0.0
@@ -34,7 +41,28 @@ func _to(s: String) -> void:
 	state = s
 	state_t = 0.0
 
+func can_talk() -> bool:
+	return state in ["walk", "pause", "look", "talk"]
+
+func talk() -> String:  # detiene la actividad un momento sin perder su destino pendiente
+	_to("talk")
+	var topic := "calm" if not main.dragon.alive else "dragon"
+	if talk_i % 3 == 2:
+		topic = "fox"
+	var l: Array = LINES[topic]
+	talk_i += 1
+	return l[talk_i % l.size()]
+
+func _next_goal() -> Vector2:  # trabajo -> descanso -> (paseo si el dragón cayó) -> trabajo
+	if goal == work:
+		return rest
+	if goal == rest and not main.dragon.alive:
+		return stroll
+	return work
+
 func _danger() -> bool:
+	if main.noise_near(pos):
+		return true
 	if main.dragon.alive and main.dragon.visible and pos.distance_to(main.dragon.pos) < DANGER:
 		return true
 	for p in main.predators:
@@ -51,12 +79,13 @@ func _physics_process(delta: float) -> void:
 	var hero_d: float = pos.distance_to(main.pos)
 	if state != "flee" and state != "hide" and _danger():
 		_to("flee")
+		main.combat.play_at("shout", pos)
 	match state:
 		"walk":
 			if hero_d < LOOK and state_t > MIN_STATE:
 				_to("look")
 			elif pos.distance_to(goal) < 2.0:
-				wait = randf_range(2.0, 4.0)
+				wait = randf_range(4.0, 7.0) if goal == rest else randf_range(2.0, 4.0)  # descansa más de lo que trabaja
 				_to("pause")
 			else:
 				_step(goal, WALK, delta)
@@ -64,7 +93,12 @@ func _physics_process(delta: float) -> void:
 			if hero_d < LOOK:
 				_to("look")
 			elif state_t > wait:
-				goal = rest if goal == work else work
+				goal = _next_goal()
+				_to("walk")
+		"talk":  # se queda mirando al héroe mientras habla
+			if absf(main.pos.x - pos.x) > 1.0:
+				face = signf(main.pos.x - pos.x)
+			if state_t > 3.0 or hero_d > UNLOOK:
 				_to("walk")
 		"look":  # se gira hacia el héroe; si se le echa encima, da un paso al lado
 			if absf(main.pos.x - pos.x) > 1.0:
