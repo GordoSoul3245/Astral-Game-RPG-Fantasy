@@ -125,6 +125,7 @@ func run_checks() -> void:
 	# pausa de impacto: el pesado congela solo animaciones, poco tiempo, y no se acumula por objetivo
 	var hs := _enemy("skeleton_archer", Vector2(40, 0))
 	await create_timer(0.2).timeout
+	c.stop_until = 0  # sin pausa reciente (el tope usa reloj real; el temporizador del test, tiempo de juego)
 	c.hit(hs, 1, "heavy", main.pos)
 	assert(main.hero.speed_scale == 0.0 and hs.spr.speed_scale == 0.0, "pausa de impacto activa")
 	var until: int = c.stop_until

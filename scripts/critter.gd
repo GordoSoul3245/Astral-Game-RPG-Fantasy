@@ -23,11 +23,24 @@ var goal := Vector2.ZERO
 var wait := 0.0
 var face := 1.0
 var anim_t := 0.0
+var look := Vector2.DOWN   # dirección del sprite
+var spr: AnimatedSprite2D  # sprite de Blender; si falta, se dibuja por código
 
 func _ready() -> void:
 	pos = home
 	goal = home
+	spr = preload("res://scripts/life_sprite.gd").build(self, main, "res://art/fauna/rabbit_", {"idle": 1, "watch": 1, "walk": 8})
 	_place()
+
+func _anim() -> void:
+	if spr == null:
+		return
+	spr.visible = state != "hidden"
+	var moving := pos.distance_to(goal) > 2.0
+	if state == "watch":
+		look = main.pos - pos
+	var kind := "walk" if state == "flee" or (state == "graze" and moving) else ("watch" if state == "watch" else "idle")
+	preload("res://scripts/life_sprite.gd").show(spr, main, kind, look, 2.0 if state == "flee" else 1.0)
 
 func _to(s: String) -> void:
 	state = s
@@ -65,6 +78,7 @@ func _physics_process(delta: float) -> void:
 				state_t = 0.0  # aún hay peligro: el reloj de seguridad vuelve a cero
 			elif state_t > SAFE_TIME:
 				_to("graze")
+	_anim()
 	_place()
 	queue_redraw()
 
@@ -102,6 +116,8 @@ func _step(to: Vector2, speed: float, delta: float) -> void:
 	var dir := (to - pos).normalized()
 	if absf(dir.x) > 0.1:
 		face = signf(dir.x)
+	if dir != Vector2.ZERO:
+		look = dir
 	var want := pos + dir * minf(speed * delta, pos.distance_to(to)) * Vector2(1, 0.6)  # suelo aplastado en Y, como los enemigos
 	if want.distance_to(to) < 0.5:
 		want = to
@@ -129,6 +145,10 @@ func _draw() -> void:  # unidades: px de suelo, pies en el origen
 		if fmod(anim_t, 2.0) < 0.6:  # asoma las orejas de vez en cuando
 			draw_line(Vector2(-1.5, -1), Vector2(-2, -6), fur, 1.6)
 			draw_line(Vector2(1.5, -1), Vector2(2, -6), fur, 1.6)
+		return
+	if spr:
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE * S)
+		_ell(Vector2.ZERO, 5.0, 2.2, Color(0, 0, 0, 0.3))  # sombra
 		return
 	var moving := pos.distance_to(goal) > 2.0
 	var hop := 0.0

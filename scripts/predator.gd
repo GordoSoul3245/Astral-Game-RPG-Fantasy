@@ -34,9 +34,25 @@ var bit := false
 var face := 1.0
 var anim_t := 0.0
 
+var look := Vector2.DOWN
+var spr: AnimatedSprite2D  # sprite de Blender; si falta, se dibuja por código
+
 func _ready() -> void:
 	pos = den
+	spr = preload("res://scripts/life_sprite.gd").build(self, main, "res://art/fauna/fox_", {"idle": 1, "rest": 1, "warn": 1, "walk": 8})
 	_place()
+
+func _anim() -> void:
+	if spr == null:
+		return
+	if state == "warn" or state == "recover":
+		look = main.pos - pos
+	var kind := "idle"
+	match state:
+		"rest", "eat": kind = "rest"
+		"warn": kind = "warn"
+		"hunt", "home", "lunge": kind = "walk"
+	preload("res://scripts/life_sprite.gd").show(spr, main, kind, look, 1.8 if state in ["hunt", "lunge"] else 1.0)
 
 func _to(s: String) -> void:
 	state = s
@@ -105,6 +121,7 @@ func _physics_process(delta: float) -> void:
 		"recover":  # ventana de castigo: quieto
 			if state_t > RECOVER:
 				_to("warn" if hero_den < LEAVE else "home")
+	_anim()
 	_place()
 	queue_redraw()
 
@@ -122,6 +139,8 @@ func _face(dx: float) -> void:
 func _step(to: Vector2, speed: float, delta: float) -> void:
 	var d := (to - pos).normalized()
 	_face(d.x)
+	if d != Vector2.ZERO:
+		look = d
 	var want := pos + d * minf(speed * delta, pos.distance_to(to)) * Vector2(1, 0.6)
 	pos = world.move_collide(pos, want, R_T)
 
@@ -141,6 +160,10 @@ func _draw() -> void:  # px de suelo, pies en el origen
 	_ell(Vector2.ZERO, 9.0, 4.5, Color(0.1, 0.07, 0.05, 0.85))  # guarida
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE * S)
 	_ell(Vector2.ZERO, 8.0, 3.0, Color(0, 0, 0, 0.3))
+	if spr:
+		if state == "warn":  # aviso por forma, no solo color
+			draw_string(ThemeDB.fallback_font, Vector2(-3, -34), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(1.0, 0.85, 0.2))
+		return
 	var low := 3.0 if state == "warn" else 0.0           # se agacha al advertir
 	var run := absf(sin(anim_t * 16.0)) * 2.5 if state in ["hunt", "lunge"] else 0.0
 	draw_set_transform(Vector2(0, low - run) * S, 0.0, Vector2(S * face, S) * SIZE)

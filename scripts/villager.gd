@@ -32,10 +32,26 @@ var wait := 0.0
 var face := 1.0
 var anim_t := 0.0
 
+var look := Vector2.DOWN
+var spr: AnimatedSprite2D  # sprite de Blender; si falta, se dibuja por código
+
 func _ready() -> void:
 	pos = rest
 	goal = work
+	spr = preload("res://scripts/life_sprite.gd").build(self, main, "res://art/fauna/villager_", {"idle": 1, "hide": 1, "walk": 8, "flee": 8})
 	_place()
+
+func _anim() -> void:
+	if spr == null:
+		return
+	if state in ["look", "talk"]:
+		look = main.pos - pos
+	var kind := "idle"
+	match state:
+		"walk": kind = "walk"
+		"flee": kind = "flee"
+		"hide": kind = "hide"
+	preload("res://scripts/life_sprite.gd").show(spr, main, kind, look, 1.6 if state == "flee" else 1.0)
 
 func _to(s: String) -> void:
 	state = s
@@ -118,6 +134,7 @@ func _physics_process(delta: float) -> void:
 				state_t = 0.0
 			elif state_t > SAFE_TIME:
 				_to("walk")
+	_anim()
 	_place()
 	queue_redraw()
 
@@ -125,6 +142,8 @@ func _step(to: Vector2, speed: float, delta: float) -> void:
 	var d := (to - pos).normalized()
 	if absf(d.x) > 0.1 and state != "look":
 		face = signf(d.x)
+	if d != Vector2.ZERO and state != "look":
+		look = d
 	var want := pos + d * minf(speed * delta, pos.distance_to(to)) * Vector2(1, 0.6)
 	if want.distance_to(to) < 0.5:
 		want = to
@@ -141,6 +160,8 @@ func _draw() -> void:  # px de suelo, pies en el origen
 	for i in 16:
 		sh.append(Vector2(cos(i * TAU / 16.0) * 7.0, sin(i * TAU / 16.0) * 3.0))
 	draw_colored_polygon(sh, Color(0, 0, 0, 0.3))
+	if spr:
+		return
 	var moving := state in ["walk", "flee"] or (state == "look" and pos.distance_to(main.pos) < PERSONAL)
 	var bob := absf(sin(anim_t * (14.0 if state == "flee" else 8.0))) * 1.5 if moving else 0.0
 	var crouch := 8.0 if state == "hide" else 0.0
