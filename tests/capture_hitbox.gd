@@ -32,6 +32,9 @@ func capture() -> void:
 		e.set_physics_process(false)
 		list.append(e)
 	main.cam.position = (main.pos - Vector2(0, 40)) * main.SCALE
+	list[2].poise = 45.0  # barra de postura del cíclope a medias
 	await _shot("hitbox_enemies", 1.0)
+	list[2].add_poise(100.0)  # se abre: barra llena y parpadeante, aviso "¡Abierto!"
+	await _shot("combat_stagger", 0.3)
 	print("PASS hitbox captures saved")
 	quit()

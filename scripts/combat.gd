@@ -4,10 +4,10 @@ extends Node2D
 # Los PNG ya traen luz horneada: aquí solo hay ambiente por zona (CanvasModulate) y luces puntuales aditivas.
 
 const KINDS := {  # tipo de golpe -> sonido (Hz, s, ruido), color de chispa, tamaño, empuje en px/s
-	"light": {"hz": 900.0, "dur": 0.07, "noise": 0.55, "col": Color(0.65, 0.85, 1.0), "size": 0.9, "push": 60.0, "shake": 1.2, "kick": 3.0},
-	"heavy": {"hz": 180.0, "dur": 0.18, "noise": 0.7, "col": Color(1.0, 0.7, 0.3), "size": 1.6, "push": 170.0, "shake": 4.5, "kick": 9.0},
-	"magic": {"hz": 420.0, "dur": 0.14, "noise": 0.35, "col": Color(1.0, 0.5, 0.15), "size": 1.2, "push": 90.0, "shake": 0.0, "kick": 2.0},
-	"blast": {"hz": 90.0, "dur": 0.35, "noise": 0.9, "col": Color(1.0, 0.45, 0.1), "size": 2.4, "push": 200.0, "shake": 6.0, "kick": 6.0},
+	"light": {"hz": 900.0, "dur": 0.07, "noise": 0.55, "col": Color(0.65, 0.85, 1.0), "size": 0.9, "push": 60.0, "shake": 1.2, "kick": 3.0, "poise": 8.0},
+	"heavy": {"hz": 180.0, "dur": 0.18, "noise": 0.7, "col": Color(1.0, 0.7, 0.3), "size": 1.6, "push": 170.0, "shake": 4.5, "kick": 9.0, "poise": 30.0},
+	"magic": {"hz": 420.0, "dur": 0.14, "noise": 0.35, "col": Color(1.0, 0.5, 0.15), "size": 1.2, "push": 90.0, "shake": 0.0, "kick": 2.0, "poise": 12.0},
+	"blast": {"hz": 90.0, "dur": 0.35, "noise": 0.9, "col": Color(1.0, 0.45, 0.1), "size": 2.4, "push": 200.0, "shake": 6.0, "kick": 6.0, "poise": 24.0},
 }
 const AMBIENT_OUT := Color(0.93, 0.92, 1.0)    # exterior: atardecer suave, casi neutro
 const AMBIENT_DUNGEON := Color(0.58, 0.56, 0.72)  # dungeon: penumbra índigo; las luces locales recuperan el color
@@ -73,6 +73,10 @@ func hit(e: Node, dmg: int, kind: String, from: Vector2, charge := true) -> void
 		return
 	var k: Dictionary = KINDS[kind]
 	e.take_damage(dmg, charge)
+	if charge and (kind == "light" or kind == "heavy"):
+		main.mana_on_hit(kind)  # la espada alimenta la magia
+	if e.alive and e.has_method("add_poise"):
+		e.add_poise(k["poise"])  # postura: los élites se abren si los castigas
 	if e.alive and e.has_method("knock"):  # el dragón no tiene empuje
 		e.knock((e.pos - from).normalized() * k["push"], kind == "heavy" or kind == "blast")
 	play(kind)

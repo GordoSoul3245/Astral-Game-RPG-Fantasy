@@ -884,7 +884,34 @@ func can_prepare(e: Node) -> bool:  # un enemigo solo empieza su aviso si hay hu
 func blockers() -> Array:  # enemigos vivos: bloquean al héroe; las estructuras las maneja world
 	return enemies.filter(func(e: Node) -> bool: return e.alive)
 
+# --- recompensas de buen juego (investigación: Hades, Souls, DOOM)
+var dodge_cd := 0.0
+var dash_bonus_t := 0.0          # tras un dash, el siguiente tajo pega más
+var swing_mana := 0.0            # maná ganado en el tajo en curso
+const MANA_HIT := {"light": 4.0, "heavy": 10.0}   # maná por golpe de espada conectado
+const SWING_MANA_CAP := 14.0     # tope por tajo: un golpe a varios enemigos no regala maná sin límite
+const DASH_BONUS_TIME := 0.5
+const DASH_BONUS_MULT := 1.3
+const DODGE_ULT := 12.0
+
+func mana_on_hit(kind: String) -> void:  # la espada alimenta la magia (no existe cura por pegar: no se premia recibir daño)
+	var g := minf(MANA_HIT.get(kind, 0.0), SWING_MANA_CAP - swing_mana)
+	if g > 0.0:
+		swing_mana += g
+		mana = minf(hero_data["mana"], mana + g)
+
+func _perfect_dodge() -> void:  # un ataque habría golpeado durante el dash: esquiva perfecta
+	dodge_cd = 0.6
+	ult = minf(hero_data["ult_max"], ult + DODGE_ULT)
+	mana = minf(hero_data["mana"], mana + 15.0)
+	stamina = minf(hero_data["stamina"], stamina + 25.0)
+	popup(pos, "¡Esquiva!", Color(0.5, 0.95, 1.0))
+	combat.flash(pos, Color(0.5, 0.9, 1.0), 0.9, 2.0, 0.25)
+	combat.play("light")
+
 func damage_hero(n: int) -> void:
+	if dashing and not mega_active and dodge_cd <= 0.0 and not dying:
+		_perfect_dodge()
 	if dashing or dying or reaction_time > 0.0:
 		return
 	n = maxi(1, roundi(n * prog.defense_mult()))
@@ -1086,6 +1113,7 @@ func _begin(spec: Dictionary, mode: String) -> void:
 	current = spec
 	current_mode = mode
 	cooldown = current["cooldown"] / prog.attack_speed()
+	swing_mana = 0.0
 	aim_dir = _chest_aim()
 	facing = DIRS[posmod(roundi(aim_dir.angle() / (PI / 4.0)), 8)]  # el héroe mira hacia donde ataca
 	if current.has("anim"):
@@ -1124,6 +1152,10 @@ func _strike() -> void:
 			add_child(m)
 		"melee":
 			var dmg: float = current["damage"] * (burn_mult if burn_t > 0.0 else 1.0) * prog.melee_mult()
+			if dash_bonus_t > 0.0:  # tajo tras dash: más daño, se consume
+				dmg *= DASH_BONUS_MULT
+				dash_bonus_t = 0.0
+				popup(pos, "¡Embestida!", Color(1.0, 0.8, 0.4))
 			var blasts: Array[Vector2] = []
 			var HB := preload("res://scripts/hitbox.gd")
 			var chest := pos - Vector2(0, 40)  # el tajo sale del pecho (como su estela) y se mide contra el cuerpo del sprite
@@ -1312,6 +1344,8 @@ func _physics_process(delta: float) -> void:
 		return
 	cooldown = maxf(0.0, cooldown - delta)
 	dash_cd = maxf(0.0, dash_cd - delta)
+	dodge_cd = maxf(0.0, dodge_cd - delta)
+	dash_bonus_t = maxf(0.0, dash_bonus_t - delta)
 	_try_buffer()
 	burn_t = maxf(0.0, burn_t - delta)
 	# regeneración tras una pausa sin gastar
@@ -1340,6 +1374,8 @@ func _physics_process(delta: float) -> void:
 					shake(8.0)
 		if dash_t >= dash_time_cur:
 			dashing = false
+			if not mega_active:
+				dash_bonus_t = DASH_BONUS_TIME  # el siguiente tajo pega más
 			if mega_active:
 				mega_active = false
 				burn_t = mega_spec["burn_time"]  # la katana queda en llamas

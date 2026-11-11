@@ -76,6 +76,40 @@ func _search(delta: float) -> void:  # sin ver al héroe: va a donde lo vio por 
 		state = "idle"
 		_anim("idle")
 
+# --- postura (Sekiro, versión suave): los golpes llenan la barra de los élites; al llenarse quedan abiertos
+# unos segundos (no actúan y reciben más daño). Los tajos pesados la llenan 4 veces más rápido que los ligeros.
+const POISE_REGEN := 12.0     # por segundo, tras 2 s sin recibir golpes
+const STAGGER_TIME := 2.2
+const STAGGER_BONUS := 1.5
+var poise := 0.0
+var poise_t := 0.0
+var staggered := false
+
+func add_poise(v: float) -> void:
+	var mx: float = data.get("poise", 0.0)
+	if mx <= 0.0 or not alive or staggered:
+		return
+	poise = minf(mx, poise + v)
+	poise_t = 0.0
+	if poise >= mx:
+		_stagger()
+
+func _stagger() -> void:
+	staggered = true
+	poise = 0.0
+	state = "recover"
+	t = STAGGER_TIME
+	kb = Vector2.ZERO
+	for z in zones:  # un golpe de zona preparado se cancela
+		if is_instance_valid(z) and not z.fired:
+			z.queue_free()
+	if spr:
+		spr.stop()
+		_anim("idle")
+	main.popup(pos, "¡Abierto!", Color(1.0, 0.85, 0.3))
+	main.combat.play("blast")
+	main.combat.flash(pos, Color(1.0, 0.85, 0.3), 1.0, 2.5, 0.35)
+
 func knock(v: Vector2, heavy: bool) -> void:  # empuje (menos en los pesados) y, en los ligeros, interrumpe el aviso
 	kb = v * (1.0 - data.get("knock_resist", 0.0))
 	if heavy and data.get("staggerable", false) and state == "windup":
@@ -152,10 +186,14 @@ func _physics_process(delta: float) -> void:
 	if kb.length() > 5.0:
 		pos = main.world.move_collide(pos, pos + kb * delta * Vector2(1, 0.6), data["r_t"])
 		kb = kb.move_toward(Vector2.ZERO, 900.0 * delta)
+	poise_t += delta
+	if poise > 0.0 and poise_t > 2.0 and not staggered:
+		poise = maxf(0.0, poise - POISE_REGEN * delta)
 	if state == "recover":  # recuperación castigable: no se mueve ni ataca
 		t -= delta
 		if t <= 0.0:
 			state = "chase"
+			staggered = false
 	elif state == "chase" and not sees:
 		_search(delta)
 	elif state != "idle":
@@ -305,6 +343,8 @@ func _cast(to: Vector2) -> void:  # cada tercer hechizo es un rayo; el resto, bo
 func take_damage(n: int, charge := true) -> void:
 	if not alive:
 		return
+	if staggered:
+		n = roundi(n * STAGGER_BONUS)  # abierto: recibe más daño
 	if charge:  # golpear entidades carga la ultimate
 		main.gain_ultimate(minf(n, hp))
 	hp -= n
@@ -372,9 +412,14 @@ func _draw() -> void:
 	if alert_t > 0.0:  # aviso de alerta: forma ("!") además de color
 		var pop := 1.0 + 0.4 * clampf((alert_t - ALERT_SHOW + 0.15) / 0.15, 0.0, 1.0)
 		draw_string(ThemeDB.fallback_font, Vector2(-4 * pop, -body_h - 16), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, int(16 * pop), Color(1.0, 0.85, 0.2, clampf(alert_t / 0.3, 0.0, 1.0)))
-	var w := maxf(radius * 2.2, 26.0)
+	var w := maxf(maxf(radius * 2.2, 26.0), preload("res://scripts/hitbox.gd").of(self)["rx"] * 1.2)  # las barras de un gigante son más anchas
 	draw_rect(Rect2(-w / 2.0, -body_h - 10.0, w, 3.0), Color(0.1, 0.1, 0.14, 0.85))
 	draw_rect(Rect2(-w / 2.0, -body_h - 10.0, w * clampf(float(hp) / data["hp"], 0.0, 1.0), 3.0), Color(0.85, 0.2, 0.2))
+	if data.get("poise", 0.0) > 0.0:  # barra de postura (amarilla) bajo la vida; llena y parpadeando mientras está abierto
+		var pr := 1.0 if staggered else clampf(poise / data["poise"], 0.0, 1.0)
+		var pc := Color(1.0, 0.85, 0.3) if (not staggered or fmod(anim_t, 0.3) < 0.15) else Color(1.0, 1.0, 1.0)
+		draw_rect(Rect2(-w / 2.0, -body_h - 6.0, w, 3.0), Color(0.1, 0.1, 0.14, 0.85))
+		draw_rect(Rect2(-w / 2.0, -body_h - 6.0, w * pr, 3.0), pc)
 
 func _draw_slime(S: float) -> void:
 	var lift := 0.0
