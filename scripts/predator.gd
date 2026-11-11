@@ -37,7 +37,40 @@ var anim_t := 0.0
 var look := Vector2.DOWN
 var spr: AnimatedSprite2D  # sprite de Blender; si falta, se dibuja por código
 
+var data := {}             # data/creatures.json "fox"
+var alive := true
+var hp := 1
+var radius := 9.0
+var dead_t := 0.0
+var flash_tw: Tween
+
+func take_damage(n: int, charge := true) -> void:  # mismo contrato que enemy.gd; si lo atacas, se defiende
+	if not alive:
+		return
+	if charge:
+		main.gain_ultimate(minf(n, hp))
+	hp -= n
+	if flash_tw:
+		flash_tw.kill()
+	modulate = Color(3, 3, 3)
+	flash_tw = create_tween()
+	flash_tw.tween_property(self, "modulate", Color.WHITE, 0.15)
+	if hp <= 0:
+		alive = false
+		dead_t = data.get("respawn", 60.0)
+		prey = null
+		main.on_kill(self)
+		visible = false
+	elif state in ["rest", "hunt", "eat", "home"]:
+		prey = null
+		_to("warn")
+		state_t = WARN_TIME  # provocado: no avisa, embiste en cuanto puede
+		main.combat.play_at("growl", pos)
+
 func _ready() -> void:
+	data = main.creatures["fox"]
+	hp = data["hp"]
+	radius = data["radius"]
 	pos = den
 	spr = preload("res://scripts/life_sprite.gd").build(self, main, "res://art/fauna/fox_", {"idle": 1, "rest": 1, "warn": 1, "walk": 8})
 	_place()
@@ -59,9 +92,18 @@ func _to(s: String) -> void:
 	state_t = 0.0
 
 func dangerous() -> bool:  # para que conejos y civiles huyan
-	return state in ["hunt", "warn", "lunge"]
+	return alive and state in ["hunt", "warn", "lunge"]
 
 func _physics_process(delta: float) -> void:
+	if not alive:  # otro zorro ocupa la guarida tras un rato
+		dead_t -= delta
+		if dead_t > 0.0:
+			return
+		alive = true
+		hp = data["hp"]
+		pos = den
+		cool = TIRED
+		_to("rest")
 	visible = not main.in_dungeon
 	if main.in_dungeon:
 		return
@@ -84,7 +126,7 @@ func _physics_process(delta: float) -> void:
 					_to("hunt")
 		"hunt":
 			energy -= delta
-			if not is_instance_valid(prey) or prey.state == "hidden" or energy <= 0.0:
+			if not is_instance_valid(prey) or not prey.alive or prey.state == "hidden" or energy <= 0.0:
 				prey = null
 				cool = TIRED
 				_to("home")
@@ -128,7 +170,7 @@ func _physics_process(delta: float) -> void:
 func _find_prey() -> Node:
 	var best: Node = null
 	for f in main.fauna:
-		if f.state != "hidden" and f.pos.distance_to(pos) < SPOT and (best == null or f.pos.distance_to(pos) < best.pos.distance_to(pos)):
+		if f.alive and f.state != "hidden" and f.pos.distance_to(pos) < SPOT and (best == null or f.pos.distance_to(pos) < best.pos.distance_to(pos)):
 			best = f
 	return best
 

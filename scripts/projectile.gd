@@ -51,7 +51,7 @@ func _physics_process(delta: float) -> void:
 			_explode()
 			return
 		if source == "hero":
-			for e in main.enemies:
+			for e in main.targets():
 				if e.alive and ground.distance_to(e.pos) < e.radius + radius:
 					if aoe == 0.0:
 						_burn(e)
@@ -66,7 +66,7 @@ func _physics_process(delta: float) -> void:
 func _explode() -> void:
 	dead = true
 	if aoe > 0.0 and source == "hero":
-		for e in main.enemies:  # explosión en área: alcanza a los enemigos cercanos aunque no sean impacto directo
+		for e in main.targets():  # explosión en área: alcanza a los enemigos cercanos aunque no sean impacto directo
 			if e.alive and ground.distance_to(e.pos) < aoe + e.radius:
 				_burn(e)
 	sprite.rotation = 0.0

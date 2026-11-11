@@ -1,0 +1,10 @@
+{
+	"giver": "Elda",
+	"quests": [
+		{"id": "dragon", "name": "La bestia del castillo", "goal": "Mata al dragón que ronda el castillo", "offer": "Un dragón ronda el castillo y nadie se atreve a salir. ¿Podrás con él?", "event": "kill", "target": "dragon", "count": 1, "reward": {"coins": 40, "xp": 60}},
+		{"id": "fox", "name": "Zorro ladrón", "goal": "Caza al zorro que acecha a los conejos", "offer": "Ese zorro se come los conejos del pueblo. Ahuyéntalo para siempre.", "event": "kill", "target": "fox", "count": 1, "reward": {"coins": 20, "potions": 1}},
+		{"id": "floor1", "name": "Bajo el castillo", "goal": "Completa el primer piso de la dungeon", "offer": "Bajo el castillo hay ruinas llenas de monstruos. Limpia el primer piso.", "event": "floor", "target": "1", "count": 1, "reward": {"coins": 50, "xp": 80}},
+		{"id": "slimes", "name": "Plaga de limo", "goal": "Elimina slimes en la dungeon", "offer": "Los slimes de las ruinas ensucian los pozos. Acaba con cinco.", "event": "kill", "target": "slime", "count": 5, "reward": {"coins": 40, "potions": 1}},
+		{"id": "boss", "name": "El mago de la tormenta", "goal": "Derrota al mago de la tormenta del piso 3", "offer": "En lo más hondo vive el mago de la tormenta. Si cae, el pueblo será libre.", "event": "kill", "target": "storm_mage", "count": 1, "reward": {"coins": 150, "xp": 200}}
+	]
+}

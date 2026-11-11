@@ -46,7 +46,7 @@ func _process(delta: float) -> void:
 func _explode() -> void:
 	var n: float = spec["aoe_tiles"]
 	var center: Vector2 = cell + Vector2(0.5, 0.5)
-	for e in main.enemies:  # daño en área: todo lo que esté dentro del cuadrado de n x n casillas
+	for e in main.targets():  # daño en área: todo lo que esté dentro del cuadrado de n x n casillas
 		if not e.alive:
 			continue
 		var tt: Vector2 = main.ground_to_tile(e.pos)

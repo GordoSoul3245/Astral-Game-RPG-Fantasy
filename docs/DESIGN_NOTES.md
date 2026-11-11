@@ -29,7 +29,8 @@ Lee este archivo y sigue desde "Pendiente". Lo que está escrito aquí es la fue
   - El usuario pidió: si el uso de tokens llega al 98 %, pasar a Codex todo el contexto, el pedido y las imágenes, manteniendo el estilo y la forma de trabajo.
 
 **Pendiente / conocido:**
-- Sin pueblo, NPC, misiones ni dungeon (el brief sí los pide).
+- **Hecho (2026-11-10):** pueblo junto al inicio (2 casas y puesto del mercader, generados con `art/map/build_map.py`; `VILLAGE`), reaparición en el pueblo al morir, cadena de 5 misiones con Elda (`data/quests.json`, `scripts/quests.gd`; `[E]` para hablar), mercader de pociones, guardado/carga en `user://save.json` (nivel, estadísticas, equipo, monedas, piso y misión; autoguardado cada 20 s y en hitos), fauna golpeable (conejos y zorro, `main.targets()`) y estructuras translúcidas cuando tapan al héroe (`world_map.gd: covers_hero`). Tests: `test_town.gd`, `test_fauna.gd`, `test_perception.gd`, `test_pressure.gd`, `test_buffer.gd`.
+- Pendiente: sin probar jugando; el mercader solo vende pociones; las misiones son lineales; no hay interior de casas.
 - Animaciones nuevas (procedurales, no de Blender): la bola de fuego usa la anim `cast` y el dragón se aplasta y se desvanece al morir.
 
 ## 2. Brief del juego (resumen)

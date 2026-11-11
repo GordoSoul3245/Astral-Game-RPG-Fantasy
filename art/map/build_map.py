@@ -11,6 +11,9 @@ N = 50
 PXM = 128 / 2.75    # px por metro de los sprites del héroe
 CASTLE = (23.0, 23.0, 27.0, 27.0)    # rectángulos de casillas (i0, j0, i1, j1); el castillo queda en el centro
 HOUSE = (30.0, 10.5, 34.0, 13.5)
+# pueblo junto al inicio (posiciones comprobadas: suelo firme y lejos de los caminos)
+VILLAGE = {'house': [(14.0, 37.5, 18.0, 40.5), (18.8, 36.5, 22.8, 39.5)], 'stall': [(12.0, 31.0, 14.4, 32.6)]}
+RECTS = [CASTLE, HOUSE] + [r for rs in VILLAGE.values() for r in rs]
 START = (7.5, 37.5)                  # se recalcula como la casilla de camino más cercana a (6, 38)
 DRAGON = (34.0, 21.0)
 CLEAR_R = 14.0                       # radio (casillas) del claro central sin árboles
@@ -37,7 +40,7 @@ def layout():
     for (i, j), k in list(land.items()):
         if k == 'grass' and any(land.get((i + a, j + b)) == 'water' for a in (-1, 0, 1) for b in (-1, 0, 1)):
             land[(i, j)] = 'shore'
-    for r in (CASTLE, HOUSE):  # el suelo bajo los edificios es tierra firme
+    for r in RECTS:  # el suelo bajo los edificios es tierra firme
         for i in range(int(r[0]), math.ceil(r[2])):
             for j in range(int(r[1]), math.ceil(r[3])):
                 if land.get((i, j)) in (None, 'shore'):
@@ -69,7 +72,7 @@ def layout():
         return r[0] - m < i < r[2] + m and r[1] - m < j < r[3] + m
 
     def free(i, j, m=1.5):
-        if near_rect(i, j, CASTLE, m) or near_rect(i, j, HOUSE, m):
+        if any(near_rect(i, j, r, m) for r in RECTS):
             return False
         if math.dist((i, j), DRAGON) < 3.2 or math.dist((i, j), START) < 2.5:
             return False
@@ -294,7 +297,7 @@ def render_ground(L, W=3360, H=1480, path=OUT + 'ground.png'):
 
 
 # ---------------------------------------------------------------- objetos (cada uno con su base en el origen del mundo)
-SPRITES = {'tree_a': 192, 'tree_b': 192, 'tree_c': 192, 'rock_a': 96, 'rock_b': 96, 'house': 320, 'castle': 576}
+SPRITES = {'tree_a': 192, 'tree_b': 192, 'tree_c': 192, 'rock_a': 96, 'rock_b': 96, 'house': 320, 'castle': 576, 'stall': 192}
 TREES = {'a': [(0.5, 0.85, 1.0), (1.1, 0.68, 0.95), (1.65, 0.5, 0.85), (2.15, 0.32, 0.8)],
          'b': [(0.45, 0.7, 0.9), (0.95, 0.52, 0.85), (1.4, 0.34, 0.8)],
          'c': [(0.5, 0.6, 1.0), (1.2, 0.5, 1.0), (1.9, 0.4, 0.95), (2.5, 0.28, 0.9)]}
@@ -359,6 +362,18 @@ def build_objects():
             B['roof'] = b
             box(bm('stone'), (0.75, 0.9, 3.1), 0.5, 0.5, 1.6)           # chimenea
             box(bm('dark'), (0.75, 0.9, 3.95), 0.62, 0.62, 0.12)
+        elif name == 'stall':   # puesto del mercader 1.6 (j) x 2.4 (i) m; el mostrador mira a +X
+            box(bm('stone'), (0, 0, 0.05), 1.7, 2.5, 0.1)
+            box(bm('wood'), (0.45, 0, 0.5), 0.5, 2.2, 0.9)               # mostrador
+            box(bm('wall'), (0.45, 0, 0.98), 0.62, 2.3, 0.06)
+            for sy in (-1, 1):
+                box(bm('wood'), (-0.55, sy * 1.1, 1.1), 0.1, 0.1, 2.2)   # postes traseros
+                box(bm('wood'), (0.72, sy * 1.1, 1.0), 0.1, 0.1, 2.0)    # postes delanteros
+            box(bm('wood'), (-0.55, 0, 0.7), 0.08, 2.1, 1.3)            # panel trasero
+            for k, y in enumerate((-0.9, -0.3, 0.3, 0.9)):
+                box(bm('roof' if k % 2 == 0 else 'wall'), (0.1, y, 2.18), 1.8, 0.6, 0.06)  # toldo a rayas
+            for y in (-0.7, 0.0, 0.7):
+                sphere(bm('gold'), (0.5, y, 1.14), 0.1, 0.1, 0.1)       # mercancía
         elif name == 'castle':  # 4x4 m; portón en +X
             box(bm('stone'), (0, 0, 0.12), 4.0, 4.0, 0.24)
             box(bm('stone'), (0, 0, 1.75), 3.1, 3.1, 3.0)
@@ -424,7 +439,7 @@ def export_map(L, ground, sprites):
         objs.append(dict(sprite='tree_' + v, tile=[round(ti, 3), round(tj, 3)], circle=0.3))   # solo el tronco bloquea
     for ti, tj, v in L['rocks']:
         objs.append(dict(sprite='rock_' + v, tile=[round(ti, 3), round(tj, 3)], circle=0.5 if v == 'a' else 0.45))
-    for nm, r in (('house', HOUSE), ('castle', CASTLE)):
+    for nm, r in [('house', HOUSE), ('castle', CASTLE)] + [(k, r) for k, rs in VILLAGE.items() for r in rs]:
         objs.append(dict(sprite=nm, tile=[(r[0] + r[2]) / 2, (r[1] + r[3]) / 2], rect=[r[0] + 0.1, r[1] + 0.1, r[2] - 0.1, r[3] - 0.1]))
     data = dict(tiles=N, image=ground['image'], size=ground['size'], c1=ground['c1'], e1=ground['e1'], e2=ground['e2'],
                 walk=walk, sprites=sprites, objects=objs, start=list(START), dragon=list(DRAGON))

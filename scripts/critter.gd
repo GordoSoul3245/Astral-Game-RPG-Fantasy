@@ -26,7 +26,36 @@ var anim_t := 0.0
 var look := Vector2.DOWN   # dirección del sprite
 var spr: AnimatedSprite2D  # sprite de Blender; si falta, se dibuja por código
 
+var data := {}             # data/creatures.json "rabbit": vida, botín, reaparición
+var alive := true
+var hp := 1
+var radius := 6.0
+var dead_t := 0.0
+var flash_tw: Tween
+
+func take_damage(n: int, charge := true) -> void:  # mismo contrato que enemy.gd (combat.hit lo usa)
+	if not alive:
+		return
+	if charge:
+		main.gain_ultimate(minf(n, hp))
+	hp -= n
+	if flash_tw:
+		flash_tw.kill()
+	modulate = Color(3, 3, 3)
+	flash_tw = create_tween()
+	flash_tw.tween_property(self, "modulate", Color.WHITE, 0.15)
+	if hp <= 0:
+		alive = false
+		dead_t = data.get("respawn", 45.0)
+		main.on_kill(self)
+		visible = false
+	elif state != "hidden":
+		_flee()
+
 func _ready() -> void:
+	data = main.creatures["rabbit"]
+	hp = data["hp"]
+	radius = data["radius"]
 	pos = home
 	goal = home
 	spr = preload("res://scripts/life_sprite.gd").build(self, main, "res://art/fauna/rabbit_", {"idle": 1, "watch": 1, "walk": 8})
@@ -47,6 +76,14 @@ func _to(s: String) -> void:
 	state_t = 0.0
 
 func _physics_process(delta: float) -> void:
+	if not alive:  # reaparece más tarde en su madriguera, escondido
+		dead_t -= delta
+		if dead_t > 0.0:
+			return
+		alive = true
+		hp = data["hp"]
+		pos = home
+		_to("hidden")
 	visible = not main.in_dungeon
 	if main.in_dungeon:
 		return
@@ -96,7 +133,7 @@ func _threat() -> float:  # distancia a la amenaza más cercana: el héroe, un d
 		return 0.0
 	var d: float = pos.distance_to(main.pos)
 	for p in main.predators:
-		if p.dangerous():
+		if p.alive and p.dangerous():
 			d = minf(d, pos.distance_to(p.pos))
 	return d
 

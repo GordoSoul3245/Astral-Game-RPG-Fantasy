@@ -46,6 +46,36 @@ func setup(data: Dictionary) -> void:
 				sort_y = maxf(sort_y, main.tile_to_ground(corner).y)
 		s.z_index = int(sort_y)
 		add_child(s)
+		if not o["sprite"].begins_with("rock"):  # las rocas son bajas: no tapan
+			occluders.append(s)
+
+# --- transparencia (estilo Project Zomboid): lo que tapa al héroe se vuelve translúcido
+const FADE_ALPHA := 0.3
+var occluders: Array = []    # Sprite2D de árboles y edificios
+var masks := {}              # Texture2D -> Image, para mirar si el píxel que tapa al héroe es opaco
+
+func covers_hero(s: Sprite2D) -> bool:
+	if s.z_index <= int(main.pos.y):  # está detrás del héroe: no lo tapa
+		return false
+	if not masks.has(s.texture):
+		var im: Image = s.texture.get_image()
+		if im.is_compressed():
+			im.decompress()
+		masks[s.texture] = im
+	var img: Image = masks[s.texture]
+	for h in [12.0, 40.0, 70.0]:  # pies, pecho y cabeza, px de suelo sobre los pies
+		var p: Vector2 = ((main.pos - Vector2(0, h)) * main.SCALE - s.position) / main.SCALE
+		if p.x >= 0 and p.y >= 0 and p.x < img.get_width() and p.y < img.get_height() and img.get_pixel(int(p.x), int(p.y)).a > 0.5:
+			return true
+	return false
+
+func _process(delta: float) -> void:
+	if not visible:
+		return
+	for s: Sprite2D in occluders:
+		var target := FADE_ALPHA if covers_hero(s) else 1.0
+		if s.modulate.a != target:
+			s.modulate.a = move_toward(s.modulate.a, target, delta * 4.0)
 
 func _cell_walkable(i: int, j: int) -> bool:
 	return i >= 0 and i < tiles and j >= 0 and j < tiles and walk[i][j] == "1"

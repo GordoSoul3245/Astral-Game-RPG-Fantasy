@@ -194,12 +194,89 @@ func _ready() -> void:
 	combat.mark_spec = items["grimorio_ignis"].get("mark", combat.mark_spec)
 	_build_prompt()
 	_build_menu()
+	quests = load("res://scripts/quests.gd").new(_read_json("res://data/quests.json"))
+	testing = get_tree().get_script() != null  # los tests corren con un SceneTree propio: no tocan la partida guardada
+	if not testing:
+		load_game()
 	_apply_stats()
 	for o: Dictionary in mp["objects"]:
 		if o["sprite"] == "castle":  # la puerta de madera está en la cara frontal derecha del sprite del castillo
 			var door_g := tile_to_ground(Vector2(o["tile"][0], o["tile"][1])) + Vector2(65, -8)
 			_add_door(ground_to_tile(door_g), "Entrar a la dungeon", enter_dungeon, false)
+		elif o["sprite"] == "stall":  # mercader del pueblo: se compra desde el frente del puesto (+j)
+			var d := _add_door(Vector2(o["tile"][0], o["tile"][1] + 1.6), "Comprar poción · %d monedas" % POTION_PRICE, _buy_potion, false)
+			d.reach = 1.6
 	_place()
+
+# --- pueblo: misiones, mercader y guardado
+const POTION_PRICE := 15
+var quests: RefCounted
+var testing := false
+var save_path := "user://save.json"
+var autosave_t := 0.0
+var quest_label: Label
+
+func _buy_potion() -> void:
+	if prog.coins < POTION_PRICE:
+		say("Te faltan monedas (%d / %d)" % [prog.coins, POTION_PRICE])
+		return
+	prog.coins -= POTION_PRICE
+	prog.potions += 1
+	say("+1 poción de vida")
+	save_game()
+
+func quest_event(event: String, target: String) -> void:  # muertes y pisos completados avanzan la misión activa
+	if quests.notify(event, target):
+		say("¡Misión cumplida! Vuelve con %s" % quests.giver, 3.0)
+		save_game()
+
+func save_game() -> void:
+	if testing and save_path == "user://save.json":
+		return
+	var d := {"version": 1, "level": prog.level, "xp": prog.xp, "points": prog.points, "spent": prog.spent,
+		"coins": prog.coins, "potions": prog.potions, "materials": prog.materials, "owned": prog.owned,
+		"equipped": prog.equipped, "dungeon_floor": dungeon_floor, "quests": quests.to_dict()}
+	var f := FileAccess.open(save_path, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify(d, "\t"))
+
+func load_game() -> bool:  # valida cada campo: el archivo puede estar editado o ser de otra versión
+	if not FileAccess.file_exists(save_path):
+		return false
+	var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(save_path))
+	if not d is Dictionary:
+		push_warning("partida guardada ilegible: se ignora")
+		return false
+	prog.level = maxi(1, int(d.get("level", 1)))
+	prog.xp = maxi(0, int(d.get("xp", 0)))
+	prog.points = maxi(0, int(d.get("points", 0)))
+	var spent: Variant = d.get("spent", {})
+	for s: String in prog.STATS:
+		prog.spent[s] = maxi(0, int(spent.get(s, 0))) if spent is Dictionary else 0
+	prog.coins = maxi(0, int(d.get("coins", 0)))
+	prog.potions = maxi(0, int(d.get("potions", 1)))
+	prog.materials.clear()
+	var mats: Variant = d.get("materials", {})
+	if mats is Dictionary:
+		for k: String in mats:
+			if prog.material_names.has(k):
+				prog.materials[k] = maxi(0, int(mats[k]))
+	prog.owned = (d.get("owned", []) as Array).filter(func(i: Variant) -> bool: return prog.equipment.has(str(i))) if d.get("owned") is Array else []
+	prog.equipped.clear()
+	var eq: Variant = d.get("equipped", {})
+	if eq is Dictionary:
+		for slot: String in eq:
+			var id := str(eq[slot])
+			if prog.equipment.has(id) and prog.owned.has(id) and prog.equipment[id]["slot"] == slot:
+				prog.equipped[slot] = id
+	dungeon_floor = clampi(int(d.get("dungeon_floor", 1)), 1, 3)
+	if d.get("quests") is Dictionary:
+		quests.from_dict(d["quests"])
+	return true
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		save_game()
 
 # --- puertas, avisos y dungeon
 const DUNGEON_TILES := 25
@@ -234,6 +311,17 @@ func _build_prompt() -> void:
 	prompt.add_theme_color_override("font_outline_color", Color.BLACK)
 	prompt.add_theme_constant_override("outline_size", 8)
 	layer.add_child(prompt)
+	quest_label = Label.new()  # misión activa, arriba a la derecha
+	quest_label.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	quest_label.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	quest_label.offset_right = -18.0
+	quest_label.offset_top = 14.0
+	quest_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	quest_label.add_theme_font_size_override("font_size", 20)
+	quest_label.add_theme_color_override("font_color", Color(1.0, 0.88, 0.55))
+	quest_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	quest_label.add_theme_constant_override("outline_size", 6)
+	layer.add_child(quest_label)
 	fade = ColorRect.new()
 	fade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	fade.color = Color(0, 0, 0, 0)
@@ -288,7 +376,11 @@ func _interact() -> void:
 		return
 	var v := _near_villager()
 	if v != null:
-		say(v.talk(), 3.0)
+		var line: String = v.talk()
+		if v == villagers[0]:  # Elda da las misiones
+			line = quests.talk(self)
+			save_game()
+		say(line, 4.0)
 
 func _near_villager() -> Node2D:
 	if in_dungeon:
@@ -317,6 +409,12 @@ func _update_prompt(delta: float) -> void:
 		if loot_t <= 0.0:
 			for c in loot_box.get_children():
 				c.queue_free()
+	if quests:
+		quest_label.text = quests.tracker()
+	autosave_t += delta
+	if autosave_t > 20.0:  # guardado automático periódico
+		autosave_t = 0.0
+		save_game()
 	for n: Array in noises:
 		n[2] -= delta
 	noises = noises.filter(func(n: Array) -> bool: return n[2] > 0.0)
@@ -326,7 +424,7 @@ func _update_prompt(delta: float) -> void:
 	elif d != null and not transitioning:
 		prompt.text = ("[E] " + d.label) if not d.locked else d.lock_text
 	elif _near_villager() != null:
-		prompt.text = "[E] Hablar"
+		prompt.text = "[E] Hablar con %s" % quests.giver if _near_villager() == villagers[0] else "[E] Hablar"
 	else:
 		prompt.text = ""
 
@@ -479,6 +577,9 @@ func on_kill(e: Node) -> void:  # botín de un enemigo: XP, monedas y objetos (d
 			lines.append(prog.material_names[drop["item"]])
 	popup(e.pos, "\n".join(lines))
 	gain_xp(xp)
+	var id: Variant = creatures.find_key(d)
+	if id != null:
+		quest_event("kill", id)
 
 func give_item(id: String) -> String:  # entrega un objeto de equipo (se equipa solo si es mejor que lo actual)
 	var equipped: bool = prog.add_item(id)
@@ -658,7 +759,15 @@ func _spawn_dragon() -> void:
 	add_child(dragon)
 	enemies.append(dragon)
 
-var fauna: Array = []      # presas del exterior (critter.gd): no combaten ni bloquean
+func targets() -> Array:  # todo lo que el héroe puede golpear: enemigos y, en el exterior, la fauna viva
+	var t: Array = enemies.duplicate()
+	if not in_dungeon:
+		for f in fauna + predators:
+			if f.alive:
+				t.append(f)
+	return t
+
+var fauna: Array = []      # presas del exterior (critter.gd): se pueden cazar; no bloquean
 var predators: Array = []  # zorro territorial (predator.gd)
 var villagers: Array = []  # civiles (villager.gd)
 
@@ -734,11 +843,14 @@ func _respawn() -> void:
 	mana = hero_data["mana"]
 	stamina = hero_data["stamina"]
 	burn_t = 0.0
-	if in_dungeon:  # el pueblo aún no existe: reaparece en la entrada del piso
-		pos = _dungeon_spawn()
+	if in_dungeon:  # despierta en el pueblo; el piso alcanzado y la misión se conservan
+		_exit_dungeon()
+		say("Despiertas en el pueblo", 2.5)
 	else:
-		pos = start_pos
 		dragon.reset(dragon_start)
+	pos = start_pos
+	cam.position = (pos - Vector2(0, 40)) * SCALE
+	save_game()
 	hero.play("idle_" + facing)
 
 func gain_ultimate(damage: float) -> void:  # la ultimate se carga golpeando entidades
@@ -936,7 +1048,7 @@ func _strike() -> void:
 		"melee":
 			var dmg: float = current["damage"] * (burn_mult if burn_t > 0.0 else 1.0) * prog.melee_mult()
 			var blasts: Array[Vector2] = []
-			for e in enemies.duplicate():
+			for e in targets():
 				if not e.alive:
 					continue
 				var to: Vector2 = e.pos - pos
@@ -1138,7 +1250,7 @@ func _physics_process(delta: float) -> void:
 			if ghost_t >= 0.035:
 				ghost_t = 0.0
 				_spawn_ghost()
-			for e in enemies:  # el mega dash daña (una vez) a todo lo que atraviesa
+			for e in targets():  # el mega dash daña (una vez) a todo lo que atraviesa
 				if e.alive and not mega_hits.has(e) and pos.distance_to(e.pos) < 12.0 + e.radius:
 					mega_hits.append(e)
 					combat.hit(e, roundi(mega_spec["damage"] * prog.melee_mult()), "heavy", pos, false)

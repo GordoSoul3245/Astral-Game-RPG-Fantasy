@@ -152,7 +152,7 @@ func detonate(ground: Vector2) -> void:  # la explosión no marca ni consume mar
 	flash(ground, Color(1.0, 0.5, 0.15), 1.4, 3.5, 0.45)
 	_spark(ground, KINDS["blast"]["col"], KINDS["blast"]["size"])
 	main.shake(KINDS["blast"]["shake"])
-	for e in main.enemies.duplicate():
+	for e in main.targets():
 		if e.alive and ground.distance_to(e.pos) < mark_spec["radius"] + e.radius:
 			hit(e, roundi(mark_spec["damage"] * main.prog.magic_mult()), "blast", ground, false)
 

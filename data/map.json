@@ -6,15 +6,15 @@
   1480
  ],
  "c1": [
-  84.64133352041245,
-  926.9394481182098
+  84.6411582827568,
+  926.9395363330841
  ],
  "e1": [
-  1191.7140474915504,
-  -826.7486989498138
+  1191.7141225934029,
+  -826.7487871646881
  ],
  "e2": [
-  1999.0036860108376,
+  1999.0036609768867,
   492.86963552236557
  ],
  "walk": [
@@ -145,6 +145,17 @@
    "feet": [
     292.0,
     337.7
+   ]
+  },
+  "stall": {
+   "path": "res://art/map/stall.png",
+   "frame": [
+    192,
+    192
+   ],
+   "feet": [
+    100.0,
+    145.7
    ]
   }
  },
@@ -742,6 +753,14 @@
    "circle": 0.3
   },
   {
+   "sprite": "tree_b",
+   "tile": [
+    11.865,
+    7.778
+   ],
+   "circle": 0.3
+  },
+  {
    "sprite": "tree_a",
    "tile": [
     11.729,
@@ -752,24 +771,8 @@
   {
    "sprite": "tree_a",
    "tile": [
-    11.823,
-    31.702
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    12.418,
-    4.657
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    12.399,
-    8.482
+    12.579,
+    4.578
    ],
    "circle": 0.3
   },
@@ -784,40 +787,40 @@
   {
    "sprite": "tree_b",
    "tile": [
-    13.492,
-    4.588
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    13.352,
-    6.259
+    13.639,
+    4.154
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_c",
    "tile": [
-    13.642,
-    9.737
+    13.756,
+    6.278
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    13.735,
-    10.767
+    13.237,
+    8.383
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    13.327,
-    32.776
+    14.594,
+    5.531
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    14.863,
+    7.456
    ],
    "circle": 0.3
   },
@@ -825,7 +828,7 @@
    "sprite": "tree_a",
    "tile": [
     14.255,
-    5.615
+    9.615
    ],
    "circle": 0.3
   },
@@ -833,527 +836,359 @@
    "sprite": "tree_b",
    "tile": [
     14.103,
-    6.896
+    10.896
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    14.509,
-    8.506
+    15.526,
+    4.573
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    14.861,
-    9.738
+    15.644,
+    6.738
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_a",
+   "tile": [
+    15.493,
+    8.848
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_b",
    "tile": [
-    14.169,
-    37.67
+    16.746,
+    5.403
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    14.156,
-    39.447
+    16.714,
+    7.591
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    14.493,
-    40.848
+    16.375,
+    42.129
    ],
    "circle": 0.3
   },
   {
-   "sprite": "tree_a",
+   "sprite": "tree_b",
    "tile": [
-    15.702,
-    4.724
+    16.181,
+    43.367
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_c",
    "tile": [
-    15.742,
-    7.326
+    17.65,
+    4.812
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    15.889,
-    36.328
+    17.709,
+    6.427
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    15.281,
-    37.66
+    17.793,
+    12.685
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_a",
+   "tile": [
+    18.423,
+    5.798
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_a",
+   "tile": [
+    18.194,
+    42.179
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_a",
+   "tile": [
+    18.898,
+    43.432
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_b",
    "tile": [
-    15.529,
-    38.896
+    18.156,
+    44.783
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    19.487,
+    5.753
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_c",
    "tile": [
-    15.802,
-    40.44
+    19.536,
+    7.113
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_b",
    "tile": [
-    15.216,
-    42.599
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    16.171,
-    5.59
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    16.168,
-    8.713
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    16.832,
-    42.521
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    17.336,
-    4.308
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    17.331,
-    37.629
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    17.431,
-    39.2
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    17.189,
-    40.889
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    17.571,
-    43.16
+    19.824,
+    8.408
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_c",
    "tile": [
-    17.397,
-    44.671
+    19.886,
+    11.237
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_b",
    "tile": [
-    18.318,
-    5.159
+    19.723,
+    42.654
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    19.214,
+    44.717
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_c",
    "tile": [
-    18.532,
-    6.617
+    19.477,
+    46.232
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_b",
    "tile": [
-    18.779,
-    7.742
+    20.697,
+    5.284
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_b",
    "tile": [
-    18.824,
-    38.408
+    20.704,
+    6.503
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    20.749,
+    9.271
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    20.269,
+    41.738
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    20.721,
+    44.816
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_a",
+   "tile": [
+    20.619,
+    47.557
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_a",
+   "tile": [
+    21.873,
+    7.494
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_a",
+   "tile": [
+    21.327,
+    41.368
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_c",
    "tile": [
-    18.723,
-    39.58
+    21.223,
+    42.872
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    18.497,
-    40.705
+    21.687,
+    44.405
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    18.484,
-    41.718
+    21.894,
+    47.278
    ],
    "circle": 0.3
   },
   {
-   "sprite": "tree_a",
+   "sprite": "tree_b",
    "tile": [
-    18.801,
-    42.85
+    21.871,
+    48.296
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    22.23,
+    6.508
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_c",
    "tile": [
-    18.508,
-    43.824
+    22.828,
+    7.605
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    22.398,
+    9.801
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    22.844,
+    44.24
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_a",
+   "tile": [
+    22.859,
+    46.217
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_a",
+   "tile": [
+    22.571,
+    49.448
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_a",
+   "tile": [
+    23.71,
+    10.8
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_a",
+   "tile": [
+    23.398,
+    41.738
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_c",
    "tile": [
-    19.51,
-    5.528
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    19.598,
-    6.543
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    19.614,
-    8.465
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    19.556,
-    41.688
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    19.397,
-    44.462
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    20.67,
-    5.182
+    23.621,
+    45.561
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_c",
    "tile": [
-    20.795,
-    7.159
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    20.473,
-    8.874
+    23.872,
+    46.738
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    20.374,
-    10.407
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    20.546,
-    40.333
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    20.499,
-    42.521
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    20.664,
-    44.411
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    20.557,
-    46.366
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    20.26,
-    47.483
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    21.73,
-    9.45
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    21.819,
-    10.575
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    21.69,
-    46.386
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    22.118,
-    6.136
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    22.381,
-    7.524
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    22.707,
-    8.472
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    22.851,
-    10.253
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    22.632,
-    40.863
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    22.671,
-    41.894
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    22.488,
-    43.459
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    22.747,
-    45.226
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    22.485,
-    47.368
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    22.301,
-    48.752
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    22.396,
-    49.876
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    23.55,
-    7.517
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    23.327,
-    39.818
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    23.743,
-    42.81
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    23.544,
-    46.5
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    23.664,
-    49.542
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    24.594,
-    7.698
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    24.811,
-    10.255
+    24.544,
+    9.5
    ],
    "circle": 0.3
   },
@@ -1361,7 +1196,7 @@
    "sprite": "tree_b",
    "tile": [
     24.481,
-    39.798
+    42.798
    ],
    "circle": 0.3
   },
@@ -1369,39 +1204,55 @@
    "sprite": "tree_c",
    "tile": [
     24.287,
-    41.275
+    44.275
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_b",
    "tile": [
-    24.435,
-    44.535
+    24.19,
+    49.609
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    25.409,
+    7.604
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    25.715,
-    6.517
+    25.817,
+    39.685
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    25.863,
+    42.238
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    25.581,
-    7.605
+    25.731,
+    43.554
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    25.512,
-    8.85
+    25.224,
+    45.443
    ],
    "circle": 0.3
   },
@@ -1409,95 +1260,71 @@
    "sprite": "tree_c",
    "tile": [
     25.445,
-    42.42
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    25.352,
-    45.296
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    25.719,
-    46.874
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    25.202,
-    49.498
+    46.42
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    26.774,
-    6.219
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    26.683,
-    8.693
+    25.506,
+    47.614
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_b",
    "tile": [
-    26.517,
-    10.682
+    25.477,
+    49.35
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    26.355,
+    8.23
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_c",
    "tile": [
-    26.693,
-    41.135
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    26.292,
-    43.545
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    26.485,
-    45.393
+    26.202,
+    9.498
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    26.195,
-    48.261
+    26.75,
+    41.291
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_a",
+   "tile": [
+    27.505,
+    7.114
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_c",
    "tile": [
-    26.254,
-    49.66
+    27.254,
+    8.66
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_a",
+   "tile": [
+    27.77,
+    9.46
    ],
    "circle": 0.3
   },
@@ -1505,23 +1332,39 @@
    "sprite": "tree_a",
    "tile": [
     27.65,
-    7.47
+    10.47
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    27.803,
-    40.5
+    27.643,
+    42.725
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    27.231,
+    43.805
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    27.431,
-    42.387
+    27.245,
+    45.85
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    27.856,
+    46.73
    ],
    "circle": 0.3
   },
@@ -1529,95 +1372,127 @@
    "sprite": "tree_c",
    "tile": [
     27.826,
-    44.679
+    48.679
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    27.169,
+    49.602
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    27.547,
-    48.83
+    28.82,
+    40.179
    ],
    "circle": 0.3
   },
   {
-   "sprite": "tree_c",
+   "sprite": "tree_a",
+   "tile": [
+    28.878,
+    41.351
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    28.78,
+    42.792
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    28.421,
+    45.237
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    28.829,
+    48.184
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
    "tile": [
     28.403,
-    10.349
+    49.49
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    28.599,
-    45.329
+    29.739,
+    38.461
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    29.584,
+    39.396
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_a",
+   "tile": [
+    29.279,
+    43.773
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_c",
    "tile": [
-    28.115,
-    46.259
+    29.685,
+    46.456
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_c",
    "tile": [
-    28.761,
-    47.415
+    29.892,
+    47.421
    ],
    "circle": 0.3
   },
   {
-   "sprite": "tree_a",
+   "sprite": "tree_c",
    "tile": [
-    28.596,
-    49.378
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    29.248,
-    40.883
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    29.776,
-    41.779
+    29.447,
+    49.567
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_b",
    "tile": [
-    29.459,
-    44.572
+    30.545,
+    39.369
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_b",
    "tile": [
-    30.241,
-    40.748
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    30.518,
-    45.731
+    30.642,
+    40.801
    ],
    "circle": 0.3
   },
@@ -1625,23 +1500,47 @@
    "sprite": "tree_a",
    "tile": [
     30.118,
-    48.184
+    45.184
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    30.763,
+    46.69
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    30.718,
+    48.18
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_c",
+   "tile": [
+    30.485,
+    49.839
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    31.402,
+    5.155
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    30.673,
-    49.328
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    31.59,
-    37.782
+    31.84,
+    37.705
    ],
    "circle": 0.3
   },
@@ -1649,47 +1548,47 @@
    "sprite": "tree_a",
    "tile": [
     31.576,
-    39.606
+    38.606
    ],
    "circle": 0.3
   },
   {
-   "sprite": "tree_b",
+   "sprite": "tree_c",
    "tile": [
-    31.2,
-    40.642
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    31.249,
-    43.235
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    31.359,
-    44.254
+    31.36,
+    42.409
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    31.689,
-    48.57
+    31.795,
+    43.821
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    32.759,
-    5.525
+    31.312,
+    45.525
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_c",
+   "tile": [
+    31.467,
+    48.808
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_c",
+   "tile": [
+    32.368,
+    5.124
    ],
    "circle": 0.3
   },
@@ -1697,7 +1596,7 @@
    "sprite": "tree_a",
    "tile": [
     32.305,
-    8.368
+    7.368
    ],
    "circle": 0.3
   },
@@ -1713,15 +1612,7 @@
    "sprite": "tree_a",
    "tile": [
     32.796,
-    41.642
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    32.777,
-    43.304
+    40.642
    ],
    "circle": 0.3
   },
@@ -1734,26 +1625,26 @@
    "circle": 0.3
   },
   {
-   "sprite": "tree_a",
+   "sprite": "tree_b",
    "tile": [
-    32.547,
-    46.504
+    32.611,
+    45.495
    ],
    "circle": 0.3
   },
   {
-   "sprite": "tree_a",
+   "sprite": "tree_c",
    "tile": [
-    32.253,
-    47.664
+    32.25,
+    47.747
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_b",
    "tile": [
-    33.719,
-    5.196
+    33.387,
+    5.462
    ],
    "circle": 0.3
   },
@@ -1774,10 +1665,10 @@
    "circle": 0.3
   },
   {
-   "sprite": "tree_c",
+   "sprite": "tree_b",
    "tile": [
-    33.174,
-    40.66
+    33.523,
+    38.361
    ],
    "circle": 0.3
   },
@@ -1790,18 +1681,18 @@
    "circle": 0.3
   },
   {
-   "sprite": "tree_a",
+   "sprite": "tree_b",
    "tile": [
-    33.317,
-    45.402
+    33.649,
+    45.859
    ],
    "circle": 0.3
   },
   {
-   "sprite": "tree_c",
+   "sprite": "tree_a",
    "tile": [
-    34.753,
-    5.474
+    33.22,
+    46.804
    ],
    "circle": 0.3
   },
@@ -1816,8 +1707,8 @@
   {
    "sprite": "tree_a",
    "tile": [
-    34.673,
-    8.863
+    34.9,
+    8.813
    ],
    "circle": 0.3
   },
@@ -1826,6 +1717,14 @@
    "tile": [
     34.11,
     37.46
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_a",
+   "tile": [
+    34.598,
+    38.505
    ],
    "circle": 0.3
   },
@@ -1854,14 +1753,6 @@
    "circle": 0.3
   },
   {
-   "sprite": "tree_a",
-   "tile": [
-    35.732,
-    5.143
-   ],
-   "circle": 0.3
-  },
-  {
    "sprite": "tree_c",
    "tile": [
     35.117,
@@ -1874,14 +1765,6 @@
    "tile": [
     35.847,
     9.308
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    35.562,
-    11.122
    ],
    "circle": 0.3
   },
@@ -1902,10 +1785,10 @@
    "circle": 0.3
   },
   {
-   "sprite": "tree_c",
+   "sprite": "tree_b",
    "tile": [
-    35.481,
-    36.383
+    35.158,
+    35.725
    ],
    "circle": 0.3
   },
@@ -1918,34 +1801,50 @@
    "circle": 0.3
   },
   {
-   "sprite": "tree_a",
+   "sprite": "tree_c",
    "tile": [
-    35.379,
-    38.874
+    35.255,
+    40.808
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    35.613,
-    43.401
+    35.66,
+    43.407
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_a",
+   "tile": [
+    36.613,
+    5.401
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_b",
    "tile": [
-    36.681,
-    5.848
+    36.841,
+    6.52
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_b",
    "tile": [
-    36.154,
-    7.717
+    36.167,
+    7.803
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_a",
+   "tile": [
+    36.75,
+    8.755
    ],
    "circle": 0.3
   },
@@ -1953,7 +1852,31 @@
    "sprite": "tree_b",
    "tile": [
     36.703,
-    11.783
+    10.783
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_b",
+   "tile": [
+    36.115,
+    11.738
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_a",
+   "tile": [
+    36.574,
+    13.785
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_a",
+   "tile": [
+    36.787,
+    16.751
    ],
    "circle": 0.3
   },
@@ -1961,7 +1884,15 @@
    "sprite": "tree_a",
    "tile": [
     36.545,
-    38.542
+    37.542
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_c",
+   "tile": [
+    36.453,
+    38.564
    ],
    "circle": 0.3
   },
@@ -1969,7 +1900,7 @@
    "sprite": "tree_a",
    "tile": [
     36.852,
-    41.528
+    40.528
    ],
    "circle": 0.3
   },
@@ -1977,71 +1908,55 @@
    "sprite": "tree_a",
    "tile": [
     36.369,
-    42.768
+    41.768
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_b",
    "tile": [
-    37.376,
-    7.139
+    37.588,
+    8.313
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    37.434,
-    9.243
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    37.439,
-    14.109
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    37.148,
-    15.49
+    37.269,
+    9.738
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_b",
    "tile": [
-    37.33,
-    39.801
+    37.54,
+    11.35
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_b",
    "tile": [
-    38.151,
-    6.357
+    37.556,
+    12.741
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    38.819,
-    7.574
+    37.363,
+    42.652
    ],
    "circle": 0.3
   },
   {
-   "sprite": "tree_b",
+   "sprite": "tree_c",
    "tile": [
-    38.484,
-    8.682
+    38.367,
+    6.819
    ],
    "circle": 0.3
   },
@@ -2062,18 +1977,10 @@
    "circle": 0.3
   },
   {
-   "sprite": "tree_b",
-   "tile": [
-    38.679,
-    14.889
-   ],
-   "circle": 0.3
-  },
-  {
    "sprite": "tree_c",
    "tile": [
     38.267,
-    40.114
+    14.114
    ],
    "circle": 0.3
   },
@@ -2081,7 +1988,7 @@
    "sprite": "tree_c",
    "tile": [
     38.779,
-    41.227
+    40.227
    ],
    "circle": 0.3
   },
@@ -2089,23 +1996,15 @@
    "sprite": "tree_c",
    "tile": [
     38.14,
-    42.296
+    41.296
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    39.382,
-    6.202
-   ],
-   "circle": 0.3
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    39.884,
-    7.369
+    38.382,
+    42.202
    ],
    "circle": 0.3
   },
@@ -2113,7 +2012,7 @@
    "sprite": "tree_b",
    "tile": [
     39.711,
-    8.688
+    7.688
    ],
    "circle": 0.3
   },
@@ -2121,15 +2020,23 @@
    "sprite": "tree_a",
    "tile": [
     39.349,
-    10.102
+    9.102
    ],
    "circle": 0.3
   },
   {
    "sprite": "tree_a",
    "tile": [
-    40.668,
-    6.513
+    39.565,
+    41.849
+   ],
+   "circle": 0.3
+  },
+  {
+   "sprite": "tree_a",
+   "tile": [
+    40.616,
+    6.84
    ],
    "circle": 0.3
   },
@@ -2280,18 +2187,10 @@
   {
    "sprite": "rock_b",
    "tile": [
-    21.5,
-    47.5
-   ],
-   "circle": 0.45
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
     19.5,
     22.5
    ],
-   "circle": 0.5
+   "circle": 0.45
   },
   {
    "sprite": "rock_a",
@@ -2302,28 +2201,28 @@
    "circle": 0.5
   },
   {
-   "sprite": "rock_b",
+   "sprite": "rock_a",
    "tile": [
     27.5,
     32.5
-   ],
-   "circle": 0.45
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    33.5,
-    16.5
    ],
    "circle": 0.5
   },
   {
    "sprite": "rock_b",
    "tile": [
+    33.5,
+    16.5
+   ],
+   "circle": 0.45
+  },
+  {
+   "sprite": "rock_a",
+   "tile": [
     35.5,
     12.5
    ],
-   "circle": 0.45
+   "circle": 0.5
   },
   {
    "sprite": "rock_b",
@@ -2334,44 +2233,20 @@
    "circle": 0.45
   },
   {
-   "sprite": "rock_a",
-   "tile": [
-    36.5,
-    16.5
-   ],
-   "circle": 0.5
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    27.5,
-    10.5
-   ],
-   "circle": 0.5
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    19.5,
-    36.5
-   ],
-   "circle": 0.5
-  },
-  {
-   "sprite": "rock_a",
+   "sprite": "rock_b",
    "tile": [
     29.5,
     19.5
    ],
-   "circle": 0.5
+   "circle": 0.45
   },
   {
-   "sprite": "rock_b",
+   "sprite": "rock_a",
    "tile": [
     25.5,
     11.5
    ],
-   "circle": 0.45
+   "circle": 0.5
   },
   {
    "sprite": "rock_a",
@@ -2390,36 +2265,20 @@
    "circle": 0.5
   },
   {
-   "sprite": "rock_b",
+   "sprite": "rock_a",
    "tile": [
     33.5,
     35.5
    ],
-   "circle": 0.45
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    11.5,
-    24.5
-   ],
    "circle": 0.5
   },
   {
    "sprite": "rock_b",
    "tile": [
-    28.5,
-    39.5
+    11.5,
+    24.5
    ],
    "circle": 0.45
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    34.5,
-    40.5
-   ],
-   "circle": 0.5
   },
   {
    "sprite": "rock_a",
@@ -2430,42 +2289,34 @@
    "circle": 0.5
   },
   {
-   "sprite": "rock_b",
+   "sprite": "rock_a",
    "tile": [
     19.5,
     24.5
    ],
-   "circle": 0.45
+   "circle": 0.5
   },
   {
-   "sprite": "rock_a",
+   "sprite": "rock_b",
    "tile": [
     21.5,
     34.5
    ],
-   "circle": 0.5
+   "circle": 0.45
   },
   {
    "sprite": "rock_a",
    "tile": [
-    17.5,
-    7.5
+    25.5,
+    21.5
    ],
    "circle": 0.5
   },
   {
    "sprite": "rock_b",
    "tile": [
-    26.5,
-    7.5
-   ],
-   "circle": 0.45
-  },
-  {
-   "sprite": "rock_b",
-   "tile": [
-    25.5,
-    21.5
+    27.5,
+    40.5
    ],
    "circle": 0.45
   },
@@ -2486,12 +2337,12 @@
    "circle": 0.5
   },
   {
-   "sprite": "rock_a",
+   "sprite": "rock_b",
    "tile": [
     21.5,
     20.5
    ],
-   "circle": 0.5
+   "circle": 0.45
   },
   {
    "sprite": "rock_a",
@@ -2518,10 +2369,18 @@
    "circle": 0.45
   },
   {
-   "sprite": "rock_a",
+   "sprite": "rock_b",
    "tile": [
     27.5,
     20.5
+   ],
+   "circle": 0.45
+  },
+  {
+   "sprite": "rock_a",
+   "tile": [
+    15.5,
+    5.5
    ],
    "circle": 0.5
   },
@@ -2534,20 +2393,12 @@
    "circle": 0.5
   },
   {
-   "sprite": "rock_b",
+   "sprite": "rock_a",
    "tile": [
-    30.5,
-    42.5
+    24.5,
+    8.5
    ],
-   "circle": 0.45
-  },
-  {
-   "sprite": "rock_b",
-   "tile": [
-    23.5,
-    38.5
-   ],
-   "circle": 0.45
+   "circle": 0.5
   },
   {
    "sprite": "rock_a",
@@ -2558,34 +2409,90 @@
    "circle": 0.5
   },
   {
-   "sprite": "rock_b",
+   "sprite": "rock_a",
    "tile": [
     33.5,
     25.5
    ],
-   "circle": 0.45
+   "circle": 0.5
   },
   {
    "sprite": "rock_b",
    "tile": [
-    20.5,
-    13.5
+    22.5,
+    42.5
    ],
    "circle": 0.45
   },
   {
    "sprite": "rock_a",
    "tile": [
-    13.5,
-    38.5
+    20.5,
+    13.5
    ],
    "circle": 0.5
   },
   {
    "sprite": "rock_a",
    "tile": [
-    28.5,
-    42.5
+    32.5,
+    28.5
+   ],
+   "circle": 0.5
+  },
+  {
+   "sprite": "rock_b",
+   "tile": [
+    19.5,
+    35.5
+   ],
+   "circle": 0.45
+  },
+  {
+   "sprite": "rock_b",
+   "tile": [
+    22.5,
+    35.5
+   ],
+   "circle": 0.45
+  },
+  {
+   "sprite": "rock_a",
+   "tile": [
+    19.5,
+    15.5
+   ],
+   "circle": 0.5
+  },
+  {
+   "sprite": "rock_b",
+   "tile": [
+    6.5,
+    15.5
+   ],
+   "circle": 0.45
+  },
+  {
+   "sprite": "rock_b",
+   "tile": [
+    29.5,
+    17.5
+   ],
+   "circle": 0.45
+  },
+  {
+   "sprite": "rock_a",
+   "tile": [
+    16.5,
+    4.5
+   ],
+   "circle": 0.5
+  },
+  {
+   "sprite": "rock_a",
+   "tile": [
+    20.5,
+    24.5
    ],
    "circle": 0.5
   },
@@ -2613,6 +2520,45 @@
     23.1,
     26.9,
     26.9
+   ]
+  },
+  {
+   "sprite": "house",
+   "tile": [
+    16.0,
+    39.0
+   ],
+   "rect": [
+    14.1,
+    37.6,
+    17.9,
+    40.4
+   ]
+  },
+  {
+   "sprite": "house",
+   "tile": [
+    20.8,
+    38.0
+   ],
+   "rect": [
+    18.900000000000002,
+    36.6,
+    22.7,
+    39.4
+   ]
+  },
+  {
+   "sprite": "stall",
+   "tile": [
+    13.2,
+    31.8
+   ],
+   "rect": [
+    12.1,
+    31.1,
+    14.3,
+    32.5
    ]
   }
  ],

@@ -96,6 +96,7 @@ func _clear() -> void:
 	chest_door = main._add_door(spot, "Abrir cofre", open_chest, false)
 	chest_door.reach = 1.6
 	main.say("¡Piso completo! Abre el cofre", 3.0)
+	main.quest_event("floor", str(floor_no))
 
 func next_floor() -> void:
 	main._transition(func() -> void:
@@ -126,3 +127,4 @@ func open_chest() -> void:
 		label.text = "¡Dungeon completada!"
 		main.dungeon_floor = 1  # la próxima visita empieza de nuevo
 	main.say("\n".join(lines), 6.0)
+	main.save_game()

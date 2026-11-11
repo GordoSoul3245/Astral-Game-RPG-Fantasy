@@ -160,6 +160,10 @@ func _draw() -> void:  # px de suelo, pies en el origen
 	for i in 16:
 		sh.append(Vector2(cos(i * TAU / 16.0) * 7.0, sin(i * TAU / 16.0) * 3.0))
 	draw_colored_polygon(sh, Color(0, 0, 0, 0.3))
+	if main.quests != null and not main.villagers.is_empty() and self == main.villagers[0]:
+		var m: String = main.quests.marker()  # "!" misión nueva, "?" para entregar
+		if m != "":
+			draw_string(ThemeDB.fallback_font, Vector2(-5, -86 + sin(anim_t * 3.0) * 2.0), m, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color(1.0, 0.85, 0.2))
 	if spr:
 		return
 	var moving := state in ["walk", "flee"] or (state == "look" and pos.distance_to(main.pos) < PERSONAL)

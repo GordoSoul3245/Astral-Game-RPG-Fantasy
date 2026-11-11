@@ -32,6 +32,8 @@
 		"coins": [15, 25],
 		"drops": [{"item": "escama_dragon", "chance": 1.0}, {"item": "pocion_vida", "chance": 0.5}]
 	},
+	"rabbit": {"hp": 6, "radius": 6.0, "xp": 3, "coins": [0, 1], "drops": [], "respawn": 45.0},
+	"fox": {"hp": 24, "radius": 9.0, "xp": 14, "coins": [2, 5], "drops": [{"item": "pocion_vida", "chance": 0.25}], "respawn": 60.0},
 	"slime": {
 		"kind": "slime",
 		"hp": 28,
