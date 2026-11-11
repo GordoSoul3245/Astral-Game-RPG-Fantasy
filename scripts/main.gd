@@ -5,8 +5,14 @@ extends Node2D
 
 const SCALE := 3.0
 const FEET := Vector2(68, 113.7)            # píxel de los pies dentro del sprite de 128x128
-const WALK_SPEED := 90.0
-const SPRINT_SPEED := 190.0
+const WALK_SPEED := 100.0     # +11 %: el héroe se sentía lento junto al dash y al combate nuevo
+const SPRINT_SPEED := 200.0
+const ACCEL := 900.0          # px/s²: alcanza la velocidad de paso en ~0.11 s (inercia al arrancar)
+const BRAKE := 1500.0         # frenado más seco que el arranque: se detiene en ~0.07 s
+const ATTACK_MOVE := {"light": 0.5, "heavy": 0.2, "cast": 0.35}   # fracción de la velocidad al caminar mientras atacas
+const LIGHT_CANCEL_T := 0.08  # s tras el impacto de un ligero a partir de los cuales caminar corta la recuperación
+var move_vel := Vector2.ZERO  # velocidad actual del héroe (px/s sobre el plano de entrada); suaviza arranque y frenado
+var recover_t := 0.0          # tiempo desde el impacto del ataque en curso
 # Proyección del mapa (se carga de data/map.json): casilla (i,j) -> suelo = C1 + (i/TILES)*E1 + (j/TILES)*E2
 var map_origin := Vector2.ZERO   # píxel de la imagen del suelo que es el (0,0) del suelo (centro del mapa)
 var C1 := Vector2.ZERO
@@ -1001,7 +1007,11 @@ func spawn_projectile(source: String, ground: Vector2, dir: Vector2, spec: Dicti
 	p.tint = Color.html(spec["tint"]) if spec.has("tint") else tint
 	add_child(p)
 
+var forced_input := Vector2.ZERO   # pruebas: sustituye al teclado cuando no es cero
+
 func _input_dir() -> Vector2:
+	if forced_input != Vector2.ZERO:
+		return forced_input
 	if touch_mode:
 		return Vector2.ZERO if aiming else touch.stick
 	return Vector2(
@@ -1051,6 +1061,7 @@ func _dash() -> bool:  # true si el dash empezó
 	dash_dir = d.normalized() if d != Vector2.ZERO else Vector2.from_angle(DIRS.find(facing) * PI / 4.0)
 	facing = DIRS[posmod(roundi(dash_dir.angle() / (PI / 4.0)), 8)]
 	dashing = true
+	move_vel = Vector2.ZERO
 	mega_active = false
 	attacking = false
 	dash_t = 0.0
@@ -1114,6 +1125,7 @@ func _begin(spec: Dictionary, mode: String) -> void:
 	current_mode = mode
 	cooldown = current["cooldown"] / prog.attack_speed()
 	swing_mana = 0.0
+	recover_t = 0.0
 	aim_dir = _chest_aim()
 	facing = DIRS[posmod(roundi(aim_dir.angle() / (PI / 4.0)), 8)]  # el héroe mira hacia donde ataca
 	if current.has("anim"):
@@ -1137,6 +1149,7 @@ func _on_hero_frame() -> void:
 		_spawn_trail()
 	if not struck and hero.frame == current["strike_frame"]:
 		struck = true
+		recover_t = 0.0
 		_strike()
 
 func _strike() -> void:
@@ -1360,7 +1373,9 @@ func _physics_process(delta: float) -> void:
 	if dashing:
 		var step_dt := minf(delta, dash_time_cur - dash_t)  # el último paso no se pasa de la distancia
 		dash_t += delta
-		var step := dash_dir * dash_speed_cur * step_dt * (Vector2.ONE if mega_active else Vector2(1, 0.6))
+		# el dash frena al final (curva 1.75→0.25 con media 1): recorre lo mismo pero termina en un punto legible; el mega dash va a velocidad constante
+		var ease_k := 1.0 if mega_active else 1.5 * (1.0 - clampf(dash_t / dash_time_cur, 0.0, 1.0)) + 0.25
+		var step := dash_dir * dash_speed_cur * ease_k * step_dt * (Vector2.ONE if mega_active else Vector2(1, 0.6))
 		pos = world.move_collide(pos, pos + step, HERO_R_T)  # atraviesa al dragón pero no estructuras ni agua
 		if mega_active:
 			ghost_t += delta
@@ -1387,29 +1402,52 @@ func _physics_process(delta: float) -> void:
 		_attack("light")  # mantener pulsado repite respetando el cooldown
 	elif _mb(MOUSE_BUTTON_RIGHT):
 		_attack("heavy")
-	if attacking:  # durante la animación de ataque el héroe no se mueve
-		_place()
-		return
+	if attacking:
+		recover_t += delta
+		var dir_a := _input_dir()
+		# un ligero ya conectado se corta caminando (ritmo de combate); el pesado y los hechizos se cumplen enteros
+		if dir_a != Vector2.ZERO and struck and current_mode == "light" and current.get("type", "") == "melee" and recover_t > LIGHT_CANCEL_T:
+			attacking = false
+			recover_t = 0.0
+		else:
+			_move_while_attacking(dir_a, delta)  # avance lento: no te clava en el sitio, pero conserva el compromiso
+			_place()
+			return
 	var dir := _input_dir()
-	if dir == Vector2.ZERO:
-		hero.play("idle_" + facing)
-		_place()
-		return
-	var sprint := (_held([KEY_SHIFT]) or (touch_mode and bool(touch.sprint))) and not exhausted
+	var sprint := dir != Vector2.ZERO and (_held([KEY_SHIFT]) or (touch_mode and bool(touch.sprint))) and not exhausted
 	if sprint:  # correr gasta estamina; sin ella se camina
 		stamina = maxf(0.0, stamina - hero_data["sprint_drain"] * delta)
 		stamina_idle = 0.0
 		if stamina == 0.0:
 			exhausted = true
-	facing = DIRS[posmod(roundi(dir.angle() / (PI / 4.0)), 8)]
-	# el eje Y se acorta por la vista isométrica
-	var step: Vector2 = dir.normalized() * (SPRINT_SPEED if sprint else WALK_SPEED) * prog.move_mult() * delta * Vector2(1, 0.6)
+	if dir != Vector2.ZERO:
+		facing = DIRS[posmod(roundi(dir.angle() / (PI / 4.0)), 8)]
+	# inercia: acelera hacia la velocidad pedida y frena más seco; el eje Y se acorta por la vista isométrica
+	var target: Vector2 = dir.normalized() * (SPRINT_SPEED if sprint else WALK_SPEED) * prog.move_mult()
+	move_vel = move_vel.move_toward(target, (ACCEL if dir != Vector2.ZERO else BRAKE) * delta)
+	if move_vel.length() < 1.0:
+		move_vel = Vector2.ZERO
+		hero.play("idle_" + facing)
+		_place()
+		return
+	var step: Vector2 = move_vel * delta * Vector2(1, 0.6)
 	var previous_pos := pos
 	pos = world.move_collide(pos, pos + step, HERO_R_T)  # el mapa (agua, árboles, rocas, edificios) bloquea
 	var traveled := ((pos - previous_pos) / Vector2(1, 0.6)).length()
+	if traveled < 0.001:
+		move_vel = Vector2.ZERO  # contra una pared no se acumula velocidad
 	_push_out(blockers())  # el dragón también bloquea al héroe
 	_update_gait(traveled, sprint)
 	_place()
+
+func _move_while_attacking(dir: Vector2, delta: float) -> void:  # caminar lento durante un ataque; no cambia hacia dónde mira ni su animación
+	var kind := "cast" if current.get("type", "") in ["projectile", "meteor"] else current_mode
+	var mult: float = ATTACK_MOVE.get(kind, 0.3)
+	var target: Vector2 = dir.normalized() * WALK_SPEED * prog.move_mult() * mult
+	move_vel = move_vel.move_toward(target, (ACCEL if dir != Vector2.ZERO else BRAKE) * delta)
+	if move_vel.length() >= 1.0:
+		pos = world.move_collide(pos, pos + move_vel * delta * Vector2(1, 0.6), HERO_R_T)
+		_push_out(blockers())
 
 func _update_gait(traveled: float, sprint: bool) -> void:
 	if traveled < 0.001:

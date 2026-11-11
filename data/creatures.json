@@ -11,7 +11,7 @@
 		"stamina": 100.0,
 		"stamina_regen": 28.0,
 		"stamina_regen_delay": 0.7,
-		"sprint_drain": 20.0,
+		"sprint_drain": 16.0,
 		"ult_max": 100.0,
 		"ult_per_damage": 2.0
 	},
