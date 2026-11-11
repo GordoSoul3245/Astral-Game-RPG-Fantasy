@@ -41,7 +41,7 @@ func _ready() -> void:
 	var gap := Control.new()
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(gap)
-	for pair in [["inv", "Inventario"], ["stats", "Estadísticas"]]:
+	for pair in [["inv", "Inventario"], ["stats", "Estadísticas"], ["opt", "Opciones"]]:
 		var b := Button.new()
 		b.text = pair[1]
 		b.focus_mode = Control.FOCUS_NONE
@@ -107,6 +107,8 @@ func refresh() -> void:
 		c.queue_free()
 	if tab == "inv":
 		_build_inv()
+	elif tab == "opt":
+		_build_options()
 	else:
 		_build_stats()
 
@@ -280,6 +282,62 @@ func _build_inv() -> void:
 		main._apply_stats()
 		refresh())
 	right.add_child(act)
+
+func _slider_row(grid: GridContainer, text: String, hint: String, value: float, on: Callable) -> void:  # etiqueta, control 0-100 % y pista
+	_label(text, grid, 19)
+	var s := HSlider.new()
+	s.min_value = 0.0
+	s.max_value = 1.0
+	s.step = 0.05
+	s.value = value
+	s.custom_minimum_size = Vector2(260, 28)
+	s.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var pct := _label("%d %%" % roundi(value * 100.0), grid, 19, GOLD)
+	s.value_changed.connect(func(v: float) -> void:
+		on.call(v)
+		pct.text = "%d %%" % roundi(v * 100.0)
+		main.settings.save())
+	grid.add_child(s)
+	_label(hint, grid, 15, MUTED)
+
+func _build_options() -> void:
+	var st: RefCounted = main.settings
+	var card := _card(body, Vector2(0, 0))
+	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_label("Accesibilidad de efectos", card, 22, GOLD)
+	var g1 := GridContainer.new()
+	g1.columns = 4
+	g1.add_theme_constant_override("h_separation", 28)
+	g1.add_theme_constant_override("v_separation", 14)
+	card.add_child(g1)
+	_slider_row(g1, "Temblor de cámara", "Sacudidas e impulso al golpear (0 % = cámara quieta)", st.shake, func(v: float) -> void: st.shake = v)
+	_slider_row(g1, "Destellos", "Flash blanco al golpear y luces de impacto (0 % = sin destellos)", st.flash, func(v: float) -> void: st.flash = v)
+	var hs := CheckButton.new()
+	hs.text = "Pausa de impacto en golpes pesados"
+	hs.button_pressed = st.hitstop
+	hs.focus_mode = Control.FOCUS_NONE
+	hs.add_theme_font_size_override("font_size", 19)
+	hs.toggled.connect(func(on: bool) -> void:
+		st.hitstop = on
+		st.save())
+	card.add_child(hs)
+	card.add_child(HSeparator.new())
+	_label("Sonido", card, 22, GOLD)
+	var g2 := GridContainer.new()
+	g2.columns = 4
+	g2.add_theme_constant_override("h_separation", 28)
+	g2.add_theme_constant_override("v_separation", 14)
+	card.add_child(g2)
+	_slider_row(g2, "Volumen general", "", st.master, func(v: float) -> void:
+		st.master = v
+		st.apply_audio())
+	_slider_row(g2, "Efectos", "Golpes, avisos y voces", st.sfx, func(v: float) -> void:
+		st.sfx = v
+		st.apply_audio())
+	_slider_row(g2, "Música y ambiente", "Tema de cada zona y capa de combate", st.music, func(v: float) -> void:
+		st.music = v
+		st.apply_audio())
+	_label("Los avisos de peligro (zonas rojas, línea de tiro) usan forma y color: no dependen de los destellos.", card, 15, MUTED)
 
 func _build_stats() -> void:
 	var p = main.prog

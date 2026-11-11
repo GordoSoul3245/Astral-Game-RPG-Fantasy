@@ -2,22 +2,26 @@
 	"floors": [
 		{
 			"name": "Piso 1",
+			"scale": {"hp": 1.0, "dmg": 1.0},
 			"enemies": {"slime": 4, "skeleton_archer": 3, "cyclops": 1},
 			"chest": {"coins": [40, 60], "xp": 120, "items": 1, "pool": ["armadura_cuero", "anillo_vigor", "collar_hueso", "anillo_furia"]}
 		},
 		{
 			"name": "Piso 2",
+			"scale": {"hp": 1.3, "dmg": 1.15},
 			"enemies": {"slime": 5, "skeleton_archer": 4, "cyclops": 1},
 			"chest": {"coins": [70, 100], "xp": 200, "items": 1, "pool": ["armadura_malla", "katana_obsidiana", "grimorio_brasas", "anillo_arcano", "collar_viento"]}
 		},
 		{
 			"name": "Piso 3 · Cámara de la tormenta",
+			"scale": {"hp": 1.6, "dmg": 1.3},
 			"enemies": {"cyclops": 2, "storm_mage": 1},
 			"chest": {"coins": [250, 320], "xp": 500, "items": 2, "pool": ["armadura_dorada", "katana_tormenta", "grimorio_inferno", "amuleto_tormenta"]}
 		},
 		{
 			"name": "Piso 4 · Cámara oculta (opcional)",
-			"enemies": {"slime": 6, "skeleton_archer": 5, "cyclops": 3, "storm_mage": 1},
+			"scale": {"hp": 1.9, "dmg": 1.4},
+			"enemies": {"slime": 5, "skeleton_archer": 4, "cyclops": 2, "storm_mage": 1},
 			"chest": {"coins": [400, 500], "xp": 800, "items": 1, "points": 3, "final": true, "pool": ["armadura_dorada", "katana_tormenta", "grimorio_inferno", "amuleto_tormenta"]}
 		}
 	]

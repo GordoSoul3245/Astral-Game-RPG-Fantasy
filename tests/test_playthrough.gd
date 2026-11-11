@@ -43,7 +43,34 @@ func _target() -> Node:
 				best = e
 	return best
 
+func _dodge() -> bool:  # esquiva básica: si un aviso en el suelo va a golpear donde está, dash hacia afuera
+	if main.dashing or main.dash_cd > 0.0:
+		return false
+	for z in main.get_children():
+		if z.get_script() != null and z.get("bolt") != null and not z.fired and z.delay - z.t < 0.5:  # zone.gd (el dragón también tiene `fired`)
+			var off: Vector2 = main.pos - z.center
+			if Vector2(off.x, off.y / 0.6).length() < z.radius + main.HERO_RADIUS + 10.0:
+				var away: Vector2 = off.normalized() if off.length() > 1.0 else Vector2.RIGHT
+				main.facing = main.DIRS[posmod(roundi(away.angle() / (PI / 4.0)), 8)]
+				main.attacking = false
+				return main._dash()
+	return false
+
+const SPEND :=["strength", "defense", "endurance", "strength", "attack_speed", "defense"]
+const SHOPPING := ["armadura_cuero", "anillo_vigor", "collar_hueso", "anillo_furia", "armadura_malla", "collar_viento", "anillo_arcano"]
+
+func _grow() -> void:  # como un jugador: gasta los puntos y compra equipo con las monedas
+	var i := 0
+	while main.prog.points > 0:
+		main.prog.spend(SPEND[i % SPEND.size()])
+		i += 1
+	for id: String in SHOPPING:
+		if main.prog.coins >= main.shop.price_of(id):
+			main.shop.buy(id)
+	main._apply_stats()
+
 func _floor_done() -> void:
+	_grow()
 	var f: int = main.floors.floor_no
 	report.append("piso %d: %.0f s, daño %d, muertes %d, nivel %d" % [f, elapsed - floor_t0, damage_taken - floor_dmg0, deaths - floor_deaths0, main.prog.level])
 	floor_t0 = elapsed
@@ -71,6 +98,8 @@ func _tick() -> void:
 		return
 	if main.hero_hp < 35 and main.prog.potions > 0:
 		main._use_potion()
+	if _dodge():
+		return
 	if main.floors.cleared:
 		_floor_done()
 		if is_instance_valid(main.floors.chest_door):
@@ -103,7 +132,9 @@ func _finish() -> void:
 	print("PLAYTHROUGH total: %.0f s de juego, daño %d, muertes %d, golpes %d, nivel %d, monedas %d, puntos sin gastar %d" % [elapsed, damage_taken, deaths, swings, main.prog.level, main.prog.coins, main.prog.points])
 	assert(swings >= 20, "el bot llegó a pelear")
 	assert(report.size() == 4, "se completaron los 4 pisos (%d) dentro del límite de %.0f s" % [report.size(), LIMIT])
-	assert(main.prog.points >= 3, "el cofre final da los 3 puntos de estadística")
+	assert(deaths <= 15, "el bot no debería morir tanto (%d): revisar escalado por piso en data/dungeon.json" % deaths)  # medido: 0-2 muertes
+	assert(elapsed <= 900.0, "recorrer la dungeon no debería tardar más de 15 min de juego (%.0f s)" % elapsed)  # medido: ~215 s
+	assert(main.prog.points >= 3 or main.prog.spent.values().reduce(func(a: int, b: int) -> int: return a + b, 0) >= 3, "el cofre final da los 3 puntos de estadística")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(main.save_path))
 	print("PASS playthrough: los 4 pisos se completan con el motor real")
 	quit()

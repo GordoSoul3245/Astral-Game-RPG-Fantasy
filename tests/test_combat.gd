@@ -65,7 +65,7 @@ func run_checks() -> void:
 	b.take_damage(999)
 	b.take_damage(999)
 	c.detonate(b.pos)
-	assert(main.prog.xp == xp0 + 10, "xp %d" % (main.prog.xp - xp0))
+	assert(main.prog.xp == xp0 + roundi(10 * main.REWARD_XP), "xp %d" % (main.prog.xp - xp0))  # el slime da 10 de XP base
 	assert(not b.alive)
 
 	# enemigos muertos no actúan

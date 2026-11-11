@@ -26,6 +26,7 @@ var adir := "S"              # dirección fija durante el ataque
 var aim := Vector2.DOWN      # dirección del disparo, fijada al empezar el aviso (no persigue al héroe)
 var kb := Vector2.ZERO       # empuje recibido, px de suelo/s
 var zones: Array = []        # avisos pendientes: se cancelan si muere antes del golpe
+var id := ""                 # clave en data/creatures.json (data puede ser una copia escalada por piso)
 var hit := {}                # hitbox corporal medida del sprite (hitbox.gd); {} = círculo por `radius`
 var last_seen := Vector2.ZERO  # última posición vista del héroe (px de suelo)
 var lost_t := 0.0            # segundos sin ver al héroe
@@ -314,7 +315,7 @@ func take_damage(n: int, charge := true) -> void:
 		_alert()
 	if flash_tw:
 		flash_tw.kill()
-	modulate = Color(3.0, 3.0, 3.0)  # destello blanco claro, se sostiene un instante y se apaga
+	modulate = Color.WHITE.lerp(Color(3.0, 3.0, 3.0), main.settings.flash)  # destello blanco claro (opción de accesibilidad), se sostiene un instante y se apaga
 	flash_tw = create_tween()
 	flash_tw.tween_interval(0.05)
 	flash_tw.tween_property(self, "modulate", Color.WHITE, 0.15)

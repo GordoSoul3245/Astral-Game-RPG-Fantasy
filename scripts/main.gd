@@ -104,6 +104,12 @@ func _ready() -> void:
 		touch.main = self
 		add_child(touch)
 	RenderingServer.set_default_clear_color(Color("#0f1a2a"))  # mar alrededor de la isla
+	settings = load("res://scripts/settings.gd").new()
+	if get_tree().get_script() == null:  # en los tests no se tocan las opciones del jugador
+		settings.load_file()
+	else:
+		settings.path = "user://test_settings.json"
+	settings.apply_audio()
 	creatures = _read_json("res://data/creatures.json")
 	hero_data = creatures["hero"]
 	prog = load("res://scripts/progress.gd").new(_read_json("res://data/equipment.json"))
@@ -192,6 +198,11 @@ func _ready() -> void:
 	combat.set_script(load("res://scripts/combat.gd"))
 	combat.main = self
 	add_child(combat)
+	if get_tree().get_script() == null or force_music:  # la música se sintetiza en un hilo; los tests no la necesitan
+		music = Node.new()
+		music.set_script(load("res://scripts/music.gd"))
+		music.main = self
+		add_child(music)
 	_spawn_dragon()
 	_spawn_fauna()
 	_load_inventory()
@@ -236,6 +247,15 @@ var autosave_t := 0.0
 var quest_label: Label
 var merchants: Array = []
 var shop: CanvasLayer
+
+func _in_combat() -> bool:  # hay un enemigo (o el zorro) cerca y activo: entra la capa de percusión
+	for e in enemies + predators:
+		if not e.alive or e.pos.distance_to(pos) > 320.0:
+			continue
+		var s: Variant = e.get("state")
+		if (s is String and s != "idle" and s != "rest" and s != "home" and s != "eat" and s != "hunt") or (s is int and s != 0):
+			return true
+	return false
 
 func _near_merchant() -> Node2D:
 	for m: Node2D in merchants:
@@ -431,6 +451,8 @@ func _update_prompt(delta: float) -> void:
 		if loot_t <= 0.0:
 			for c in loot_box.get_children():
 				c.queue_free()
+	if music:
+		music.set_combat(_in_combat())
 	if quests:
 		quest_label.text = quests.tracker()
 	autosave_t += delta
@@ -541,6 +563,7 @@ func _build_menu() -> void:
 	m.set_script(load("res://scripts/menu.gd"))
 	m.main = self
 	add_child(m)
+	menu = m
 
 func _apply_stats() -> void:  # recalcula máximos con nivel, puntos y equipo; si el máximo sube, sube también lo actual
 	var old := hero_max_hp
@@ -555,11 +578,30 @@ func spawn_enemy(id: String, ground: Vector2) -> Node2D:
 	var e := Node2D.new()
 	e.set_script(load("res://scripts/enemy.gd"))
 	e.main = self
-	e.data = creatures[id]
+	e.data = _scaled(creatures[id]) if in_dungeon else creatures[id]
+	e.id = id
 	e.pos = ground
 	add_child(e)
 	enemies.append(e)
 	return e
+
+# Dificultad por piso (data/dungeon.json "scale"): vida y daño de los monstruos crecen con la profundidad.
+var floor_hp := 1.0
+var floor_dmg := 1.0
+const REWARD_XP := 0.8      # recompensas globales (ajustadas con tests/test_playthrough.gd)
+const REWARD_COINS := 0.7
+
+func _scaled(base: Dictionary) -> Dictionary:
+	var d: Dictionary = base.duplicate(true)
+	d["hp"] = roundi(d["hp"] * floor_hp)
+	for path: Array in [["contact_damage"], ["slam_damage"], ["projectile", "damage"], ["orb", "damage"], ["lightning", "damage"]]:
+		var node: Dictionary = d
+		for i in path.size() - 1:
+			node = node.get(path[i], {})
+		var key: String = path[-1]
+		if node.has(key):
+			node[key] = roundi(node[key] * floor_dmg)
+	return d
 
 func popup(ground: Vector2, text: String, color := Color(1.0, 0.9, 0.5)) -> void:  # texto flotante sobre un punto del suelo
 	var l := Label.new()
@@ -584,10 +626,10 @@ func gain_xp(n: int) -> void:
 
 func on_kill(e: Node) -> void:  # botín de un enemigo: XP, monedas y objetos (data/creatures.json)
 	var d: Dictionary = e.data
-	var xp := int(d.get("xp", 0))
+	var xp := roundi(int(d.get("xp", 0)) * REWARD_XP)
 	var lines: Array[String] = ["+%d XP" % xp]
 	if d.has("coins"):
-		var c := randi_range(int(d["coins"][0]), int(d["coins"][1]))
+		var c := roundi(randi_range(int(d["coins"][0]), int(d["coins"][1])) * REWARD_COINS)
 		prog.coins += c
 		lines.append("+%d monedas" % c)
 	for drop: Dictionary in d.get("drops", []):
@@ -602,9 +644,9 @@ func on_kill(e: Node) -> void:  # botín de un enemigo: XP, monedas y objetos (d
 			quest_event("loot", drop["item"])
 	popup(e.pos, "\n".join(lines))
 	gain_xp(xp)
-	var id: Variant = creatures.find_key(d)
-	if id != null:
-		quest_event("kill", id)
+	var eid: String = str(e.get("id")) if e.get("id") != null and str(e.get("id")) != "" else str(creatures.find_key(d))  # los monstruos de la dungeon llevan una copia escalada de sus datos
+	if eid != "<null>" and eid != "":
+		quest_event("kill", eid)
 
 func give_item(id: String) -> String:  # entrega un objeto de equipo (se equipa solo si es mejor que lo actual)
 	var equipped: bool = prog.add_item(id)
@@ -881,12 +923,18 @@ func _respawn() -> void:
 func gain_ultimate(damage: float) -> void:  # la ultimate se carga golpeando entidades
 	ult = minf(hero_data["ult_max"], ult + damage * hero_data["ult_per_damage"])
 
+var settings: RefCounted   # opciones del jugador (settings.gd): accesibilidad de efectos y volúmenes
+var music: Node
+var menu: CanvasLayer
+var force_music := false   # capturas y pruebas de audio: activa la música aunque corra un script de test
+
 func shake(amount: float) -> void:
-	shake_amp = maxf(shake_amp, amount)
+	shake_amp = maxf(shake_amp, amount * settings.shake)
 
 var kick_v := Vector2.ZERO  # empujón direccional de cámara (px de pantalla), vuelve solo al centro
 
 func kick(v: Vector2) -> void:
+	v *= settings.shake
 	if v.length() > kick_v.length():
 		kick_v = v
 

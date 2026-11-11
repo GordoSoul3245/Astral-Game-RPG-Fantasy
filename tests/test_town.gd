@@ -23,7 +23,7 @@ func run_checks() -> void:
 	assert(main.targets().has(c), "el conejo es un blanco")
 	var xp0: int = main.prog.xp
 	main.combat.hit(c, 99, "light", c.pos + Vector2(-10, 0))
-	assert(not c.alive and main.prog.xp == xp0 + 3, "el conejo muere y da XP")
+	assert(not c.alive and main.prog.xp == xp0 + roundi(3 * main.REWARD_XP), "el conejo muere y da XP")
 	assert(not main.targets().has(c), "muerto: ya no es blanco")
 	c._physics_process(c.dead_t + 0.1)
 	assert(c.alive and c.hp == c.data["hp"] and c.state == "hidden", "reaparece escondido")

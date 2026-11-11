@@ -43,6 +43,8 @@ func _ready() -> void:
 	set_zone(false)
 
 func set_zone(dungeon: bool) -> void:  # ambiente por mapa; las luces transitorias se liberan con su dueño
+	if main.music:
+		main.music.set_zone(dungeon)
 	ambient.color = AMBIENT_DUNGEON if dungeon else AMBIENT_OUT
 	lantern.energy = 0.55 if dungeon else 0.0
 	marks.clear()
@@ -56,7 +58,9 @@ func light(col: Color, energy: float, size: float) -> PointLight2D:
 	return l
 
 func flash(ground: Vector2, col: Color, energy: float, size: float, secs: float) -> void:  # destello que se apaga y se borra
-	var l := light(col, energy, size)
+	if main.settings.flash <= 0.0:
+		return
+	var l := light(col, energy * main.settings.flash, size)
 	l.position = (ground - Vector2(0, 16)) * main.SCALE
 	main.add_child(l)
 	var tw := l.create_tween()
@@ -77,7 +81,7 @@ func hit(e: Node, dmg: int, kind: String, from: Vector2, charge := true) -> void
 	if k["shake"] > 0.0:
 		main.shake(k["shake"])
 	main.kick((e.pos - from).normalized() * k["kick"])  # la cámara se empuja hacia donde va el golpe
-	if kind == "heavy":
+	if kind == "heavy" and main.settings.hitstop:
 		_hitstop(e)
 	main.noise(e.pos, 240.0 if kind == "heavy" or kind == "blast" else 150.0)  # el combate asusta a la fauna y a los civiles
 
@@ -94,6 +98,7 @@ func play_at(cue: String, ground: Vector2) -> void:
 		var c: Array = CUES[cue]
 		sounds[cue] = _synth(c[0], c[1], c[2])
 	var p := AudioStreamPlayer.new()
+	p.bus = "SFX"
 	p.stream = sounds[cue]
 	p.volume_db = -10.0 - d / 25.0
 	p.pitch_scale = randf_range(0.9, 1.1)
@@ -120,6 +125,7 @@ func _hitstop(e: Node) -> void:
 
 func play(kind: String) -> void:
 	var p := AudioStreamPlayer.new()
+	p.bus = "SFX"
 	p.stream = sounds[kind]
 	p.volume_db = -8.0
 	p.pitch_scale = randf_range(0.92, 1.08)

@@ -44,6 +44,8 @@ func start(n: int) -> void:
 	chest_door = null
 	chest = null
 	var f: Dictionary = cfg["floors"][n - 1]
+	main.floor_hp = float(f.get("scale", {}).get("hp", 1.0))
+	main.floor_dmg = float(f.get("scale", {}).get("dmg", 1.0))
 	var spawn: Vector2 = main.ground_to_tile(main._dungeon_spawn())
 	var placed: Array[Vector2] = []
 	for id: String in f["enemies"]:
@@ -110,9 +112,10 @@ func open_chest() -> void:
 	main.doors.erase(chest_door)
 	chest_door.queue_free()
 	chest_door = null
-	var coins := rng.randi_range(int(c["coins"][0]), int(c["coins"][1]))
+	var coins := roundi(rng.randi_range(int(c["coins"][0]), int(c["coins"][1])) * main.REWARD_COINS)
+	var chest_xp := roundi(int(c["xp"]) * main.REWARD_XP)
 	main.prog.coins += coins
-	var lines: Array[String] = ["+%d monedas" % coins, "+%d XP" % int(c["xp"])]
+	var lines: Array[String] = ["+%d monedas" % coins, "+%d XP" % chest_xp]
 	var fresh: Array = c["pool"].filter(func(i: String) -> bool: return not main.prog.owned.has(i))
 	var rest: Array = c["pool"].filter(func(i: String) -> bool: return main.prog.owned.has(i))
 	fresh.shuffle()
@@ -121,7 +124,7 @@ func open_chest() -> void:
 	for id: String in got:
 		lines.append(main.give_item(id))
 	main.show_loot(got)
-	main.gain_xp(int(c["xp"]))
+	main.gain_xp(chest_xp)
 	if c.has("points"):  # reliquia: puntos de estadística extra
 		main.prog.points += int(c["points"])
 		lines.append("+%d puntos de estadística" % int(c["points"]))
