@@ -203,9 +203,13 @@ func _ready() -> void:
 		if o["sprite"] == "castle":  # la puerta de madera está en la cara frontal derecha del sprite del castillo
 			var door_g := tile_to_ground(Vector2(o["tile"][0], o["tile"][1])) + Vector2(65, -8)
 			_add_door(ground_to_tile(door_g), "Entrar a la dungeon", enter_dungeon, false)
-		elif o["sprite"] == "stall":  # mercader del pueblo: se compra desde el frente del puesto (+j)
-			var d := _add_door(Vector2(o["tile"][0], o["tile"][1] + 1.6), "Comprar poción · %d monedas" % POTION_PRICE, _buy_potion, false)
-			d.reach = 1.6
+		elif o["sprite"] == "stall":  # el mercader está de pie junto al puesto (tras el mostrador lo taparía el toldo)
+			var m := Node2D.new()
+			m.set_script(load("res://scripts/merchant.gd"))
+			m.main = self
+			m.pos = tile_to_ground(Vector2(o["tile"][0] - 1.75, o["tile"][1] + 0.3))  # del lado que mira al camino: delante del puesto en pantalla
+			add_child(m)
+			merchants.append(m)
 	_place()
 
 # --- pueblo: misiones, mercader y guardado
@@ -215,6 +219,13 @@ var testing := false
 var save_path := "user://save.json"
 var autosave_t := 0.0
 var quest_label: Label
+var merchants: Array = []
+
+func _near_merchant() -> Node2D:
+	for m: Node2D in merchants:
+		if m.in_range():
+			return m
+	return null
 
 func _buy_potion() -> void:
 	if prog.coins < POTION_PRICE:
@@ -381,6 +392,9 @@ func _interact() -> void:
 			line = quests.talk(self)
 			save_game()
 		say(line, 4.0)
+		return
+	if _near_merchant() != null:
+		_buy_potion()
 
 func _near_villager() -> Node2D:
 	if in_dungeon:
@@ -425,6 +439,8 @@ func _update_prompt(delta: float) -> void:
 		prompt.text = ("[E] " + d.label) if not d.locked else d.lock_text
 	elif _near_villager() != null:
 		prompt.text = "[E] Hablar con %s" % quests.giver if _near_villager() == villagers[0] else "[E] Hablar"
+	elif _near_merchant() != null:
+		prompt.text = "[E] Comprar poción · %d monedas  (tienes %d)" % [POTION_PRICE, prog.coins]
 	else:
 		prompt.text = ""
 

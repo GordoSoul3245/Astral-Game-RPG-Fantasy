@@ -70,7 +70,13 @@ func run_checks() -> void:
 	main.quest_event("kill", "fox")
 	assert(q.status == "ready")
 
-	# --- mercader
+	# --- mercader: un personaje tras el mostrador; [E] cerca le compra una poción
+	assert(main.merchants.size() == 1, "hay un mercader")
+	var m: Node = main.merchants[0]
+	main.pos = m.pos + Vector2(400, 0)
+	assert(main._near_merchant() == null, "lejos no vende")
+	main.pos = m.pos + Vector2(60, 0)
+	assert(main._near_merchant() == m, "cerca puede comprarle")
 	main.prog.coins = 0
 	var p0: int = main.prog.potions
 	main._buy_potion()
