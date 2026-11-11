@@ -153,7 +153,7 @@ func detonate(ground: Vector2) -> void:  # la explosión no marca ni consume mar
 	_spark(ground, KINDS["blast"]["col"], KINDS["blast"]["size"])
 	main.shake(KINDS["blast"]["shake"])
 	for e in main.targets():
-		if e.alive and ground.distance_to(e.pos) < mark_spec["radius"] + e.radius:
+		if e.alive and preload("res://scripts/hitbox.gd").foot_dist(e, ground) < mark_spec["radius"]:
 			hit(e, roundi(mark_spec["damage"] * main.prog.magic_mult()), "blast", ground, false)
 
 func _process(delta: float) -> void:
@@ -164,15 +164,35 @@ func _process(delta: float) -> void:
 	lantern.position = (main.pos - Vector2(0, 30)) * main.SCALE
 	queue_redraw()
 
+func _ellipse_pts(c: Vector2, rx: float, ry: float) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for i in 33:
+		pts.append(c + Vector2(cos(i * TAU / 32.0) * rx, sin(i * TAU / 32.0) * ry))
+	return pts
+
+func _draw_hitboxes(S: float) -> void:  # F2: cuerpo (verde) y huella (azul) de cada blanco y del héroe
+	var HB := preload("res://scripts/hitbox.gd")
+	var list: Array = main.targets() + [main]
+	if not main.in_dungeon:
+		list += main.villagers + main.merchants
+	for e in list:
+		if e != main and not e.alive if e.get("alive") != null else false:
+			continue
+		var b: Dictionary = HB.of(e)
+		draw_polyline(_ellipse_pts((e.pos + b["c"]) * S, b["rx"] * S, b["ry"] * S), Color(0.2, 1.0, 0.3, 0.9), 2.0)
+		draw_polyline(_ellipse_pts(e.pos * S, b["rx"] * S, b["rx"] * HB.SQUASH * S), Color(0.3, 0.6, 1.0, 0.9), 2.0)
+
 func _draw() -> void:  # anillo de brasas parpadeante bajo cada enemigo marcado
 	var S: float = main.SCALE
+	if main.debug_hitboxes:
+		_draw_hitboxes(S)
 	for e in marks:
 		var a := 0.55 + 0.35 * sin(Time.get_ticks_msec() * 0.012)
 		var c: Vector2 = e.pos * S
 		var pts := PackedVector2Array()
 		for i in 25:
 			var ang := i * TAU / 24.0
-			pts.append(c + Vector2(cos(ang), sin(ang) * 0.6) * (e.radius + 6.0) * S)
+			pts.append(c + Vector2(cos(ang), sin(ang) * 0.6) * (preload("res://scripts/hitbox.gd").of(e)["rx"] + 4.0) * S)
 		draw_polyline(pts, Color(1.0, 0.45, 0.1, a), 4.0)
 		draw_circle(c - Vector2(0, 8 * S), 2.5 * S, Color(1.0, 0.7, 0.2, a))
 

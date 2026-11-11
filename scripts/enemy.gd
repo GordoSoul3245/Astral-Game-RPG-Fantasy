@@ -26,6 +26,7 @@ var adir := "S"              # dirección fija durante el ataque
 var aim := Vector2.DOWN      # dirección del disparo, fijada al empezar el aviso (no persigue al héroe)
 var kb := Vector2.ZERO       # empuje recibido, px de suelo/s
 var zones: Array = []        # avisos pendientes: se cancelan si muere antes del golpe
+var hit := {}                # hitbox corporal medida del sprite (hitbox.gd); {} = círculo por `radius`
 var last_seen := Vector2.ZERO  # última posición vista del héroe (px de suelo)
 var lost_t := 0.0            # segundos sin ver al héroe
 const SEARCH_TIME := 4.0     # busca en la última posición este tiempo y vuelve a idle
@@ -88,6 +89,9 @@ func _ready() -> void:
 	radius = data["radius"]
 	if data.has("sprites"):
 		_build_sprite()
+		var HB := preload("res://scripts/hitbox.gd")
+		var f: Array = data["sprites"]["feet"]
+		hit = HB.measure(main.DIRS, data["sprites"]["prefix"] + "%s_idle_00.png", Vector2(f[0], f[1]))
 	_place()
 
 func _dir_name(v: Vector2) -> String:

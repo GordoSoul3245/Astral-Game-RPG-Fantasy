@@ -9,6 +9,7 @@ var main: Node
 var data := {}               # entrada "dragon" de data/creatures.json
 var pos := Vector2.ZERO      # pies, en píxeles del suelo original
 var radius := 14.0           # contra proyectiles y ataques (como el resto de enemigos)
+var hit := {}                # hitbox corporal medida del sprite (hitbox.gd)
 var hp := 0
 var alive := true
 var state := State.IDLE
@@ -35,6 +36,8 @@ func _ready() -> void:
 	centered = false
 	scale = Vector2.ONE * main.SCALE
 	hp = data["hp"]
+	var HB := preload("res://scripts/hitbox.gd")
+	hit = HB.measure(main.DIRS, "res://art/dragon/dragon_%s_idle_00.png", main.FEET)
 	frame_changed.connect(_on_frame_changed)
 	animation_finished.connect(_on_animation_finished)
 	play("idle_S")

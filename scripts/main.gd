@@ -28,7 +28,9 @@ const ZOOM_MIN := 0.3
 const ZOOM_MAX := 2.0
 const ZOOM_STEP := 0.1
 
-const HERO_RADIUS := 8.0      # contra entidades (px de suelo)
+const HERO_RADIUS := 8.0      # contra entidades (px de suelo); el daño usa `hit` (cuerpo del sprite)
+var hit := {}                 # hitbox corporal del héroe, medida de su sprite (hitbox.gd)
+var debug_hitboxes := false   # F2
 const DRAGON_RADIUS := 14.0
 const HERO_R_T := 0.28        # contra el mapa (casillas = metros)
 const DRAGON_R_T := 0.45
@@ -149,6 +151,8 @@ func _ready() -> void:
 	hero.centered = false
 	hero.scale = Vector2.ONE * SCALE
 	hero.play("idle_S")
+	var HB := preload("res://scripts/hitbox.gd")  # cuerpo del héroe medido de su sprite: lo usan los proyectiles enemigos
+	hit = HB.measure(DIRS, "res://art/hechicero/polished/idle_%s_00.png", FEET)
 	hero.frame_changed.connect(_on_hero_frame)
 	hero.animation_finished.connect(func() -> void: attacking = false)
 	add_child(hero)
@@ -1064,13 +1068,17 @@ func _strike() -> void:
 		"melee":
 			var dmg: float = current["damage"] * (burn_mult if burn_t > 0.0 else 1.0) * prog.melee_mult()
 			var blasts: Array[Vector2] = []
+			var HB := preload("res://scripts/hitbox.gd")
+			var chest := pos - Vector2(0, 40)  # el tajo sale del pecho (como su estela) y se mide contra el cuerpo del sprite
 			for e in targets():
 				if not e.alive:
 					continue
-				var to: Vector2 = e.pos - pos
-				if to.length() > current["reach"] + e.radius:
+				if HB.dist(e, chest) > current["reach"]:
 					continue
-				if absf(angle_difference(aim_dir.angle(), to.angle())) > deg_to_rad(current["arc"]) / 2.0:
+				var to: Vector2 = HB.center(e) - chest
+				var hb: Dictionary = HB.of(e)
+				var tol := asin(clampf(sqrt(hb["rx"] * hb["ry"]) / maxf(to.length(), 1.0), 0.0, 1.0))  # cuerpo ancho: el borde también cuenta
+				if absf(angle_difference(aim_dir.angle(), to.angle())) > deg_to_rad(current["arc"]) / 2.0 + tol:
 					continue
 				if current_mode == "heavy" and combat.consume(e):  # el pesado detona la marca de Ignis
 					blasts.append(e.pos)
@@ -1183,6 +1191,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			_ultimate()
 		elif event.physical_keycode == KEY_E:
 			_interact()
+		elif event.physical_keycode == KEY_F2:
+			debug_hitboxes = not debug_hitboxes  # dibuja las hitbox sobre los sprites
 		elif event.physical_keycode == KEY_H:
 			_use_potion()
 		elif event.physical_keycode == KEY_ESCAPE:
@@ -1267,7 +1277,7 @@ func _physics_process(delta: float) -> void:
 				ghost_t = 0.0
 				_spawn_ghost()
 			for e in targets():  # el mega dash daña (una vez) a todo lo que atraviesa
-				if e.alive and not mega_hits.has(e) and pos.distance_to(e.pos) < 12.0 + e.radius:
+				if e.alive and not mega_hits.has(e) and preload("res://scripts/hitbox.gd").dist(e, pos - Vector2(0, 40)) < 10.0:
 					mega_hits.append(e)
 					combat.hit(e, roundi(mega_spec["damage"] * prog.melee_mult()), "heavy", pos, false)
 					shake(8.0)

@@ -14,6 +14,7 @@ HOUSE = (30.0, 10.5, 34.0, 13.5)
 # pueblo junto al inicio (posiciones comprobadas: suelo firme y lejos de los caminos)
 VILLAGE = {'house': [(14.0, 37.5, 18.0, 40.5), (18.8, 36.5, 22.8, 39.5)], 'stall': [(12.0, 31.0, 14.4, 32.6)]}
 RECTS = [CASTLE, HOUSE] + [r for rs in VILLAGE.values() for r in rs]
+FOOTPRINT_MARGIN = {'house': 0.15, 'castle': 0.27, 'stall': 0.05}   # cuánto sobresale el sprite del rectángulo de casillas (m)
 START = (7.5, 37.5)                  # se recalcula como la casilla de camino más cercana a (6, 38)
 DRAGON = (34.0, 21.0)
 CLEAR_R = 14.0                       # radio (casillas) del claro central sin árboles
@@ -436,11 +437,13 @@ def export_map(L, ground, sprites):
     walk = [''.join('1' if land.get((i, j)) in ('grass', 'path', 'shore') else '0' for j in range(N)) for i in range(N)]
     objs = []
     for ti, tj, v in L['trees']:
-        objs.append(dict(sprite='tree_' + v, tile=[round(ti, 3), round(tj, 3)], circle=0.3))   # solo el tronco bloquea
-    for ti, tj, v in L['rocks']:
-        objs.append(dict(sprite='rock_' + v, tile=[round(ti, 3), round(tj, 3)], circle=0.5 if v == 'a' else 0.45))
+        # al caminar bloquea el tronco (+ margen); un proyectil a la altura del pecho choca con el follaje (radio del piso bajo a 0.9 m)
+        objs.append(dict(sprite='tree_' + v, tile=[round(ti, 3), round(tj, 3)], circle=0.3, pcircle=0.55))
+    for ti, tj, v in L['rocks']:  # la roca grande tiene un bulto lateral que llega a 0.78 m del centro
+        objs.append(dict(sprite='rock_' + v, tile=[round(ti, 3), round(tj, 3)], circle=0.6 if v == 'a' else 0.5))
     for nm, r in [('house', HOUSE), ('castle', CASTLE)] + [(k, r) for k, rs in VILLAGE.items() for r in rs]:
-        objs.append(dict(sprite=nm, tile=[(r[0] + r[2]) / 2, (r[1] + r[3]) / 2], rect=[r[0] + 0.1, r[1] + 0.1, r[2] - 0.1, r[3] - 0.1]))
+        m = FOOTPRINT_MARGIN[nm]  # el rectángulo cubre el zócalo real del sprite (casa 4.3x3.3, castillo con torres, puesto 2.5x1.7)
+        objs.append(dict(sprite=nm, tile=[(r[0] + r[2]) / 2, (r[1] + r[3]) / 2], rect=[r[0] - m, r[1] - m, r[2] + m, r[3] + m]))
     data = dict(tiles=N, image=ground['image'], size=ground['size'], c1=ground['c1'], e1=ground['e1'], e2=ground['e2'],
                 walk=walk, sprites=sprites, objects=objs, start=list(START), dragon=list(DRAGON))
     with open(DATA, 'w', encoding='utf8') as f:

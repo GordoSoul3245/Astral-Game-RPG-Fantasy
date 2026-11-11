@@ -27,6 +27,7 @@ var look := Vector2.DOWN   # dirección del sprite
 var spr: AnimatedSprite2D  # sprite de Blender; si falta, se dibuja por código
 
 var data := {}             # data/creatures.json "rabbit": vida, botín, reaparición
+var hit := {}              # hitbox corporal medida del sprite (hitbox.gd)
 var alive := true
 var hp := 1
 var radius := 6.0
@@ -59,6 +60,7 @@ func _ready() -> void:
 	pos = home
 	goal = home
 	spr = preload("res://scripts/life_sprite.gd").build(self, main, "res://art/fauna/rabbit_", {"idle": 1, "watch": 1, "walk": 8})
+	hit = preload("res://scripts/life_sprite.gd").hitbox(main, "res://art/fauna/rabbit_")
 	_place()
 
 func _anim() -> void:

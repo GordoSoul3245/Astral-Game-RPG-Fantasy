@@ -32,6 +32,10 @@ static func build(owner: Node2D, main: Node, prefix: String, kinds: Dictionary) 
 	owner.add_child(spr)
 	return spr
 
+static func hitbox(main: Node, prefix: String) -> Dictionary:  # hitbox corporal medida de los 8 reposos (hitbox.gd)
+	var HB := preload("res://scripts/hitbox.gd")
+	return HB.measure(main.DIRS, prefix + "%s_idle_00.png", FEET)
+
 static func show(spr: AnimatedSprite2D, main: Node, kind: String, look: Vector2, speed := 1.0) -> void:
 	var dir: String = main.DIRS[posmod(roundi(look.angle() / (PI / 4.0)), 8)]
 	var key := "%s_%s" % [kind, dir]

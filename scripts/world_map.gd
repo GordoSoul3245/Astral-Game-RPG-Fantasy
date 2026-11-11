@@ -31,7 +31,7 @@ func setup(data: Dictionary) -> void:
 		s.position = (g - Vector2(sp["feet"][0], sp["feet"][1])) * main.SCALE
 		var sort_y := g.y
 		if o.has("circle"):
-			var circle := [tile, float(o["circle"])]
+			var circle := [tile, float(o["circle"]), float(o.get("pcircle", o["circle"]))]  # [centro, radio al caminar, radio para proyectiles (follaje)]
 			circles.append(circle)
 			var key := Vector2i(floori(tile.x / 2.0), floori(tile.y / 2.0))
 			if not grid.has(key):
@@ -80,12 +80,12 @@ func _process(delta: float) -> void:
 func _cell_walkable(i: int, j: int) -> bool:
 	return i >= 0 and i < tiles and j >= 0 and j < tiles and walk[i][j] == "1"
 
-func hits_structure(t: Vector2, r: float) -> bool:  # árboles, rocas y edificios (t y r en casillas)
+func hits_structure(t: Vector2, r: float, proj := false) -> bool:  # árboles, rocas y edificios (t y r en casillas)
 	var cell := Vector2i(floori(t.x / 2.0), floori(t.y / 2.0))
 	for dx in [-1, 0, 1]:
 		for dy in [-1, 0, 1]:
 			for c in grid.get(cell + Vector2i(dx, dy), []):
-				if t.distance_to(c[0]) < c[1] + r:
+				if t.distance_to(c[0]) < c[2 if proj else 1] + r:
 					return true
 	for rc: Rect2 in rects:
 		var closest := Vector2(clampf(t.x, rc.position.x, rc.end.x), clampf(t.y, rc.position.y, rc.end.y))
@@ -142,4 +142,4 @@ func next_waypoint(from_g: Vector2, to_g: Vector2, r: float) -> Vector2:
 	return main.tile_to_ground(Vector2(step) + Vector2(0.5, 0.5))
 
 func hits_obstacle(p_ground: Vector2) -> bool:  # los proyectiles chocan con estructuras, no con el agua
-	return hits_structure(main.ground_to_tile(p_ground), 0.12)
+	return hits_structure(main.ground_to_tile(p_ground), 0.12, true)

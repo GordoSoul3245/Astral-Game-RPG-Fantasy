@@ -166,7 +166,8 @@
     1.652,
     26.608
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -174,7 +175,8 @@
     1.216,
     28.701
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -182,7 +184,8 @@
     2.229,
     18.683
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -190,7 +193,8 @@
     2.724,
     20.267
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -198,7 +202,8 @@
     2.636,
     25.601
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -206,7 +211,8 @@
     2.647,
     27.641
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -214,7 +220,8 @@
     2.4,
     29.298
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -222,7 +229,8 @@
     2.487,
     30.77
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -230,7 +238,8 @@
     3.128,
     14.299
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -238,7 +247,8 @@
     3.302,
     16.867
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -246,7 +256,8 @@
     3.862,
     17.82
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -254,7 +265,8 @@
     3.361,
     21.3
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -262,7 +274,8 @@
     3.457,
     23.213
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -270,7 +283,8 @@
     3.531,
     24.359
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -278,7 +292,8 @@
     3.843,
     28.41
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -286,7 +301,8 @@
     3.871,
     29.584
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -294,7 +310,8 @@
     3.558,
     31.536
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -302,7 +319,8 @@
     4.152,
     14.626
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -310,7 +328,8 @@
     4.597,
     16.116
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -318,7 +337,8 @@
     4.289,
     19.408
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -326,7 +346,8 @@
     4.238,
     20.398
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -334,7 +355,8 @@
     4.833,
     24.409
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -342,7 +364,8 @@
     4.24,
     26.518
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -350,7 +373,8 @@
     4.861,
     30.358
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -358,7 +382,8 @@
     4.291,
     32.651
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -366,7 +391,8 @@
     5.633,
     11.636
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -374,7 +400,8 @@
     5.38,
     12.604
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -382,7 +409,8 @@
     5.106,
     14.536
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -390,7 +418,8 @@
     5.557,
     15.83
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -398,7 +427,8 @@
     5.742,
     17.775
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -406,7 +436,8 @@
     5.148,
     20.752
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -414,7 +445,8 @@
     5.643,
     21.641
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -422,7 +454,8 @@
     5.154,
     23.509
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -430,7 +463,8 @@
     5.731,
     25.42
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -438,7 +472,8 @@
     5.653,
     26.682
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -446,7 +481,8 @@
     5.395,
     29.483
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -454,7 +490,8 @@
     5.722,
     31.822
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -462,7 +499,8 @@
     5.657,
     33.394
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -470,7 +508,8 @@
     6.699,
     10.246
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -478,7 +517,8 @@
     6.579,
     13.382
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -486,7 +526,8 @@
     6.229,
     18.63
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -494,7 +535,8 @@
     6.444,
     20.402
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -502,7 +544,8 @@
     6.731,
     21.369
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -510,7 +553,8 @@
     6.415,
     24.103
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -518,7 +562,8 @@
     6.346,
     30.607
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -526,7 +571,8 @@
     6.649,
     33.368
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -534,7 +580,8 @@
     7.897,
     10.286
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -542,7 +589,8 @@
     7.53,
     11.539
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -550,7 +598,8 @@
     7.377,
     12.704
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -558,7 +607,8 @@
     7.286,
     14.782
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -566,7 +616,8 @@
     7.224,
     16.111
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -574,7 +625,8 @@
     7.363,
     17.272
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -582,7 +634,8 @@
     7.222,
     18.541
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -590,7 +643,8 @@
     8.831,
     11.44
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -598,7 +652,8 @@
     8.719,
     12.78
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -606,7 +661,8 @@
     8.384,
     13.777
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -614,7 +670,8 @@
     8.7,
     15.657
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -622,7 +679,8 @@
     9.444,
     7.631
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -630,7 +688,8 @@
     9.139,
     8.67
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -638,7 +697,8 @@
     9.714,
     11.861
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -646,7 +706,8 @@
     9.6,
     13.35
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -654,7 +715,8 @@
     9.376,
     14.849
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -662,7 +724,8 @@
     10.713,
     7.89
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -670,7 +733,8 @@
     10.861,
     8.872
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -678,7 +742,8 @@
     10.426,
     9.887
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -686,7 +751,8 @@
     10.842,
     11.214
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -694,7 +760,8 @@
     10.696,
     13.395
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -702,7 +769,8 @@
     10.163,
     14.262
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -710,7 +778,8 @@
     10.855,
     22.248
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -718,7 +787,8 @@
     10.792,
     23.615
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -726,7 +796,8 @@
     10.716,
     25.505
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -734,7 +805,8 @@
     10.594,
     27.244
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -742,7 +814,8 @@
     10.333,
     28.401
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -750,7 +823,8 @@
     11.576,
     6.677
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -758,7 +832,8 @@
     11.865,
     7.778
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -766,7 +841,8 @@
     11.729,
     9.885
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -774,7 +850,8 @@
     12.579,
     4.578
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -782,7 +859,8 @@
     12.665,
     10.668
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -790,7 +868,8 @@
     13.639,
     4.154
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -798,7 +877,8 @@
     13.756,
     6.278
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -806,7 +886,8 @@
     13.237,
     8.383
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -814,7 +895,8 @@
     14.594,
     5.531
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -822,7 +904,8 @@
     14.863,
     7.456
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -830,7 +913,8 @@
     14.255,
     9.615
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -838,7 +922,8 @@
     14.103,
     10.896
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -846,7 +931,8 @@
     15.526,
     4.573
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -854,7 +940,8 @@
     15.644,
     6.738
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -862,7 +949,8 @@
     15.493,
     8.848
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -870,7 +958,8 @@
     16.746,
     5.403
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -878,7 +967,8 @@
     16.714,
     7.591
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -886,7 +976,8 @@
     16.375,
     42.129
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -894,7 +985,8 @@
     16.181,
     43.367
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -902,7 +994,8 @@
     17.65,
     4.812
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -910,7 +1003,8 @@
     17.709,
     6.427
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -918,7 +1012,8 @@
     17.793,
     12.685
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -926,7 +1021,8 @@
     18.423,
     5.798
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -934,7 +1030,8 @@
     18.194,
     42.179
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -942,7 +1039,8 @@
     18.898,
     43.432
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -950,7 +1048,8 @@
     18.156,
     44.783
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -958,7 +1057,8 @@
     19.487,
     5.753
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -966,7 +1066,8 @@
     19.536,
     7.113
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -974,7 +1075,8 @@
     19.824,
     8.408
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -982,7 +1084,8 @@
     19.886,
     11.237
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -990,7 +1093,8 @@
     19.723,
     42.654
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -998,7 +1102,8 @@
     19.214,
     44.717
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1006,7 +1111,8 @@
     19.477,
     46.232
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1014,7 +1120,8 @@
     20.697,
     5.284
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1022,7 +1129,8 @@
     20.704,
     6.503
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1030,7 +1138,8 @@
     20.749,
     9.271
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1038,7 +1147,8 @@
     20.269,
     41.738
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1046,7 +1156,8 @@
     20.721,
     44.816
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1054,7 +1165,8 @@
     20.619,
     47.557
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1062,7 +1174,8 @@
     21.873,
     7.494
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1070,7 +1183,8 @@
     21.327,
     41.368
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1078,7 +1192,8 @@
     21.223,
     42.872
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1086,7 +1201,8 @@
     21.687,
     44.405
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1094,7 +1210,8 @@
     21.894,
     47.278
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1102,7 +1219,8 @@
     21.871,
     48.296
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1110,7 +1228,8 @@
     22.23,
     6.508
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1118,7 +1237,8 @@
     22.828,
     7.605
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1126,7 +1246,8 @@
     22.398,
     9.801
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1134,7 +1255,8 @@
     22.844,
     44.24
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1142,7 +1264,8 @@
     22.859,
     46.217
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1150,7 +1273,8 @@
     22.571,
     49.448
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1158,7 +1282,8 @@
     23.71,
     10.8
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1166,7 +1291,8 @@
     23.398,
     41.738
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1174,7 +1300,8 @@
     23.621,
     45.561
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1182,7 +1309,8 @@
     23.872,
     46.738
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1190,7 +1318,8 @@
     24.544,
     9.5
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1198,7 +1327,8 @@
     24.481,
     42.798
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1206,7 +1336,8 @@
     24.287,
     44.275
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1214,7 +1345,8 @@
     24.19,
     49.609
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1222,7 +1354,8 @@
     25.409,
     7.604
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1230,7 +1363,8 @@
     25.817,
     39.685
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1238,7 +1372,8 @@
     25.863,
     42.238
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1246,7 +1381,8 @@
     25.731,
     43.554
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1254,7 +1390,8 @@
     25.224,
     45.443
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1262,7 +1399,8 @@
     25.445,
     46.42
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1270,7 +1408,8 @@
     25.506,
     47.614
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1278,7 +1417,8 @@
     25.477,
     49.35
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1286,7 +1426,8 @@
     26.355,
     8.23
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1294,7 +1435,8 @@
     26.202,
     9.498
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1302,7 +1444,8 @@
     26.75,
     41.291
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1310,7 +1453,8 @@
     27.505,
     7.114
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1318,7 +1462,8 @@
     27.254,
     8.66
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1326,7 +1471,8 @@
     27.77,
     9.46
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1334,7 +1480,8 @@
     27.65,
     10.47
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1342,7 +1489,8 @@
     27.643,
     42.725
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1350,7 +1498,8 @@
     27.231,
     43.805
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1358,7 +1507,8 @@
     27.245,
     45.85
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1366,7 +1516,8 @@
     27.856,
     46.73
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1374,7 +1525,8 @@
     27.826,
     48.679
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1382,7 +1534,8 @@
     27.169,
     49.602
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1390,7 +1543,8 @@
     28.82,
     40.179
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1398,7 +1552,8 @@
     28.878,
     41.351
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1406,7 +1561,8 @@
     28.78,
     42.792
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1414,7 +1570,8 @@
     28.421,
     45.237
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1422,7 +1579,8 @@
     28.829,
     48.184
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1430,7 +1588,8 @@
     28.403,
     49.49
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1438,7 +1597,8 @@
     29.739,
     38.461
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1446,7 +1606,8 @@
     29.584,
     39.396
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1454,7 +1615,8 @@
     29.279,
     43.773
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1462,7 +1624,8 @@
     29.685,
     46.456
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1470,7 +1633,8 @@
     29.892,
     47.421
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1478,7 +1642,8 @@
     29.447,
     49.567
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1486,7 +1651,8 @@
     30.545,
     39.369
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1494,7 +1660,8 @@
     30.642,
     40.801
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1502,7 +1669,8 @@
     30.118,
     45.184
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1510,7 +1678,8 @@
     30.763,
     46.69
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1518,7 +1687,8 @@
     30.718,
     48.18
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1526,7 +1696,8 @@
     30.485,
     49.839
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1534,7 +1705,8 @@
     31.402,
     5.155
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1542,7 +1714,8 @@
     31.84,
     37.705
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1550,7 +1723,8 @@
     31.576,
     38.606
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1558,7 +1732,8 @@
     31.36,
     42.409
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1566,7 +1741,8 @@
     31.795,
     43.821
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1574,7 +1750,8 @@
     31.312,
     45.525
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1582,7 +1759,8 @@
     31.467,
     48.808
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1590,7 +1768,8 @@
     32.368,
     5.124
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1598,7 +1777,8 @@
     32.305,
     7.368
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1606,7 +1786,8 @@
     32.841,
     39.218
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1614,7 +1795,8 @@
     32.796,
     40.642
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1622,7 +1804,8 @@
     32.663,
     44.278
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1630,7 +1813,8 @@
     32.611,
     45.495
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1638,7 +1822,8 @@
     32.25,
     47.747
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1646,7 +1831,8 @@
     33.387,
     5.462
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1654,7 +1840,8 @@
     33.459,
     6.481
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1662,7 +1849,8 @@
     33.334,
     8.548
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1670,7 +1858,8 @@
     33.523,
     38.361
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1678,7 +1867,8 @@
     33.505,
     42.66
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1686,7 +1876,8 @@
     33.649,
     45.859
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1694,7 +1885,8 @@
     33.22,
     46.804
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1702,7 +1894,8 @@
     34.529,
     7.777
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1710,7 +1903,8 @@
     34.9,
     8.813
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1718,7 +1912,8 @@
     34.11,
     37.46
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1726,7 +1921,8 @@
     34.598,
     38.505
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1734,7 +1930,8 @@
     34.776,
     39.607
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1742,7 +1939,8 @@
     34.452,
     41.611
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1750,7 +1948,8 @@
     34.319,
     44.797
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1758,7 +1957,8 @@
     35.117,
     6.61
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1766,7 +1966,8 @@
     35.847,
     9.308
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1774,7 +1975,8 @@
     35.598,
     13.61
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1782,7 +1984,8 @@
     35.347,
     15.324
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1790,7 +1993,8 @@
     35.158,
     35.725
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1798,7 +2002,8 @@
     35.611,
     37.818
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1806,7 +2011,8 @@
     35.255,
     40.808
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1814,7 +2020,8 @@
     35.66,
     43.407
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1822,7 +2029,8 @@
     36.613,
     5.401
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1830,7 +2038,8 @@
     36.841,
     6.52
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1838,7 +2047,8 @@
     36.167,
     7.803
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1846,7 +2056,8 @@
     36.75,
     8.755
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1854,7 +2065,8 @@
     36.703,
     10.783
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1862,7 +2074,8 @@
     36.115,
     11.738
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1870,7 +2083,8 @@
     36.574,
     13.785
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1878,7 +2092,8 @@
     36.787,
     16.751
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1886,7 +2101,8 @@
     36.545,
     37.542
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1894,7 +2110,8 @@
     36.453,
     38.564
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1902,7 +2119,8 @@
     36.852,
     40.528
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1910,7 +2128,8 @@
     36.369,
     41.768
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1918,7 +2137,8 @@
     37.588,
     8.313
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1926,7 +2146,8 @@
     37.269,
     9.738
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1934,7 +2155,8 @@
     37.54,
     11.35
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -1942,7 +2164,8 @@
     37.556,
     12.741
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1950,7 +2173,8 @@
     37.363,
     42.652
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1958,7 +2182,8 @@
     38.367,
     6.819
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -1966,7 +2191,8 @@
     38.17,
     10.38
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1974,7 +2200,8 @@
     38.785,
     12.341
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1982,7 +2209,8 @@
     38.267,
     14.114
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1990,7 +2218,8 @@
     38.779,
     40.227
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -1998,7 +2227,8 @@
     38.14,
     41.296
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -2006,7 +2236,8 @@
     38.382,
     42.202
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -2014,7 +2245,8 @@
     39.711,
     7.688
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -2022,7 +2254,8 @@
     39.349,
     9.102
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -2030,7 +2263,8 @@
     39.565,
     41.849
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -2038,7 +2272,8 @@
     40.616,
     6.84
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -2046,7 +2281,8 @@
     40.687,
     8.764
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -2054,7 +2290,8 @@
     40.517,
     10.499
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -2062,7 +2299,8 @@
     40.486,
     12.38
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -2070,7 +2308,8 @@
     40.196,
     13.809
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -2078,7 +2317,8 @@
     40.886,
     41.672
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -2086,7 +2326,8 @@
     41.572,
     8.424
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -2094,7 +2335,8 @@
     41.556,
     10.416
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -2102,7 +2344,8 @@
     41.315,
     11.335
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -2110,7 +2353,8 @@
     41.753,
     12.876
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -2118,7 +2362,8 @@
     42.633,
     7.808
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -2126,7 +2371,8 @@
     42.731,
     8.891
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -2134,7 +2380,8 @@
     42.236,
     9.703
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_c",
@@ -2142,7 +2389,8 @@
     43.843,
     9.212
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -2150,7 +2398,8 @@
     43.177,
     10.238
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -2158,7 +2407,8 @@
     43.46,
     11.273
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_a",
@@ -2166,7 +2416,8 @@
     44.754,
     9.726
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "tree_b",
@@ -2174,7 +2425,8 @@
     44.466,
     11.692
    ],
-   "circle": 0.3
+   "circle": 0.3,
+   "pcircle": 0.55
   },
   {
    "sprite": "rock_a",
@@ -2182,7 +2434,7 @@
     32.5,
     17.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_b",
@@ -2190,7 +2442,7 @@
     19.5,
     22.5
    ],
-   "circle": 0.45
+   "circle": 0.5
   },
   {
    "sprite": "rock_a",
@@ -2198,7 +2450,7 @@
     24.5,
     35.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_a",
@@ -2206,7 +2458,7 @@
     27.5,
     32.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_b",
@@ -2214,7 +2466,7 @@
     33.5,
     16.5
    ],
-   "circle": 0.45
+   "circle": 0.5
   },
   {
    "sprite": "rock_a",
@@ -2222,7 +2474,7 @@
     35.5,
     12.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_b",
@@ -2230,7 +2482,7 @@
     25.5,
     38.5
    ],
-   "circle": 0.45
+   "circle": 0.5
   },
   {
    "sprite": "rock_b",
@@ -2238,7 +2490,7 @@
     29.5,
     19.5
    ],
-   "circle": 0.45
+   "circle": 0.5
   },
   {
    "sprite": "rock_a",
@@ -2246,7 +2498,7 @@
     25.5,
     11.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_a",
@@ -2254,7 +2506,7 @@
     27.5,
     33.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_a",
@@ -2262,7 +2514,7 @@
     12.5,
     22.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_a",
@@ -2270,7 +2522,7 @@
     33.5,
     35.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_b",
@@ -2278,7 +2530,7 @@
     11.5,
     24.5
    ],
-   "circle": 0.45
+   "circle": 0.5
   },
   {
    "sprite": "rock_a",
@@ -2286,7 +2538,7 @@
     30.5,
     34.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_a",
@@ -2294,7 +2546,7 @@
     19.5,
     24.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_b",
@@ -2302,7 +2554,7 @@
     21.5,
     34.5
    ],
-   "circle": 0.45
+   "circle": 0.5
   },
   {
    "sprite": "rock_a",
@@ -2310,7 +2562,7 @@
     25.5,
     21.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_b",
@@ -2318,7 +2570,7 @@
     27.5,
     40.5
    ],
-   "circle": 0.45
+   "circle": 0.5
   },
   {
    "sprite": "rock_a",
@@ -2326,7 +2578,7 @@
     31.5,
     23.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_a",
@@ -2334,7 +2586,7 @@
     17.5,
     35.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_b",
@@ -2342,7 +2594,7 @@
     21.5,
     20.5
    ],
-   "circle": 0.45
+   "circle": 0.5
   },
   {
    "sprite": "rock_a",
@@ -2350,7 +2602,7 @@
     21.5,
     35.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_a",
@@ -2358,7 +2610,7 @@
     9.5,
     10.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_b",
@@ -2366,7 +2618,7 @@
     21.5,
     24.5
    ],
-   "circle": 0.45
+   "circle": 0.5
   },
   {
    "sprite": "rock_b",
@@ -2374,7 +2626,7 @@
     27.5,
     20.5
    ],
-   "circle": 0.45
+   "circle": 0.5
   },
   {
    "sprite": "rock_a",
@@ -2382,7 +2634,7 @@
     15.5,
     5.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_a",
@@ -2390,7 +2642,7 @@
     26.5,
     18.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_a",
@@ -2398,7 +2650,7 @@
     24.5,
     8.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_a",
@@ -2406,7 +2658,7 @@
     2.5,
     17.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_a",
@@ -2414,7 +2666,7 @@
     33.5,
     25.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_b",
@@ -2422,7 +2674,7 @@
     22.5,
     42.5
    ],
-   "circle": 0.45
+   "circle": 0.5
   },
   {
    "sprite": "rock_a",
@@ -2430,7 +2682,7 @@
     20.5,
     13.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_a",
@@ -2438,7 +2690,7 @@
     32.5,
     28.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_b",
@@ -2446,7 +2698,7 @@
     19.5,
     35.5
    ],
-   "circle": 0.45
+   "circle": 0.5
   },
   {
    "sprite": "rock_b",
@@ -2454,7 +2706,7 @@
     22.5,
     35.5
    ],
-   "circle": 0.45
+   "circle": 0.5
   },
   {
    "sprite": "rock_a",
@@ -2462,7 +2714,7 @@
     19.5,
     15.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_b",
@@ -2470,7 +2722,7 @@
     6.5,
     15.5
    ],
-   "circle": 0.45
+   "circle": 0.5
   },
   {
    "sprite": "rock_b",
@@ -2478,7 +2730,7 @@
     29.5,
     17.5
    ],
-   "circle": 0.45
+   "circle": 0.5
   },
   {
    "sprite": "rock_a",
@@ -2486,7 +2738,7 @@
     16.5,
     4.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "rock_a",
@@ -2494,7 +2746,7 @@
     20.5,
     24.5
    ],
-   "circle": 0.5
+   "circle": 0.6
   },
   {
    "sprite": "house",
@@ -2503,10 +2755,10 @@
     12.0
    ],
    "rect": [
-    30.1,
-    10.6,
-    33.9,
-    13.4
+    29.85,
+    10.35,
+    34.15,
+    13.65
    ]
   },
   {
@@ -2516,10 +2768,10 @@
     25.0
    ],
    "rect": [
-    23.1,
-    23.1,
-    26.9,
-    26.9
+    22.73,
+    22.73,
+    27.27,
+    27.27
    ]
   },
   {
@@ -2529,10 +2781,10 @@
     39.0
    ],
    "rect": [
-    14.1,
-    37.6,
-    17.9,
-    40.4
+    13.85,
+    37.35,
+    18.15,
+    40.65
    ]
   },
   {
@@ -2542,10 +2794,10 @@
     38.0
    ],
    "rect": [
-    18.900000000000002,
-    36.6,
-    22.7,
-    39.4
+    18.650000000000002,
+    36.35,
+    22.95,
+    39.65
    ]
   },
   {
@@ -2555,10 +2807,10 @@
     31.8
    ],
    "rect": [
-    12.1,
-    31.1,
-    14.3,
-    32.5
+    11.95,
+    30.95,
+    14.450000000000001,
+    32.65
    ]
   }
  ],

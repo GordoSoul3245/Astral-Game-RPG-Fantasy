@@ -8,11 +8,13 @@ const LOOK := 150.0       # px de suelo
 var main: Node
 var pos := Vector2.ZERO
 var look := Vector2.DOWN
+var hit := {}             # hitbox corporal medida del sprite (hitbox.gd)
 var spr: AnimatedSprite2D
 var anim_t := 0.0
 
 func _ready() -> void:
 	spr = preload("res://scripts/life_sprite.gd").build(self, main, "res://art/fauna/villager_", {"idle": 1})
+	hit = preload("res://scripts/life_sprite.gd").hitbox(main, "res://art/fauna/villager_")
 	if spr:
 		spr.modulate = Color(1.0, 0.78, 0.62)  # otro tono de ropa que el de Elda
 	look = main.tile_to_ground(Vector2(1, 0)) - main.tile_to_ground(Vector2.ZERO)  # mira hacia el frente del mostrador (+j)
