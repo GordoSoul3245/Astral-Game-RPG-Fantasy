@@ -16,6 +16,8 @@ var scale_mult := 1.0       # tamaño del sprite (la esfera pesada es más grand
 var aoe := 0.0              # radio de explosión en px de suelo; 0 = daño solo por impacto directo
 var sprite: AnimatedSprite2D
 var dead := false
+var trail_points: Array[Vector2] = []
+var trail_distance := 0.0
 var glow: PointLight2D
 const HB := preload("res://scripts/hitbox.gd")  # hitbox del cuerpo (silueta del sprite), no un círculo en el suelo
 
@@ -43,6 +45,13 @@ func _sync() -> void:
 func _physics_process(delta: float) -> void:
 	if dead:
 		return
+	trail_distance += speed * delta
+	if trail_distance >= 5.0:
+		trail_distance = 0.0
+		trail_points.push_front((ground - Vector2(0, height)) * main.SCALE)
+		if trail_points.size() > 7:
+			trail_points.pop_back()
+	queue_redraw()
 	var step := dir * speed * delta
 	# subdivide para no atravesar obstáculos a velocidad alta
 	var n := maxi(1, ceili(step.length() / 4.0))
@@ -78,3 +87,13 @@ func _explode() -> void:
 	sprite.animation_finished.connect(queue_free)
 	hit.emit(ground)
 	_sync()
+
+func _draw() -> void:
+	if dead:
+		return
+	for i in trail_points.size():
+		var strength := 1.0 - float(i) / 7.0
+		var col := Color(1.0, 0.45, 0.12, strength * 0.65) * tint
+		var size := 3.0 * maxf(1.0, roundf(strength * scale_mult * 2.0))
+		var point := (trail_points[i] - position).snapped(Vector2(3, 3))
+		draw_rect(Rect2(point - Vector2.ONE * size * 0.5, Vector2.ONE * size), col)

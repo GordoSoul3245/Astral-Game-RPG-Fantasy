@@ -1,0 +1,22 @@
+{
+	"mara": {
+		"name": "Mara",
+		"tint": [1.0, 0.72, 0.82],
+		"talks": [
+			{"if": "dragon_alive", "lines": ["Bram no duerme desde que el dragón ronda el castillo.", "Dice que sus llamas derretirían el mejor acero. Yo solo pido que nadie salga herido."]},
+			{"if": "dragon_dead", "lines": ["¡Mataste al dragón! Bram no deja de contarlo a todo el que entra en la herrería.", "Pásate por allí: paga bien los materiales de las ruinas."]},
+			{"if": "fox_alive", "lines": ["Ese zorro se lleva los conejos del huerto. Si lo ves, ten cuidado: muerde si te acercas a su guarida."]},
+			{"lines": ["Esta casa es pequeña, pero siempre hay una sopa caliente para quien vuelve de las ruinas."]}
+		]
+	},
+	"teo": {
+		"name": "Teo",
+		"tint": [0.82, 0.84, 0.9],
+		"talks": [
+			{"if": "deep", "lines": ["Has bajado más hondo de lo que yo nunca me atreví.", "Si llegas a la cámara oculta, recuerda: el mago de la tormenta lanza una corona de orbes cada cierto tiempo. Busca el hueco entre ellos."]},
+			{"lines": ["Fui aventurero, ¿sabes? Los cíclopes embisten desde lejos: cuando veas el pasillo rojo en el suelo, apártate de lado, no hacia atrás.", "Y si te quedas sin aire, esquiva justo cuando te vayan a golpear: se llama esquiva perfecta y te devuelve fuerzas."]},
+			{"lines": ["El dragón se cansa tras tres ataques. Esa es tu ventana: golpéalo mientras respira.", "Los golpes pesados llenan la postura de los gigantes. Cuando se abren, aprovecha."]},
+			{"lines": ["La espada alimenta la magia: cada golpe conectado te devuelve un poco de maná. Alterna tajos y hechizos."]}
+		]
+	}
+}

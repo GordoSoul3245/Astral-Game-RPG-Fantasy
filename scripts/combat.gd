@@ -49,6 +49,12 @@ func set_zone(dungeon: bool) -> void:  # ambiente por mapa; las luces transitori
 	lantern.energy = 0.55 if dungeon else 0.0
 	marks.clear()
 
+const AMBIENT_INDOOR := Color(0.9, 0.78, 0.66)   # interior de una casa: luz cálida de fuego y ventanas
+
+func set_indoors() -> void:  # tras set_zone(false): sala cálida, con la linterna del héroe apagada
+	ambient.color = AMBIENT_INDOOR
+	lantern.energy = 0.0
+
 func light(col: Color, energy: float, size: float) -> PointLight2D:
 	var l := PointLight2D.new()
 	l.texture = glow

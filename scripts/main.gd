@@ -117,6 +117,8 @@ func _ready() -> void:
 		settings.path = "user://test_settings.json"
 	settings.apply_audio()
 	creatures = _read_json("res://data/creatures.json")
+	interiors_data = _read_json("res://data/interiors.json")
+	dialogue_data = _read_json("res://data/dialogue.json")
 	hero_data = creatures["hero"]
 	prog = load("res://scripts/progress.gd").new(_read_json("res://data/equipment.json"))
 	hero_base = {"hp": hero_data["hp"], "mana": hero_data["mana"], "stamina": hero_data["stamina"]}
@@ -218,8 +220,12 @@ func _ready() -> void:
 	quests = load("res://scripts/quests.gd").new(_read_json("res://data/quests.json"))
 	testing = get_tree().get_script() != null  # los tests corren con un SceneTree propio: no tocan la partida guardada
 	if not testing:
-		load_game()
+		if not get_tree().get_meta("new_game", false):
+			load_game()
+		if get_tree().has_meta("new_game"):
+			get_tree().remove_meta("new_game")
 	_apply_stats()
+	var village_houses := 0
 	for o: Dictionary in mp["objects"]:
 		if o["sprite"] == "castle":  # la puerta de madera está en la cara frontal derecha del sprite del castillo
 			var door_g := tile_to_ground(Vector2(o["tile"][0], o["tile"][1])) + Vector2(65, -8)
@@ -239,11 +245,25 @@ func _ready() -> void:
 			s.pos = tile_to_ground(Vector2(o["tile"][0], o["tile"][1] - 2.2))
 			add_child(s)
 			merchants.append(s)
+		if o["sprite"] == "house" and o["tile"][1] > 30.0 and village_houses < INTERIOR_IDS.size():  # las casas del pueblo se pueden visitar
+			var iid: String = INTERIOR_IDS[village_houses]
+			village_houses += 1
+			var dd := _add_door(Vector2(o["tile"][0], o["rect"][3] + 0.6), "Entrar: " + interiors_data[iid]["title"], enter_interior.bind(iid), false)
+			dd.reach = 1.8
 	shop = CanvasLayer.new()
 	shop.set_script(load("res://scripts/shop.gd"))
 	shop.main = self
 	add_child(shop)
+	dialogue = CanvasLayer.new()
+	dialogue.set_script(load("res://scripts/dialogue.gd"))
+	dialogue.main = self
+	add_child(dialogue)
 	_place()
+	if not testing:
+		var start_menu: CanvasLayer = load("res://scripts/start_menu.gd").new()
+		start_menu.main = self
+		add_child(start_menu)
+		save_game()
 
 # --- pueblo: misiones, mercader y guardado
 var quests: RefCounted
@@ -424,7 +444,12 @@ func _interact() -> void:
 		if v == villagers[0]:  # Elda da las misiones
 			line = quests.talk(self)
 			save_game()
-		say(line, 4.0)
+		var who: String = quests.giver if v == villagers[0] else "Aldeano"
+		dialogue.open(who, line.replace(who + ": ", "").split("\n"))
+		return
+	var nd := _near_npc()
+	if nd != null:
+		dialogue.open(nd.display, npc_lines(nd))
 		return
 	var m := _near_merchant()
 	if m != null:
@@ -475,6 +500,8 @@ func _update_prompt(delta: float) -> void:
 		prompt.text = ("[E] " + d.label) if not d.locked else d.lock_text
 	elif _near_villager() != null:
 		prompt.text = "[E] Hablar con %s" % quests.giver if _near_villager() == villagers[0] else "[E] Hablar"
+	elif _near_npc() != null:
+		prompt.text = "[E] Hablar con %s" % _near_npc().display
 	elif _near_merchant() != null:
 		prompt.text = "[E] Comprar a Tomás  (tienes %d monedas)" % prog.coins if _near_merchant().role == "merchant" else "[E] Vender materiales a Bram"
 	else:
@@ -556,6 +583,109 @@ func _exit_dungeon() -> void:
 	combat.set_zone(false)
 	cam.position = (pos - Vector2(0, 40)) * SCALE
 
+# --- interiores de las casas del pueblo (data/interiors.json) y conversaciones (data/dialogue.json)
+const INTERIOR_IDS := ["forge", "den"]   # primera y segunda casa del pueblo, por orden en map.json
+var interiors_data := {}
+var dialogue_data := {}
+var dialogue: CanvasLayer
+var in_interior := false
+var current_interior := ""
+var npcs: Array = []
+
+func enter_interior(id: String) -> void:
+	_transition(func() -> void: _enter_interior(id))
+
+func _enter_interior(id: String) -> void:  # como la dungeon: oculta el exterior, cambia la cuadrícula y monta la sala
+	var cfg: Dictionary = interiors_data[id]
+	in_dungeon = true  # fauna, civiles y enemigos se pausan y ocultan igual que bajo tierra
+	in_interior = true
+	current_interior = id
+	overworld = {"pos": pos, "C1": C1, "E1": E1, "E2": E2, "tiles": TILES, "world": world, "doors": doors, "dragon_alive": dragon.alive}
+	world.visible = false
+	for d: Node2D in doors:
+		d.visible = false
+	doors = []
+	dragon.visible = false
+	dragon.alive = false
+	var n: int = cfg["tiles"]
+	var s := n / TILES
+	E1 *= s
+	E2 *= s
+	TILES = n
+	C1 = -(E1 + E2) / 2.0
+	RenderingServer.set_default_clear_color(Color("#1a120b"))
+	combat.set_zone(false)
+	combat.set_indoors()
+	dungeon_node = Node2D.new()
+	dungeon_node.set_script(load("res://scripts/interior.gd"))
+	dungeon_node.main = self
+	add_child(dungeon_node)
+	dungeon_node.setup(cfg)
+	world = dungeon_node
+	_add_door(Vector2(n / 2.0, 0.25), "Salir de la casa", exit_interior)
+	pos = tile_to_ground(Vector2(n / 2.0, 2.4))
+	cam.position = (pos - Vector2(0, 40)) * SCALE
+	for nd: Dictionary in cfg["npcs"]:
+		var npc := Node2D.new()
+		npc.set_script(load("res://scripts/npc.gd"))
+		npc.main = self
+		npc.id = nd["id"]
+		npc.pos = tile_to_ground(Vector2(nd["tile"][0], nd["tile"][1]))
+		add_child(npc)
+		npcs.append(npc)
+
+func exit_interior() -> void:
+	_transition(_exit_interior)
+
+func _exit_interior() -> void:
+	in_dungeon = false
+	in_interior = false
+	current_interior = ""
+	for nd in npcs:
+		nd.queue_free()
+	npcs.clear()
+	for d: Node2D in doors:
+		d.queue_free()
+	dungeon_node.queue_free()
+	world = overworld["world"]
+	world.visible = true
+	doors = overworld["doors"]
+	for d: Node2D in doors:
+		d.visible = true
+	C1 = overworld["C1"]
+	E1 = overworld["E1"]
+	E2 = overworld["E2"]
+	TILES = overworld["tiles"]
+	pos = overworld["pos"]
+	dragon.visible = true
+	dragon.alive = overworld["dragon_alive"]
+	RenderingServer.set_default_clear_color(Color("#0f1a2a"))
+	combat.set_zone(false)
+	cam.position = (pos - Vector2(0, 40)) * SCALE
+
+func _near_npc() -> Node2D:
+	for nd: Node2D in npcs:
+		if nd.in_range():
+			return nd
+	return null
+
+func _dragon_alive() -> bool:  # dentro de una casa el dragón está desactivado: vale lo guardado
+	return overworld.get("dragon_alive", dragon.alive) if in_dungeon else dragon.alive
+
+func _talk_cond(c: String) -> bool:
+	match c:
+		"dragon_alive": return _dragon_alive()
+		"dragon_dead": return not _dragon_alive()
+		"fox_alive": return predators.any(func(p: Node) -> bool: return p.alive)
+		"deep": return dungeon_floor >= 3
+	return c == ""
+
+func npc_lines(npc: Node2D) -> Array:  # conversaciones que se cumplen ahora; rota entre ellas
+	var ok: Array = dialogue_data[npc.id]["talks"].filter(func(t: Dictionary) -> bool: return _talk_cond(t.get("if", "")))
+	var pick: Dictionary = ok[npc.talks % ok.size()]
+	npc.talks += 1
+	return pick["lines"]
+
 # --- enemigos, botín y progresión (progress.gd)
 var enemies: Array = []          # dragón y monstruos de la dungeon: alive, pos, radius, take_damage()
 var prog: RefCounted
@@ -579,6 +709,34 @@ func _apply_stats() -> void:  # recalcula máximos con nivel, puntos y equipo; s
 	hero_data["stamina"] = prog.max_stamina(hero_base["stamina"])
 	mana = minf(mana, hero_data["mana"])
 	stamina = minf(stamina, hero_data["stamina"])
+	_equip_look()
+
+# --- el equipo se ve sobre el héroe (versión ligera: sin capas de sprite nuevas)
+# armadura -> tono de la ropa (self_modulate, no choca con los destellos de daño en modulate);
+# espada -> color del tajo; collar/anillo -> brillo tenue alrededor del héroe.
+const ARMOR_TINT := {1: Color(1.0, 0.93, 0.82), 2: Color(0.88, 0.95, 1.08), 3: Color(1.12, 1.04, 0.78)}
+const SWORD_TRAIL := {2: Color(0.62, 0.35, 0.95), 3: Color(0.65, 0.95, 1.0)}
+const AURA := {1: Color(0.75, 0.75, 0.7), 2: Color(0.4, 0.65, 1.0), 3: Color(1.0, 0.8, 0.35)}
+var equip_aura: PointLight2D
+
+func _tier(slot: String) -> int:
+	var id: String = prog.equipped.get(slot, "")
+	return int(prog.equipment[id]["tier"]) if id != "" else 0
+
+func _equip_look() -> void:
+	if hero == null:
+		return
+	hero.self_modulate = ARMOR_TINT.get(_tier("armor"), Color.WHITE)
+	var t := maxi(_tier("amulet"), _tier("ring"))
+	if equip_aura == null and combat != null:
+		equip_aura = combat.light(Color.WHITE, 0.0, 1.4)
+		add_child(equip_aura)
+	if equip_aura:
+		equip_aura.color = AURA.get(t, Color.WHITE)
+		equip_aura.energy = 0.0 if t == 0 else 0.12 + 0.06 * t
+
+func sword_trail_color() -> Color:  # color del tajo según la espada equipada (la katana en llamas manda)
+	return SWORD_TRAIL.get(_tier("sword"), Color.html(current["trail_color"]))
 
 func spawn_enemy(id: String, ground: Vector2) -> Node2D:
 	var e := Node2D.new()
@@ -943,7 +1101,9 @@ func _respawn() -> void:
 	mana = hero_data["mana"]
 	stamina = hero_data["stamina"]
 	burn_t = 0.0
-	if in_dungeon:  # despierta en el pueblo; el piso alcanzado y la misión se conservan
+	if in_interior:
+		_exit_interior()
+	elif in_dungeon:  # despierta en el pueblo; el piso alcanzado y la misión se conservan
 		_exit_dungeon()
 		say("Despiertas en el pueblo", 2.5)
 	else:
@@ -1062,6 +1222,7 @@ func _dash() -> bool:  # true si el dash empezó
 	facing = DIRS[posmod(roundi(dash_dir.angle() / (PI / 4.0)), 8)]
 	dashing = true
 	move_vel = Vector2.ZERO
+	_spawn_dash_dust(-dash_dir)
 	mega_active = false
 	attacking = false
 	dash_t = 0.0
@@ -1195,13 +1356,23 @@ func _spawn_trail() -> void:
 	t.aim = aim_dir.angle()
 	t.arc = deg_to_rad(current["arc"])
 	t.radius = current["trail_radius"] * SCALE
-	t.color = Color(1.0, 0.45, 0.1) if burn_t > 0.0 else Color.html(current["trail_color"])
+	t.color = Color(1.0, 0.45, 0.1) if burn_t > 0.0 else sword_trail_color()
 	t.duration = current["trail_time"]
+	t.anchor = hero
+	t.heavy = current_mode == "heavy"
 	t.flip = trail_flip
 	if current_mode == "light":
 		trail_flip = -trail_flip  # los tajos ligeros alternan de lado
 	t.z_index = int(pos.y) + 6
 	add_child(t)
+
+func _spawn_dash_dust(direction: Vector2) -> void:
+	var dust := preload("res://scripts/dash_dust.gd").new()
+	dust.position = pos * SCALE
+	dust.direction = direction
+	dust.tint = Color("#8e8da1") if in_dungeon else Color("#b7a38a")
+	dust.z_index = int(pos.y) + 1
+	add_child(dust)
 
 # --- ultimates (R): requieren la carga llena, que se gana golpeando entidades
 func _ultimate() -> void:
@@ -1249,6 +1420,7 @@ func _confirm_meteor() -> void:
 	_begin(u, "ultimate")  # animación de lanzamiento; el meteoro cae en el fotograma de disparo
 
 func _mega_dash(u: Dictionary) -> void:
+	_spawn_dash_dust(-aim_dir)
 	ult = 0.0
 	var to_cursor := _mouse() / SCALE - pos  # se mueve por el suelo: rumbo de los pies al cursor
 	dash_dir = to_cursor.normalized() if to_cursor.length() >= 1.0 else Vector2.from_angle(DIRS.find(facing) * PI / 4.0)
@@ -1389,6 +1561,7 @@ func _physics_process(delta: float) -> void:
 					shake(8.0)
 		if dash_t >= dash_time_cur:
 			dashing = false
+			_spawn_dash_dust(dash_dir)
 			if not mega_active:
 				dash_bonus_t = DASH_BONUS_TIME  # el siguiente tajo pega más
 			if mega_active:
@@ -1468,4 +1641,6 @@ func _place() -> void:
 	hero.z_index = int(pos.y)
 	if is_instance_valid(contact_shadow):
 		contact_shadow.position = pos * SCALE
+	if equip_aura:
+		equip_aura.position = (pos - Vector2(0, 34)) * SCALE
 		contact_shadow.z_index = hero.z_index - 1

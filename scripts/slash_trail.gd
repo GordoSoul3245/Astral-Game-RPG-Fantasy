@@ -12,12 +12,20 @@ var color := Color.WHITE
 var duration := 0.16
 var flip := 1.0              # sentido del barrido; alterna entre tajos ligeros
 var t := 0.0
+var anchor: Node2D
+var heavy := false
+var last_anchor := Vector2.ZERO
 
 func _ready() -> void:
+	if is_instance_valid(anchor):
+		last_anchor = anchor.position
 	material = CanvasItemMaterial.new()
 	material.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD  # brillo aditivo
 
 func _process(delta: float) -> void:
+	if is_instance_valid(anchor) and t < duration:
+		center += anchor.position - last_anchor
+		last_anchor = anchor.position
 	t += delta
 	if t > duration * 2.0:
 		queue_free()
@@ -45,7 +53,7 @@ func _draw() -> void:
 		var u := float(i) / SEGMENTS
 		var a := aim + flip * lerpf(tail, head, u)
 		var d := Vector2.from_angle(a)
-		var w := radius * 0.3 * u            # fina en la cola, gruesa en la punta
+		var w := radius * (0.19 if heavy else 0.1) * sin(u * PI * 0.9)
 		outer.append(center + d * (radius + w * 0.35))
 		inner.append(center + d * (radius - w * 0.65))
 		var c := color.lerp(Color.WHITE, u * u * 0.45)  # la punta se aclara sin perder el color
@@ -56,5 +64,5 @@ func _draw() -> void:
 			PackedColorArray([cols[i], cols[i + 1], cols[i + 1], cols[i]]))
 	# destello en la punta de la hoja
 	var tip := center + Vector2.from_angle(aim + flip * head) * radius
-	draw_circle(tip, radius * 0.07, Color(1, 1, 1, alpha))
-	draw_circle(tip, radius * 0.14, Color(color.r, color.g, color.b, 0.35 * alpha))
+	var pixel_tip := tip.snapped(Vector2(3, 3))
+	draw_rect(Rect2(pixel_tip - Vector2(3, 3), Vector2(6, 6)), Color(1, 1, 1, alpha))

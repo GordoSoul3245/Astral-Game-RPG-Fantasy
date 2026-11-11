@@ -34,5 +34,10 @@ func capture() -> void:
 	main.shop.open("smith")
 	await _shot("town_smith", 0.5)
 	main.shop.close()
+	main._enter_interior("forge")
+	main.pos = main.tile_to_ground(Vector2(3.4, 3.0))
+	main._place()
+	main.cam.position = (main.pos - Vector2(0, 40)) * main.SCALE
+	await _shot("interior_forge", 0.8)
 	print("PASS town captures saved")
 	quit()
