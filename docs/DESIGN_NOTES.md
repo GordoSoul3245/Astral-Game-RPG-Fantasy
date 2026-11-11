@@ -30,7 +30,11 @@ Lee este archivo y sigue desde "Pendiente". Lo que está escrito aquí es la fue
 
 **Pendiente / conocido:**
 - **Hecho (2026-11-10):** pueblo junto al inicio (2 casas y puesto del mercader, generados con `art/map/build_map.py`; `VILLAGE`), reaparición en el pueblo al morir, cadena de 5 misiones con Elda (`data/quests.json`, `scripts/quests.gd`; `[E]` para hablar), mercader de pociones, guardado/carga en `user://save.json` (nivel, estadísticas, equipo, monedas, piso y misión; autoguardado cada 20 s y en hitos), fauna golpeable (conejos y zorro, `main.targets()`) y estructuras translúcidas cuando tapan al héroe (`world_map.gd: covers_hero`). Tests: `test_town.gd`, `test_fauna.gd`, `test_perception.gd`, `test_pressure.gd`, `test_buffer.gd`.
-- Pendiente: sin probar jugando; el mercader solo vende pociones; las misiones son lineales; no hay interior de casas.
+- **Hitboxes (2026-11-11):** `scripts/hitbox.gd` mide la silueta real de cada sprite (elipse por dirección centrada en la masa de píxeles) para héroe, dragón, monstruos, fauna y NPC. Tajos (desde el pecho), proyectiles (a la altura de la bola), mega dash, meteoro y explosiones se miden contra ella; el daño en el suelo usa la huella (elipse aplastada ×0.6). Estructuras: rectángulos de casa/castillo/puesto del tamaño del zócalo y follaje de árboles que frena proyectiles (`pcircle`). **F2** dibuja las hitbox. `art/map/build_map.py` genera todo (`FOOTPRINT_MARGIN`).
+- **Tienda (2026-11-11):** `scripts/shop.gd` + `data/shop.json`. Tomás (puesto) vende pociones y equipo de tier 1-2; Bram (junto a la casa) compra materiales de monstruos. Panel con el juego en pausa.
+- **Misiones:** 10 en cadena (`data/quests.json`); eventos `kill`, `floor` y `loot`. **Piso 4 opcional** (`data/dungeon.json`): cofre final con +3 puntos de estadística; el piso 3 ya no reinicia la dungeon.
+- **Test de humo con bot** (`tests/test_playthrough.gd`, ejecutar con `--fixed-fps 60`): recorre los 4 pisos en ~137 s de juego sin morir. El bot apunta perfecto y no esquiva; úsalo para detectar atascos, no para balance fino. Con él se ve que XP y monedas llegan muy rápido (nivel 12 y ~1500 monedas al final).
+- Pendiente: sin probar jugando por una persona; no hay interior de casas; el mercader no recompra equipo.
 - Animaciones nuevas (procedurales, no de Blender): la bola de fuego usa la anim `cast` y el dragón se aplasta y se desvanece al morir.
 
 ## 2. Brief del juego (resumen)

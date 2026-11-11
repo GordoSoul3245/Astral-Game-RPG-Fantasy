@@ -27,5 +27,12 @@ func capture() -> void:
 	main._place()
 	main.cam.position = (main.pos - Vector2(0, 40)) * main.SCALE
 	await _shot("town_occlusion", 1.5)
+	main.prog.coins = 160
+	main.prog.materials = {"gel_slime": 5, "ojo_ciclope": 2}
+	main.shop.open("merchant")
+	await _shot("town_shop", 0.5)
+	main.shop.open("smith")
+	await _shot("town_smith", 0.5)
+	main.shop.close()
 	print("PASS town captures saved")
 	quit()

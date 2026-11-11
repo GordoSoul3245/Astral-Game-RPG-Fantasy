@@ -122,6 +122,9 @@ func open_chest() -> void:
 		lines.append(main.give_item(id))
 	main.show_loot(got)
 	main.gain_xp(int(c["xp"]))
+	if c.has("points"):  # reliquia: puntos de estadística extra
+		main.prog.points += int(c["points"])
+		lines.append("+%d puntos de estadística" % int(c["points"]))
 	if c.get("final", false):
 		lines.append("¡Dungeon completada!")
 		label.text = "¡Dungeon completada!"

@@ -13,7 +13,12 @@
 		{
 			"name": "Piso 3 · Cámara de la tormenta",
 			"enemies": {"cyclops": 2, "storm_mage": 1},
-			"chest": {"coins": [250, 320], "xp": 500, "items": 2, "final": true, "pool": ["armadura_dorada", "katana_tormenta", "grimorio_inferno", "amuleto_tormenta"]}
+			"chest": {"coins": [250, 320], "xp": 500, "items": 2, "pool": ["armadura_dorada", "katana_tormenta", "grimorio_inferno", "amuleto_tormenta"]}
+		},
+		{
+			"name": "Piso 4 · Cámara oculta (opcional)",
+			"enemies": {"slime": 6, "skeleton_archer": 5, "cyclops": 3, "storm_mage": 1},
+			"chest": {"coins": [400, 500], "xp": 800, "items": 1, "points": 3, "final": true, "pool": ["armadura_dorada", "katana_tormenta", "grimorio_inferno", "amuleto_tormenta"]}
 		}
 	]
 }

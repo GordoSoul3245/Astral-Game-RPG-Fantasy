@@ -214,31 +214,34 @@ func _ready() -> void:
 			m.pos = tile_to_ground(Vector2(o["tile"][0] - 1.75, o["tile"][1] + 0.3))  # del lado que mira al camino: delante del puesto en pantalla
 			add_child(m)
 			merchants.append(m)
+		elif o["sprite"] == "house" and o["tile"][1] > 30.0 and not merchants.any(func(x: Node) -> bool: return x.role == "smith"):  # el herrero vive en la primera casa del pueblo; está frente a su puerta
+			var s := Node2D.new()
+			s.set_script(load("res://scripts/merchant.gd"))
+			s.main = self
+			s.role = "smith"
+			s.pos = tile_to_ground(Vector2(o["tile"][0], o["tile"][1] - 2.2))
+			add_child(s)
+			merchants.append(s)
+	shop = CanvasLayer.new()
+	shop.set_script(load("res://scripts/shop.gd"))
+	shop.main = self
+	add_child(shop)
 	_place()
 
 # --- pueblo: misiones, mercader y guardado
-const POTION_PRICE := 15
 var quests: RefCounted
 var testing := false
 var save_path := "user://save.json"
 var autosave_t := 0.0
 var quest_label: Label
 var merchants: Array = []
+var shop: CanvasLayer
 
 func _near_merchant() -> Node2D:
 	for m: Node2D in merchants:
 		if m.in_range():
 			return m
 	return null
-
-func _buy_potion() -> void:
-	if prog.coins < POTION_PRICE:
-		say("Te faltan monedas (%d / %d)" % [prog.coins, POTION_PRICE])
-		return
-	prog.coins -= POTION_PRICE
-	prog.potions += 1
-	say("+1 poción de vida")
-	save_game()
 
 func quest_event(event: String, target: String) -> void:  # muertes y pisos completados avanzan la misión activa
 	if quests.notify(event, target):
@@ -284,7 +287,7 @@ func load_game() -> bool:  # valida cada campo: el archivo puede estar editado o
 			var id := str(eq[slot])
 			if prog.equipment.has(id) and prog.owned.has(id) and prog.equipment[id]["slot"] == slot:
 				prog.equipped[slot] = id
-	dungeon_floor = clampi(int(d.get("dungeon_floor", 1)), 1, 3)
+	dungeon_floor = clampi(int(d.get("dungeon_floor", 1)), 1, 4)
 	if d.get("quests") is Dictionary:
 		quests.from_dict(d["quests"])
 	return true
@@ -397,8 +400,9 @@ func _interact() -> void:
 			save_game()
 		say(line, 4.0)
 		return
-	if _near_merchant() != null:
-		_buy_potion()
+	var m := _near_merchant()
+	if m != null:
+		shop.open(m.role)
 
 func _near_villager() -> Node2D:
 	if in_dungeon:
@@ -444,7 +448,7 @@ func _update_prompt(delta: float) -> void:
 	elif _near_villager() != null:
 		prompt.text = "[E] Hablar con %s" % quests.giver if _near_villager() == villagers[0] else "[E] Hablar"
 	elif _near_merchant() != null:
-		prompt.text = "[E] Comprar poción · %d monedas  (tienes %d)" % [POTION_PRICE, prog.coins]
+		prompt.text = "[E] Comprar a Tomás  (tienes %d monedas)" % prog.coins if _near_merchant().role == "merchant" else "[E] Vender materiales a Bram"
 	else:
 		prompt.text = ""
 
@@ -595,6 +599,7 @@ func on_kill(e: Node) -> void:  # botín de un enemigo: XP, monedas y objetos (d
 		else:
 			prog.materials[drop["item"]] = prog.materials.get(drop["item"], 0) + 1
 			lines.append(prog.material_names[drop["item"]])
+			quest_event("loot", drop["item"])
 	popup(e.pos, "\n".join(lines))
 	gain_xp(xp)
 	var id: Variant = creatures.find_key(d)
@@ -951,7 +956,11 @@ func _mb(button: int) -> bool:  # clic mantenido (en táctil lo simulan los boto
 		return touch.held[button]
 	return Input.is_mouse_button_pressed(button)
 
+var forced_aim := Vector2.ZERO  # pruebas con bot (test_playthrough.gd): dirección de mira fija en vez del cursor
+
 func _chest_aim() -> Vector2:  # dirección del pecho del héroe al cursor, en px de suelo
+	if forced_aim != Vector2.ZERO:
+		return forced_aim
 	var aim := _mouse() / SCALE - (pos - Vector2(0, 40))
 	return aim.normalized() if aim.length() >= 1.0 else Vector2.from_angle(DIRS.find(facing) * PI / 4.0)
 

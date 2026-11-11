@@ -70,20 +70,50 @@ func run_checks() -> void:
 	main.quest_event("kill", "fox")
 	assert(q.status == "ready")
 
-	# --- mercader: un personaje tras el mostrador; [E] cerca le compra una poción
-	assert(main.merchants.size() == 1, "hay un mercader")
-	var m: Node = main.merchants[0]
-	main.pos = m.pos + Vector2(400, 0)
+	# --- Tomás vende (pociones y equipo) y Bram compra materiales
+	var roles: Array = main.merchants.map(func(x: Node) -> String: return x.role)
+	assert(main.merchants.size() == 2 and roles.has("merchant") and roles.has("smith"), "dos comerciantes: %s" % [roles])
+	var m: Node = main.merchants[roles.find("merchant")]
+	main.pos = m.pos + Vector2(1400, 0)
 	assert(main._near_merchant() == null, "lejos no vende")
 	main.pos = m.pos + Vector2(60, 0)
 	assert(main._near_merchant() == m, "cerca puede comprarle")
+	var shop: CanvasLayer = main.shop
 	main.prog.coins = 0
 	var p0: int = main.prog.potions
-	main._buy_potion()
-	assert(main.prog.potions == p0, "sin monedas no compra")
-	main.prog.coins = 40
-	main._buy_potion()
-	assert(main.prog.potions == p0 + 1 and main.prog.coins == 40 - main.POTION_PRICE)
+	assert(shop.buy("pocion_vida").find("Te faltan") >= 0 and main.prog.potions == p0, "sin monedas no compra")
+	main.prog.coins = 500
+	shop.buy("pocion_vida")
+	assert(main.prog.potions == p0 + 1 and main.prog.coins == 485)
+	assert(shop.buy("armadura_cuero").find("Armadura de cuero") >= 0 and main.prog.owned.has("armadura_cuero") and main.prog.coins == 425, "compra equipo")
+	assert(shop.buy("armadura_cuero").find("Ya tienes") >= 0 and main.prog.coins == 425, "no se repite")
+	assert(shop.buy("katana_tormenta").find("no está en venta") >= 0, "lo que no vende, no se compra")
+	assert(not shop.stock().any(func(s: Dictionary) -> bool: return s["id"] == "armadura_cuero"), "ya no aparece en el stock")
+	main.prog.materials["gel_slime"] = 5
+	var c0: int = main.prog.coins
+	assert(shop.sell_value("gel_slime") == 20)
+	shop.sell("gel_slime")
+	assert(main.prog.coins == c0 + 20 and not main.prog.materials.has("gel_slime"), "Bram paga los materiales")
+	assert(shop.sell("gel_slime").find("No tienes") >= 0, "sin materiales no vende")
+	shop.open("merchant")  # la interfaz se construye y pausa el juego; Esc/cerrar lo reanuda
+	assert(shop.is_open() and main.get_tree().paused and shop.list.get_child_count() > 0)
+	shop.close()
+	assert(not shop.is_open() and not main.get_tree().paused)
+
+	# --- nuevos tipos de misión: recoger material y piso 4 opcional
+	var qd: RefCounted = main.quests
+	var qs: Dictionary = qd.to_dict()  # se restaura al final: el guardado de más abajo comprueba este estado
+	qd.idx = qd.list.find_custom(func(q: Dictionary) -> bool: return q["id"] == "gel")
+	qd.status = "active"
+	qd.progress = 0
+	main.quest_event("loot", "gel_slime")
+	main.quest_event("loot", "gel_slime")
+	assert(qd.status == "active")
+	main.quest_event("loot", "gel_slime")
+	assert(qd.status == "ready", "recoger tres geles cumple la misión")
+	var dung: Dictionary = main._read_json("res://data/dungeon.json")
+	assert(dung["floors"].size() == 4 and dung["floors"][3]["chest"].get("final", false) and not dung["floors"][2]["chest"].get("final", false), "el piso 4 es opcional y cierra la dungeon")
+	qd.from_dict(qs)
 
 	# --- guardado y carga (con validación)
 	main.prog.level = 4
@@ -109,7 +139,7 @@ func run_checks() -> void:
 	f.store_string('{"level": -5, "coins": -9, "spent": {"strength": -3}, "equipped": {"sword": "no_existe"}, "dungeon_floor": 99, "quests": {"idx": 99, "status": "raro"}}')
 	f.close()
 	assert(main.load_game())
-	assert(main.prog.level == 1 and main.prog.coins == 0 and main.prog.spent["strength"] == 0 and main.prog.equipped.is_empty() and main.dungeon_floor == 3)
+	assert(main.prog.level == 1 and main.prog.coins == 0 and main.prog.spent["strength"] == 0 and main.prog.equipped.is_empty() and main.dungeon_floor == 4)
 	assert(main.quests.idx == main.quests.list.size() and main.quests.status == "none")
 
 	# --- al morir en la dungeon, despierta en el pueblo

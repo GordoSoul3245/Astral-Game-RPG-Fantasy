@@ -6,6 +6,7 @@ const TALK_RANGE := 2.8   # casillas
 const LOOK := 150.0       # px de suelo
 
 var main: Node
+var role := "merchant"    # "merchant" (Tomás: vende) o "smith" (Bram: compra materiales); ver data/shop.json
 var pos := Vector2.ZERO
 var look := Vector2.DOWN
 var hit := {}             # hitbox corporal medida del sprite (hitbox.gd)
@@ -16,7 +17,7 @@ func _ready() -> void:
 	spr = preload("res://scripts/life_sprite.gd").build(self, main, "res://art/fauna/villager_", {"idle": 1})
 	hit = preload("res://scripts/life_sprite.gd").hitbox(main, "res://art/fauna/villager_")
 	if spr:
-		spr.modulate = Color(1.0, 0.78, 0.62)  # otro tono de ropa que el de Elda
+		spr.modulate = Color(1.0, 0.78, 0.62) if role == "merchant" else Color(0.7, 0.74, 0.95)  # un tono de ropa para cada uno
 	look = main.tile_to_ground(Vector2(1, 0)) - main.tile_to_ground(Vector2.ZERO)  # mira hacia el frente del mostrador (+j)
 	_place()
 
