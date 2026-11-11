@@ -194,6 +194,7 @@ func _physics_process(delta: float) -> void:
 		if t <= 0.0:
 			state = "chase"
 			staggered = false
+			charging = false
 	elif state == "chase" and not sees:
 		_search(delta)
 	elif state != "idle":
@@ -260,14 +261,28 @@ func _slime(to: Vector2, dist: float, delta: float) -> void:
 		main.damage_hero(data["contact_damage"])
 		contact_cd = data["contact_cooldown"]
 
+const FAN_ANGLES := [-0.26, 0.0, 0.26]   # abanico del arquero: tres flechas separadas ~15°
+var shots := 0               # el 3.er disparo del arquero es un abanico (más aviso, hay que moverse en vez de ladearse)
+var fan_shot := false
+var slams := 0
+var charging := false        # el cíclope embiste desde lejos: línea de aviso, carrera recta y recuperación larga
+var charge_cd := 3.0
+var charge_hit := false
+const CHARGE_WINDUP := 0.9
+const CHARGE_TIME := 0.7
+const CHARGE_SPEED := 6.0
+
 func _archer(to: Vector2, dist: float, delta: float) -> void:
 	if state == "windup":
 		t -= delta
 		if t <= 0.0:
-			main.spawn_projectile("enemy", pos + aim * 10.0, aim, data["projectile"])
+			for a: float in (FAN_ANGLES if fan_shot else [0.0]):
+				var d := aim.rotated(a)
+				main.spawn_projectile("enemy", pos + d * 10.0, d, data["projectile"])
+			shots += 1
 			cd = data["attack_cooldown"]
 			state = "recover"
-			t = data.get("recover", 0.4)
+			t = data.get("recover", 0.4) * (1.5 if fan_shot else 1.0)  # el abanico deja más tiempo para castigarlo
 		return
 	if dist < data["flee_distance"]:
 		_move(-to.normalized(), 1.1, delta)
@@ -279,22 +294,52 @@ func _archer(to: Vector2, dist: float, delta: float) -> void:
 		_anim("idle")
 	if cd == 0.0 and main.can_prepare(self):
 		state = "windup"
-		t = data["windup"]
+		fan_shot = shots % 3 == 2
+		t = data["windup"] + (0.25 if fan_shot else 0.0)
 		aim = to.normalized()
 		_play_attack(to, 4, t)  # la flecha sale en el fotograma 4
 
 func _brute(to: Vector2, dist: float, delta: float) -> void:
+	if state == "charge":  # carrera recta en la dirección avisada: no persigue
+		t -= delta
+		_move(aim, CHARGE_SPEED, delta)
+		if not charge_hit and pos.distance_to(main.pos) < radius + main.HERO_RADIUS + 8.0:
+			charge_hit = true
+			main.damage_hero(roundi(data["slam_damage"] * 0.8))
+			main.shake(8.0)
+		if t <= 0.0:
+			state = "recover"
+			t = data.get("recover", 0.7) * 1.6  # embestir deja abierto mucho tiempo
+			charging = false
+			charge_cd = 7.0
+			_anim("idle")
+		return
 	if state == "windup":
 		t -= delta
 		if t <= 0.0:
-			state = "recover"
-			t = data.get("recover", 0.7)
+			if charging:
+				state = "charge"
+				t = CHARGE_TIME
+				charge_hit = false
+			else:
+				state = "recover"
+				t = data.get("recover", 0.7)
 		return
+	charge_cd = maxf(0.0, charge_cd - delta)
 	if dist > data["attack_range"]:
+		if charge_cd == 0.0 and dist > data["attack_range"] * 1.6 and dist < 260.0 and main.can_prepare(self):  # cierra distancia embistiendo
+			state = "windup"
+			charging = true
+			t = CHARGE_WINDUP
+			aim = Vector2(to.x, to.y / 0.6).normalized()  # dirección en el espacio de movimiento (el suelo se acorta ×0.6 en Y): así el desplazamiento apunta al héroe
+			cd = data["attack_cooldown"]
+			_play_attack(to, 5, t)
+			return
 		_move(to.normalized(), 1.0, delta)
 		_anim("walk")
 	elif cd == 0.0 and main.can_prepare(self):
 		state = "windup"
+		slams += 1
 		t = data["windup"]
 		cd = data["attack_cooldown"]
 		_play_attack(to, 5, data["windup"])
@@ -334,6 +379,12 @@ func _cast(to: Vector2) -> void:  # cada tercer hechizo es un rayo; el resto, bo
 		_spawn_zone(main.pos, l["radius"], l["delay"], l["damage"], true, Color(0.5, 0.9, 1.0))
 		if enraged:
 			_spawn_zone(main.pos + Vector2.from_angle(randf() * TAU) * 60.0, l["radius"], l["delay"], l["damage"], true, Color(0.5, 0.9, 1.0))
+	elif casts % 5 == 0:  # corona de orbes en todas direcciones: hay que buscar el hueco entre ellas
+		var ring := 8 if enraged else 6
+		var phase := randf() * TAU
+		for i in ring:
+			var a := Vector2.from_angle(phase + i * TAU / ring)
+			main.spawn_projectile("enemy", pos + a * 12.0, a, data["orb"])
 	else:
 		var n := 3 if enraged else 1
 		for i in n:
@@ -408,7 +459,17 @@ func _draw() -> void:
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE * S)
 	if state == "windup" and data["kind"] in ["archer", "mage"]:  # línea de tiro fijada: el héroe puede salirse
 		var k := 1.0 - clampf(t / data.get("windup", 0.7), 0.0, 1.0)
-		draw_line(aim * radius, aim * (radius + 40.0 + 120.0 * k), Color(1.0, 0.3, 0.2, 0.35 + 0.5 * k), 1.5)
+		for a: float in (FAN_ANGLES if fan_shot and data["kind"] == "archer" else [0.0]):  # el abanico avisa sus tres líneas
+			var d := aim.rotated(a)
+			draw_line(d * radius, d * (radius + 40.0 + 120.0 * k), Color(1.0, 0.3, 0.2, 0.35 + 0.5 * k), 1.5)
+	if state == "windup" and charging:  # embestida del cíclope: pasillo rojo en la dirección fijada
+		var kc := 1.0 - clampf(t / CHARGE_WINDUP, 0.0, 1.0)
+		var screen_dir := Vector2(aim.x, aim.y * 0.6)  # lo que realmente se desplaza por segundo, por unidad de velocidad
+		var perp: Vector2 = screen_dir.normalized().orthogonal() * (radius + 6.0)
+		var far: Vector2 = screen_dir * (CHARGE_SPEED * float(data["speed"]) * CHARGE_TIME)
+		draw_colored_polygon(PackedVector2Array([perp, far + perp, far - perp, -perp]), Color(1.0, 0.25, 0.2, 0.12 + 0.2 * kc))
+		draw_line(perp, far + perp, Color(1.0, 0.3, 0.2, 0.7), 1.5)
+		draw_line(-perp, far - perp, Color(1.0, 0.3, 0.2, 0.7), 1.5)
 	if alert_t > 0.0:  # aviso de alerta: forma ("!") además de color
 		var pop := 1.0 + 0.4 * clampf((alert_t - ALERT_SHOW + 0.15) / 0.15, 0.0, 1.0)
 		draw_string(ThemeDB.fallback_font, Vector2(-4 * pop, -body_h - 16), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, int(16 * pop), Color(1.0, 0.85, 0.2, clampf(alert_t / 0.3, 0.0, 1.0)))

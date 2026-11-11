@@ -1,7 +1,13 @@
 extends AnimatedSprite2D
 # Dragón: detecta al héroe, lo sigue manteniendo distancia y le escupe bolas de fuego.
 
-enum State { IDLE, CHASE, ATTACK }
+enum State { IDLE, CHASE, ATTACK, TIRED }  # TIRED al final: los valores existentes no cambian
+
+const VOLLEY := 3          # ataques seguidos antes de quedarse sin aliento
+const TIRED_TIME := 3.0    # s de ventana de castigo
+const TIRED_BONUS := 1.5   # daño recibido mientras respira
+var attacks := 0           # ataques desde el último descanso: el 2.º de cada ráfaga es un abanico de 3 bolas
+var tired_t := 0.0
 
 const FIRE_FRAME := 4  # fotograma de la animación de ataque en que sale el fuego
 
@@ -50,6 +56,16 @@ func _physics_process(delta: float) -> void:
 	if not alive:
 		return
 	attack_cd = maxf(0.0, attack_cd - delta)
+	if state == State.TIRED:  # respira: quieto, sin atacar y con el pecho hinchándose; ventana de castigo
+		tired_t -= delta
+		play("idle_" + facing)
+		scale = Vector2(1.0, 1.0 + 0.04 * sin(tired_t * 9.0)) * main.SCALE
+		if tired_t <= 0.0:
+			state = State.CHASE
+			attacks = 0
+			scale = Vector2.ONE * main.SCALE
+		_place()
+		return
 	var to: Vector2 = main.pos - pos
 	var dist := to.length()
 	if state == State.IDLE:
@@ -92,19 +108,31 @@ func _on_frame_changed() -> void:
 	if state == State.ATTACK and not fired and animation.begins_with("attack_") and frame == FIRE_FRAME:
 		fired = true
 		var dir: Vector2 = (main.pos - pos).normalized()
-		main.spawn_projectile("dragon", pos + dir * 22.0, dir, data["projectile"], Color(1.0, 0.45, 0.45))
+		var fan: Array = [-0.32, 0.0, 0.32] if attacks % VOLLEY == 1 else [0.0]  # el 2.º ataque de cada ráfaga es un abanico
+		for a: float in fan:
+			var d := dir.rotated(a)
+			main.spawn_projectile("dragon", pos + d * 22.0, d, data["projectile"], Color(1.0, 0.45, 0.45))
 
 func _on_animation_finished() -> void:
 	if not alive:
 		return
 	if state == State.ATTACK:
-		state = State.CHASE
+		attacks += 1
 		attack_cd = data["attack_cooldown"]
 		play("idle_" + facing)
+		if attacks >= VOLLEY:  # tras la ráfaga se queda sin aliento: ventana de castigo
+			state = State.TIRED
+			tired_t = TIRED_TIME
+			main.popup(pos - Vector2(0, 30), "¡Sin aliento!", Color(1.0, 0.85, 0.3))
+			main.combat.play_at("growl", pos)
+		else:
+			state = State.CHASE
 
 func take_damage(n: int, charge := true) -> void:
 	if not alive:
 		return
+	if state == State.TIRED:
+		n = roundi(n * TIRED_BONUS)  # cansado: recibe más daño
 	if charge:  # golpear entidades carga la ultimate (el daño de las propias ultimates no la recarga)
 		main.gain_ultimate(minf(n, hp))
 	hp -= n
@@ -133,6 +161,7 @@ func reset(start: Vector2) -> void:
 	pos = start
 	hp = data["hp"]
 	alive = true
+	attacks = 0
 	state = State.IDLE
 	modulate = Color.WHITE
 	scale = Vector2.ONE * main.SCALE
