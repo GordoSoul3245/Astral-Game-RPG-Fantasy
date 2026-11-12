@@ -213,7 +213,7 @@ func _build_inv() -> void:
 		nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	left.add_child(HSeparator.new())
 	_label("Monedas: %d" % p.coins, left, 18, GOLD)
-	_label("Pociones de vida: %d   [H]" % p.potions, left, 18, Color(0.95, 0.5, 0.5))
+	_label("Pociones de vida: %d" % p.potions, left, 18, Color(0.95, 0.5, 0.5))
 	_label("Materiales", left, 18, GOLD)
 	if p.materials.is_empty():
 		_label("(ninguno)", left, 15, MUTED)
@@ -335,11 +335,17 @@ func _build_side() -> void:  # materiales con su cantidad y consumibles que se u
 			_build_side())
 		row.add_child(use)
 		var q := Button.new()
-		q.text = "G" if p.quick != id else "★G"
-		q.tooltip_text = "Asignar a la tecla G"
+		q.text = "★ Barra" if p.hand.has(id) else "A la barra"
+		q.tooltip_text = "Poner o quitar de la barra de objetos (máx. 6 espacios); se usa con el clic izquierdo"
 		q.focus_mode = Control.FOCUS_NONE
 		q.pressed.connect(func() -> void:
-			p.quick = id
+			if p.hand.has(id):
+				p.hand.erase(id)
+			elif main._hand_ids().size() >= main.HOTBAR_MAX - main.BASE_HOTBAR.size():
+				main.say("La barra está llena: quita algo antes.", 2.0)
+			else:
+				p.hand.append(id)
+			main._refresh_hotbar()
 			_build_side())
 		row.add_child(q)
 	side_card.add_child(HSeparator.new())

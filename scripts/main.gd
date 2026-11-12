@@ -26,7 +26,7 @@ var dragon_start := Vector2.ZERO
 # orden por ángulo de pantalla (y hacia abajo), en pasos de 45° desde el este
 const DIRS := ["E", "SE", "S", "SW", "W", "NW", "N", "NE"]
 # animaciones del héroe sin bucle y su número de fotogramas
-const ANIMS := {"slash_light": 6, "slash_heavy": 8, "cast": 8, "dash": 6, "fslash_light": 6, "fslash_heavy": 8, "megadash": 6}
+const ANIMS := {"slash_light": 6, "slash_heavy": 8, "cast": 8, "dash": 6, "chop_pick": 6, "chop_axe": 6, "pluck": 6, "drink": 6, "eat": 6, "fslash_light": 6, "fslash_heavy": 8, "megadash": 6}
 
 # rueda del ratón: acercar / alejar la cámara
 const ZOOM_DEFAULT := 0.7
@@ -89,8 +89,8 @@ var dash_dir := Vector2.ZERO
 const DASH_GHOST_EVERY := 0.05  # s entre siluetas residuales del dash
 const DASH_GHOST_COL := Color(0.55, 0.8, 1.0)
 var dash_cd := 0.0
-var dash_time_cur := 0.55
-var dash_speed_cur := 220.0
+var dash_time_cur := 0.4583
+var dash_speed_cur := 303.6
 var mega_active := false         # el dash en curso es la ultimate de la katana
 var mega_spec := {}
 var mega_hits: Array = []        # enemigos ya golpeados por el mega dash en curso
@@ -310,7 +310,7 @@ func save_game() -> void:
 		return
 	var d := {"version": 1, "level": prog.level, "xp": prog.xp, "points": prog.points, "spent": prog.spent,
 		"coins": prog.coins, "potions": prog.potions, "materials": prog.materials, "owned": prog.owned,
-		"equipped": prog.equipped, "blueprints": prog.blueprints, "quick": prog.quick, "dungeon_floor": dungeon_floor, "quests": quests.to_dict()}
+		"equipped": prog.equipped, "blueprints": prog.blueprints, "hand": prog.hand, "dungeon_floor": dungeon_floor, "quests": quests.to_dict()}
 	var f := FileAccess.open(save_path, FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(d, "\t"))
@@ -352,7 +352,8 @@ func load_game() -> bool:  # valida cada campo: el archivo puede estar editado o
 				prog.blueprints.append(str(b))
 	for b: String in crafting.cfg["starting_blueprints"]:
 		crafting.learn(b)
-	prog.quick = str(d.get("quick", "")) if crafting.is_consumable(str(d.get("quick", ""))) else ""
+	prog.hand = ((d["hand"] as Array).map(func(i: Variant) -> String: return str(i)).filter(func(i: String) -> bool: return crafting.is_consumable(i))) if d.get("hand") is Array else ["pocion_vida"]
+	_refresh_hotbar()
 	dungeon_floor = clampi(int(d.get("dungeon_floor", 1)), 1, 4)
 	if d.get("quests") is Dictionary:
 		quests.from_dict(d["quests"])
@@ -745,6 +746,7 @@ func _apply_stats() -> void:  # recalcula máximos con nivel, puntos y equipo; s
 	mana = minf(mana, hero_data["mana"])
 	stamina = minf(stamina, hero_data["stamina"])
 	_equip_look()
+	_refresh_hotbar()
 
 # --- el equipo se ve sobre el héroe (versión ligera: sin capas de sprite nuevas)
 # armadura -> tono de la ropa (self_modulate, no choca con los destellos de daño en modulate);
@@ -858,12 +860,10 @@ func give_item(id: String) -> String:  # entrega un objeto de equipo (se equipa 
 	_apply_stats()
 	return "%s%s" % [prog.equipment[id]["name"], "  (equipado)" if equipped else "  (al inventario)"]
 
-func _use_potion() -> void:
-	if prog.potions <= 0 or hero_hp >= hero_max_hp:
-		return
-	prog.potions -= 1
-	hero_hp = mini(hero_max_hp, hero_hp + 40)
-	popup(pos, "+40 vida", Color(0.5, 1.0, 0.5))
+func _use_potion() -> void:  # atajo de pruebas y del botón táctil: bebe una poción de vida sin pasar por la barra
+	var m: String = crafting.use(self, "pocion_vida")
+	if m != "":
+		popup(pos, "+40 vida", Color(0.5, 1.0, 0.5))
 
 func _read_json(path: String) -> Dictionary:
 	return JSON.parse_string(FileAccess.get_file_as_string(path))
@@ -897,13 +897,14 @@ func _set_bar(key: String, value: float, max_value: float, text: String) -> void
 	b.get_node("Label").text = text
 
 func _update_bars() -> void:
+	_update_counts()
 	_set_bar("hp", hero_hp, hero_max_hp, "Vida %d / %d" % [hero_hp, hero_max_hp])
 	_set_bar("mana", mana, hero_data["mana"], "Maná %d" % roundi(mana))
 	_set_bar("stamina", stamina, hero_data["stamina"], "Estamina %d" % roundi(stamina) + ("  (agotada)" if exhausted else ""))
 	var full: bool = ult >= hero_data["ult_max"]
 	_set_bar("ult", ult, hero_data["ult_max"], "ULTIMATE LISTA  [R]" if full else "Ultimate %d%%" % roundi(ult))
 	_set_bar("xp", prog.xp, prog.xp_needed(), "Nivel %d  ·  XP %d / %d" % [prog.level, prog.xp, prog.xp_needed()])
-	info_label.text = "Monedas %d  ·  Pociones %d [H]  ·  Menú [I]%s" % [prog.coins, prog.potions, ("  ·  ¡%d puntos!" % prog.points) if prog.points > 0 else ""]
+	info_label.text = "Monedas %d  ·  Menú [I]%s" % [prog.coins, ("  ·  ¡%d puntos!" % prog.points) if prog.points > 0 else ""]
 	burn_label.text = "Espada en llamas  %.1f s" % burn_t if burn_t > 0.0 else ""
 
 func _load_inventory() -> void:
@@ -957,26 +958,9 @@ func _load_inventory() -> void:
 	row.add_theme_constant_override("separation", 10)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(row)
-	for i in hotbar.size():
-		var panel := Panel.new()
-		panel.custom_minimum_size = Vector2(size, size)
-		panel.clip_contents = true
-		panel.mouse_filter = Control.MOUSE_FILTER_IGNORE  # que los clics sigan llegando al juego
-		row.add_child(panel)
-		var icon := TextureRect.new()
-		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE  # antes del tamaño: si no, el icono de 128 px desborda el cuadro
-		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.texture = load(items[hotbar[i]]["icon"])
-		icon.position = Vector2(4, 4)
-		icon.size = Vector2(size - 8, size - 8)
-		panel.add_child(icon)
-		var num := Label.new()
-		num.text = str(i + 1)
-		num.position = Vector2(6, 2)
-		panel.add_child(num)
-		slots.append(panel)
-	_select(selected)
+	hotbar_row = row
+	hotbar_size = size
+	_refresh_hotbar(true)
 
 func _select(i: int) -> void:
 	_cancel_aim()
@@ -989,6 +973,9 @@ func _select(i: int) -> void:
 		sb.set_corner_radius_all(6)
 		slots[n].add_theme_stylebox_override("panel", sb)
 	var it: Dictionary = items[hotbar[i]]
+	if it.has("hand"):
+		hint_label.text = "%s%s  ·  clic izq: %s" % [it["name"], "  ×%d" % crafting.count(hotbar[i]) if it["hand"] == "consumable" else "", it["light"]["name"]]
+		return
 	hint_label.text = "%s  ·  clic izq: %s  ·  clic der: %s  ·  R: %s" % [it["name"], it["light"]["name"], it["heavy"]["name"], it["ultimate"]["name"]]
 
 func _build_fx() -> void:
@@ -1309,6 +1296,8 @@ func _pay(spec: Dictionary) -> void:
 func _attack(mode: String) -> bool:  # true si el ataque empezó (y se cobró)
 	if attacking or dashing or aiming or gathering or cooldown > 0.0:
 		return false
+	if items[hotbar[selected]].has("hand"):
+		return _use_hand(hotbar[selected], items[hotbar[selected]])
 	var spec: Dictionary = items[hotbar[selected]][mode]
 	if not _afford(spec):
 		return false
@@ -1377,6 +1366,11 @@ func _strike() -> void:
 			m.cell = aim_cell
 			m.spec = current
 			add_child(m)
+		"consume":
+			var m: String = crafting.use(self, current["id"])
+			if m != "":
+				say(m, 2.0)
+			_refresh_hotbar()
 		"melee":
 			var dmg: float = current["damage"] * (burn_mult if burn_t > 0.0 else 1.0) * prog.melee_mult()
 			if dash_bonus_t > 0.0:  # tajo tras dash: más daño, se consume
@@ -1434,7 +1428,7 @@ func _ultimate() -> void:
 	if aiming:
 		_cancel_aim()
 		return
-	if ult < hero_data["ult_max"] or attacking or dashing:
+	if ult < hero_data["ult_max"] or attacking or dashing or items[hotbar[selected]].has("hand"):
 		return
 	var u: Dictionary = items[hotbar[selected]]["ultimate"]
 	if u["type"] == "meteor":
@@ -1540,10 +1534,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			_interact()
 		elif event.physical_keycode == KEY_F2:
 			debug_hitboxes = not debug_hitboxes  # dibuja las hitbox sobre los sprites
-		elif event.physical_keycode == KEY_H:
-			_use_potion()
-		elif event.physical_keycode == KEY_G:
-			_use_quick()
 		elif event.physical_keycode == KEY_ESCAPE:
 			_cancel_aim()
 		elif not attacking:
@@ -1810,13 +1800,14 @@ func _gather(n: Dictionary) -> void:
 	gather_node = n
 	gather_hit_done = false
 	move_vel = Vector2.ZERO
-	var key := "slash_light_" + facing
+	var tool: String = crafting.cfg["gather"][n["kind"]]["tool"]
+	var key := "%s_%s" % [{"pickaxe": "chop_pick", "axe": "chop_axe"}.get(tool, "pluck"), facing]
 	hero.sprite_frames.set_animation_speed(key, 6.0 / GATHER_TIME)
 	hero.play(key)
 
 func _gather_tick(delta: float) -> void:
 	gather_t += delta
-	if not gather_hit_done and gather_t >= GATHER_TIME * 0.5:
+	if not gather_hit_done and gather_t >= GATHER_TIME * 0.62:  # el golpe cae en el fotograma de impacto
 		gather_hit_done = true
 		_gather_hit()
 	if gather_t >= GATHER_TIME:
@@ -1850,17 +1841,104 @@ func _gather_hit() -> void:
 	popup(n["g"], "\n".join(lines))
 	quest_event("gather", n["kind"])
 
-func _use_quick() -> void:
-	var id: String = prog.quick
-	if id == "" or crafting.count(id) <= 0:
-		var owned: Array = crafting.consumables_owned().filter(func(x: String) -> bool: return x != "pocion_vida")
-		if owned.is_empty():
-			say("No tienes consumibles: cocina en la fogata o prepara pociones.", 2.0)
-			return
-		id = owned[0]
-	var m: String = crafting.use(self, id)
-	if m != "":
-		say(m, 2.0)
+# --- barra de objetos: katana y grimorio fijos + herramientas equipadas + consumibles elegidos (máx. HOTBAR_MAX)
+const HOTBAR_MAX := 6
+const BASE_HOTBAR := ["katana_ceniza", "grimorio_ignis"]
+var hotbar_row: HBoxContainer
+var hotbar_size := 72.0
+var count_labels := {}   # id -> etiqueta de cantidad
+
+func _hand_ids() -> Array:
+	var out: Array = []
+	for slot: String in ["pickaxe", "axe"]:
+		if prog.equipped.has(slot):
+			out.append(prog.equipped[slot])
+	for id: String in prog.hand:
+		if not out.has(id):
+			out.append(id)
+	return out.slice(0, HOTBAR_MAX - BASE_HOTBAR.size())
+
+func _hand_item(id: String) -> Dictionary:  # entrada tipo items.json para una herramienta o un consumible
+	var kind := "consumable"
+	var act := "Usar"
+	if prog.equipment.has(id):
+		kind = prog.equipment[id]["tool"]["kind"]
+		act = "Golpear recurso cercano"
+	return {"name": crafting.item_name(id), "icon": crafting.icon(id), "hand": kind, "light": {"name": act}}
+
+func _refresh_hotbar(force := false) -> void:
+	if hotbar_row == null:
+		return
+	var want: Array = BASE_HOTBAR + _hand_ids()
+	if not force and want == hotbar:
+		return
+	var keep: String = hotbar[selected] if selected < hotbar.size() else BASE_HOTBAR[0]
+	hotbar = want
+	for id: String in _hand_ids():
+		items[id] = _hand_item(id)
+	for c in hotbar_row.get_children():
+		c.queue_free()
+	slots.clear()
+	count_labels.clear()
+	for i in hotbar.size():
+		var panel := Panel.new()
+		panel.custom_minimum_size = Vector2(hotbar_size, hotbar_size)
+		panel.clip_contents = true
+		panel.mouse_filter = Control.MOUSE_FILTER_IGNORE  # que los clics sigan llegando al juego
+		hotbar_row.add_child(panel)
+		var icon := TextureRect.new()
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE  # antes del tamaño: si no, el icono de 128 px desborda el cuadro
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.texture = load(items[hotbar[i]]["icon"])
+		icon.position = Vector2(4, 4)
+		icon.size = Vector2(hotbar_size - 8, hotbar_size - 8)
+		panel.add_child(icon)
+		var num := Label.new()
+		num.text = str(i + 1)
+		num.position = Vector2(6, 2)
+		panel.add_child(num)
+		if items[hotbar[i]].get("hand", "") == "consumable":
+			var cnt := Label.new()
+			cnt.position = Vector2(hotbar_size - 30, hotbar_size - 26)
+			cnt.add_theme_color_override("font_outline_color", Color.BLACK)
+			cnt.add_theme_constant_override("outline_size", 5)
+			panel.add_child(cnt)
+			count_labels[hotbar[i]] = cnt
+		slots.append(panel)
+	_update_counts()
+	_select(maxi(0, hotbar.find(keep)))
+
+func _update_counts() -> void:
+	for id: String in count_labels:
+		var n: int = crafting.count(id)
+		count_labels[id].text = "×%d" % n
+		slots[hotbar.find(id)].modulate = Color.WHITE if n > 0 else Color(1, 1, 1, 0.45)
+
+func _use_hand(id: String, it: Dictionary) -> bool:  # clic izquierdo con una herramienta o un consumible seleccionado
+	if it["hand"] == "consumable":
+		var c: Dictionary = crafting.cfg["consumables"][id]
+		if crafting.count(id) <= 0:
+			say("Se acabó: %s." % it["name"], 1.5)
+		elif c.has("heal") and not c.has("buff") and hero_hp >= hero_max_hp:
+			say("Ya tienes la vida completa.", 1.5)
+		else:
+			var drink: bool = id.begins_with("pocion") or id.begins_with("elixir") or id.begins_with("frasco")
+			current = {"type": "consume", "id": id, "anim": "drink" if drink else "eat", "fps": 9.0, "strike_frame": 3, "cooldown": 0.5}
+			_begin(current, "light")
+			return true
+		cooldown = 0.5
+		return false
+	var n := _near_node()
+	if n.is_empty():
+		say("No hay nada que golpear aquí.", 1.2)
+	elif crafting.cfg["gather"][n["kind"]]["tool"] != it["hand"]:
+		say("Eso no se golpea con %s." % it["name"], 1.5)
+	else:
+		_gather(n)
+		return gathering
+	cooldown = 0.5
+	return false
 
 # --- la mina: cueva de minerales fuera del pueblo (mine.gd)
 func enter_mine() -> void:

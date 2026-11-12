@@ -29,7 +29,7 @@ var equipment := {}
 var material_names := {}
 var blueprints: Array = []   # planos de alquimia aprendidos (data/crafting.json)
 var buffs: Array = []        # bonus temporales de comida y elixires: {stat, amount, t}
-var quick := ""              # consumible de la tecla G
+var hand: Array = ["pocion_vida"]  # consumibles en la barra de objetos (las herramientas equipadas entran solas)
 
 func _init(data: Dictionary) -> void:
 	equipment = data["items"]

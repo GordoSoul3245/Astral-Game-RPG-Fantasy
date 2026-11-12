@@ -1,8 +1,8 @@
 {
 	"hero": {
 		"hp": 100,
-		"dash_time": 0.55,
-		"dash_speed": 220.0,
+		"dash_time": 0.4583,
+		"dash_speed": 303.6,
 		"dash_cooldown": 0.8,
 		"dash_stamina": 25.0,
 		"mana": 100.0,
