@@ -350,15 +350,16 @@ def render_cast(names, res=128, prefix=''):
     s.frame_set(fc)
 
 
-# Dash: 6 fotogramas (agacharse, impulso, estirado, zancada contraria, caída, recuperar)
+# Dash: 6 fotogramas de deslizamiento erguido (anticipar, impulso, planear x2, frenar, recuperar).
+# El torso casi no se inclina (máx. 10°): el movimiento lo cuentan piernas en zancada baja, brazos atrás y la capa.
 # sp = inclinación del torso, th = muslos (izq, der), sh = espinillas (izq, der), ua = brazos hacia atrás, cape = capa
 DASH = [
-    dict(sp=15, th=(-20, -20), sh=(30, 30), ua=10, cape=5),
-    dict(sp=35, th=(-50, 35), sh=(15, 70), ua=45, cape=20),
-    dict(sp=45, th=(-65, 50), sh=(10, 85), ua=60, cape=35),
-    dict(sp=45, th=(40, -60), sh=(80, 10), ua=60, cape=35),
-    dict(sp=28, th=(-30, 10), sh=(40, 30), ua=30, cape=15),
-    dict(sp=8, th=(-10, -5), sh=(10, 10), ua=5, cape=3),
+    dict(sp=6, th=(-15, -15), sh=(25, 25), ua=5, cape=5),
+    dict(sp=10, th=(-35, 25), sh=(20, 45), ua=25, cape=25),
+    dict(sp=10, th=(-40, 30), sh=(15, 50), ua=35, cape=40),
+    dict(sp=10, th=(-40, 30), sh=(15, 50), ua=35, cape=45),
+    dict(sp=8, th=(-25, 15), sh=(25, 35), ua=20, cape=25),
+    dict(sp=4, th=(-10, -5), sh=(10, 10), ua=5, cape=8),
 ]
 
 

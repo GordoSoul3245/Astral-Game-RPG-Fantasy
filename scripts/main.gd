@@ -85,7 +85,8 @@ const BUFFER_MS := 100          # punto de partida del estudio (probar 70/130)
 var buf := ""                   # una sola acción anticipada: "light", "heavy" o "dash"
 var buf_until := 0
 var dash_dir := Vector2.ZERO
-var dash_trail: Node2D = null   # estela del dash normal en curso (el mega dash tiene sus fantasmas de fuego)
+const DASH_GHOST_EVERY := 0.05  # s entre siluetas residuales del dash
+const DASH_GHOST_COL := Color(0.55, 0.8, 1.0)
 var dash_cd := 0.0
 var dash_time_cur := 0.55
 var dash_speed_cur := 220.0
@@ -1224,7 +1225,7 @@ func _dash() -> bool:  # true si el dash empezó
 	dashing = true
 	move_vel = Vector2.ZERO
 	_spawn_dash_dust(-dash_dir)
-	_spawn_dash_trail()
+	ghost_t = DASH_GHOST_EVERY  # la primera silueta sale en el primer paso
 	mega_active = false
 	attacking = false
 	dash_t = 0.0
@@ -1378,13 +1379,6 @@ func _spawn_dash_dust(direction: Vector2) -> void:
 	dust.z_index = int(pos.y) + 1
 	add_child(dust)
 
-func _spawn_dash_trail() -> void:  # raya en el suelo que marca el rumbo del dash
-	dash_trail = preload("res://scripts/dash_trail.gd").new()
-	dash_trail.tint = Color("#c4c3dc") if in_dungeon else Color("#f2e6c8")  # más claro que el polvo: debe leerse sobre hierba y losas
-	dash_trail.z_index = -2999  # sobre el suelo, bajo todo lo demás (como el marcador de casillas)
-	dash_trail.add_point(pos * SCALE)
-	add_child(dash_trail)
-
 # --- ultimates (R): requieren la carga llena, que se gana golpeando entidades
 func _ultimate() -> void:
 	if aiming:
@@ -1449,19 +1443,37 @@ func _mega_dash(u: Dictionary) -> void:
 	hero.sprite_frames.set_animation_speed(key, 6.0 / dash_time_cur)
 	hero.play(key)
 
-func _spawn_ghost() -> void:  # imagen residual de fuego: la estela del mega dash
+# imagen residual: silueta plana del fotograma actual (cuerpo, capa y arma), color sólido con borde más brillante.
+# Sirve al dash (azul acero, corta) y al mega dash (fuego, más larga).
+var ghost_shader: Shader
+func _spawn_ghost(col := Color(1.0, 0.5, 0.15), life := 0.35, alpha := 0.8) -> void:
+	if ghost_shader == null:
+		ghost_shader = Shader.new()
+		ghost_shader.code = """shader_type canvas_item;
+render_mode blend_mix;
+uniform vec4 tint : source_color;
+void fragment() {
+	float a = texture(TEXTURE, UV).a;
+	float n = texture(TEXTURE, UV + vec2(TEXTURE_PIXEL_SIZE.x, 0.0)).a * texture(TEXTURE, UV - vec2(TEXTURE_PIXEL_SIZE.x, 0.0)).a
+		* texture(TEXTURE, UV + vec2(0.0, TEXTURE_PIXEL_SIZE.y)).a * texture(TEXTURE, UV - vec2(0.0, TEXTURE_PIXEL_SIZE.y)).a;
+	float rim = step(0.5, a) * (1.0 - step(0.5, n));  // contorno de 1 px del sprite
+	COLOR = vec4(mix(tint.rgb, vec3(1.0), rim * 0.5), step(0.5, a) * tint.a * mix(0.35, 0.9, rim) * COLOR.a);
+}"""
 	var g := Sprite2D.new()
 	g.texture = hero.sprite_frames.get_frame_texture(hero.animation, hero.frame)
 	g.centered = false
 	g.scale = hero.scale
+	g.offset = hero.offset
 	g.position = hero.position
 	g.z_index = hero.z_index - 1
-	g.modulate = Color(1.0, 0.5, 0.15, 0.8)
-	g.material = CanvasItemMaterial.new()
-	g.material.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	var m := ShaderMaterial.new()
+	m.shader = ghost_shader
+	m.set_shader_parameter("tint", col)
+	g.material = m
+	g.modulate.a = alpha
 	add_child(g)
 	var tw := create_tween()
-	tw.tween_property(g, "modulate:a", 0.0, 0.35)
+	tw.tween_property(g, "modulate:a", 0.0, life).set_ease(Tween.EASE_IN)
 	tw.tween_callback(g.queue_free)
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -1560,10 +1572,11 @@ func _physics_process(delta: float) -> void:
 		var ease_k := 1.0 if mega_active else 1.5 * (1.0 - clampf(dash_t / dash_time_cur, 0.0, 1.0)) + 0.25
 		var step := dash_dir * dash_speed_cur * ease_k * step_dt * (Vector2.ONE if mega_active else Vector2(1, 0.6))
 		pos = world.move_collide(pos, pos + step, HERO_R_T)  # atraviesa al dragón pero no estructuras ni agua
-		if is_instance_valid(dash_trail):
-			dash_trail.add_point(pos * SCALE)
+		ghost_t += delta
+		if not mega_active and ghost_t >= DASH_GHOST_EVERY and dash_t < dash_time_cur * 0.8:
+			ghost_t = 0.0  # siluetas de acero: más densas y opacas al arrancar, se apagan cuando el dash frena
+			_spawn_ghost(DASH_GHOST_COL, 0.25, lerpf(0.8, 0.3, dash_t / dash_time_cur))
 		if mega_active:
-			ghost_t += delta
 			if ghost_t >= 0.035:
 				ghost_t = 0.0
 				_spawn_ghost()
@@ -1575,9 +1588,6 @@ func _physics_process(delta: float) -> void:
 		if dash_t >= dash_time_cur:
 			dashing = false
 			_spawn_dash_dust(dash_dir)
-			if is_instance_valid(dash_trail):
-				dash_trail.done = true
-			dash_trail = null
 			if not mega_active:
 				dash_bonus_t = DASH_BONUS_TIME  # el siguiente tajo pega más
 			if mega_active:

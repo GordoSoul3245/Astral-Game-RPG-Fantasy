@@ -91,6 +91,7 @@ func hit(e: Node, dmg: int, kind: String, from: Vector2, charge := true) -> void
 		_squash(e, kind == "heavy" or kind == "blast")
 	if kind == "heavy" or kind == "blast":
 		ground_impact(e.pos, 1.0 if kind == "heavy" else 1.6)
+	_splatter(e, (e.pos - from).normalized(), {"light": 5, "heavy": 10, "magic": 4, "blast": 12}[kind])
 	flash(e.pos, k["col"], 0.35 * k["size"], 0.8 * k["size"], 0.18)
 	if k["shake"] > 0.0:
 		main.shake(k["shake"])
@@ -157,6 +158,16 @@ func _squash(e: Node2D, heavy: bool) -> void:
 	tw = e.create_tween()
 	tw.tween_property(e, "scale", Vector2.ONE, 0.22 if heavy else 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	e.set_meta("squash_tw", tw)
+
+func _splatter(e: Node, dir: Vector2, count: int) -> void:  # gotas del color de la criatura (data "blood")
+	var d: Variant = e.get("data")
+	var s := preload("res://scripts/splatter.gd").new()
+	s.tint = Color(d.get("blood", "#9b1c24")) if d is Dictionary else Color("#9b1c24")
+	s.dir = dir if dir != Vector2.ZERO else Vector2.RIGHT
+	s.count = count
+	s.position = e.pos * main.SCALE
+	s.z_index = int(e.pos.y) + 2
+	main.add_child(s)
 
 func ground_impact(ground: Vector2, size: float) -> void:  # onda y grietas en el suelo bajo un golpe fuerte
 	var g := preload("res://scripts/ground_impact.gd").new()

@@ -19,6 +19,7 @@ var dead := false
 var trail_points: Array[Vector2] = []
 var trail_distance := 0.0
 var glow: PointLight2D
+var t := 0.0               # reloj de la animación de energía (órbitas y pulso del halo)
 const HB := preload("res://scripts/hitbox.gd")  # hitbox del cuerpo (silueta del sprite), no un círculo en el suelo
 
 func _burn(e: Node) -> void:  # golpe de fuego del héroe: daña y deja la marca de Ignis si sobrevive
@@ -46,6 +47,7 @@ func _physics_process(delta: float) -> void:
 	if dead:
 		return
 	trail_distance += speed * delta
+	t += delta
 	if trail_distance >= 5.0:
 		trail_distance = 0.0
 		trail_points.push_front((ground - Vector2(0, height)) * main.SCALE)
@@ -97,3 +99,34 @@ func _draw() -> void:
 		var size := 3.0 * maxf(1.0, roundf(strength * scale_mult * 2.0))
 		var point := (trail_points[i] - position).snapped(Vector2(3, 3))
 		draw_rect(Rect2(point - Vector2.ONE * size * 0.5, Vector2.ONE * size), col)
+	_draw_energy()
+
+# capas de una bola de energía (de fuera a dentro): cola de cometa que se afila, halo que pulsa,
+# chispas que orbitan en elipse (plano del suelo) y el sprite como núcleo. Todo en px de arte (múltiplos de 3).
+func _draw_energy() -> void:
+	var base := Color(1.0, 0.55, 0.2) * tint
+	var r: float = radius * main.SCALE * scale_mult
+	var n := trail_points.size()
+	if n >= 2:
+		var left := PackedVector2Array()
+		var right := PackedVector2Array()
+		for i in n:
+			var p := trail_points[i] - position
+			var d := (trail_points[maxi(i - 1, 0)] - trail_points[mini(i + 1, n - 1)]).normalized()
+			var w: float = r * 0.9 * (1.0 - float(i) / n)
+			left.append(p + d.orthogonal() * w)
+			right.append(p - d.orthogonal() * w)
+		right.reverse()
+		var tail := left + right
+		var tc := base
+		tc.a = 0.35
+		if Geometry2D.triangulate_polygon(tail).size() > 0:
+			draw_colored_polygon(tail, tc)
+	var halo := base
+	halo.a = 0.3
+	draw_arc(Vector2.ZERO, r * (1.25 + 0.15 * sin(t * 22.0)), 0.0, TAU, 16, halo, 3.0)
+	var spark := base.lightened(0.5)
+	for k in 3:
+		var a := t * 9.0 + k * TAU / 3.0
+		var o: Vector2 = (Vector2(cos(a), sin(a) * 0.5) * r * 1.5).snapped(Vector2(3, 3))
+		draw_rect(Rect2(o - Vector2(3, 3), Vector2(6, 6)), spark)

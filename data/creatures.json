@@ -36,6 +36,7 @@
 	"fox": {"hp": 24, "radius": 9.0, "xp": 14, "coins": [2, 5], "drops": [{"item": "pocion_vida", "chance": 0.25}], "respawn": 60.0},
 	"slime": {
 		"kind": "slime",
+		"blood": "#7ad94a",
 		"hp": 28,
 		"speed": 48.0,
 		"detect_range": 265.0,
@@ -53,6 +54,7 @@
 	},
 	"skeleton_archer": {
 		"kind": "archer",
+		"blood": "#e8dcc0",
 		"hp": 32,
 		"speed": 42.0,
 		"detect_range": 320.0,
@@ -72,6 +74,7 @@
 	},
 	"cyclops": {
 		"kind": "brute",
+		"blood": "#8e1f2a",
 		"hp": 160,
 		"speed": 38.0,
 		"detect_range": 370.0,
@@ -93,6 +96,7 @@
 	},
 	"storm_mage": {
 		"kind": "mage",
+		"blood": "#6a4fd8",
 		"hp": 320,
 		"speed": 34.0,
 		"detect_range": 480.0,

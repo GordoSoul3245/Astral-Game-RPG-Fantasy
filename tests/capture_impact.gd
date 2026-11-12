@@ -23,6 +23,8 @@ func capture() -> void:
 	main.combat.hit(e, 1, "heavy", main.pos)
 	assert(e.scale.x > 1.1 and e.scale.y < 0.9, "el pesado aplasta al enemigo (%s)" % e.scale)
 	assert(main.get_child_count() > before, "deja huella en el suelo")
+	var drops: Array = main.get_children().filter(func(c): return c.get_script() == preload("res://scripts/splatter.gd"))
+	assert(drops.size() == 1 and drops[0].tint == Color(e.data["blood"]), "salpica con el color de la criatura")
 	assert(e.spr.animation.begins_with("hurt"), "reproduce el golpe recibido de Blender (%s)" % e.spr.animation)
 	await create_timer(0.08).timeout
 	await RenderingServer.frame_post_draw
