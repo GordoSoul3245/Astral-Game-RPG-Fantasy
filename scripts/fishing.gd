@@ -154,8 +154,20 @@ func _release() -> void:
 	state = "throw"
 	t = 0.0
 
-func tip() -> Vector2:  # punta de la caña, en suelo
-	return main.pos + aim * 22.0 + Vector2(0, -46)
+var tips: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/rod_tips.json"))  # medido con tests/gen_rod_tips.gd
+
+func tip() -> Vector2:  # punta de la caña, en suelo: el píxel medido del fotograma actual
+	var key: String = String(main.hero.animation)
+	var n := 0
+	if not (key.begins_with("fish_wait") or key.begins_with("fish_reel")):  # los fotogramas de lanzar cortan la caña: usa la de espera
+		key = "fish_wait_" + main.facing
+	else:
+		n = main.hero.frame
+	var list: Array = tips.get(key, [])
+	if list.is_empty():
+		return main.pos + aim * 22.0 + Vector2(0, -46)
+	var p: Array = list[mini(n, list.size() - 1)]
+	return main.hero.position / main.SCALE + Vector2(p[0], p[1])
 
 func _launch() -> void:
 	var c: Dictionary = cfg["cast"]
