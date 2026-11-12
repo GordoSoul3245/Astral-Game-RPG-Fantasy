@@ -48,6 +48,8 @@ func setup(data: Dictionary) -> void:
 		add_child(s)
 		if not o["sprite"].begins_with("rock"):  # las rocas son bajas: no tapan
 			occluders.append(s)
+		if o["sprite"].begins_with("tree_") or o["sprite"].begins_with("rock_"):  # se pueden talar y picar
+			_register_node("tree" if o["sprite"].begins_with("tree_") else "rock", tile, s, circles[-1] if o.has("circle") else null)
 
 # --- transparencia (estilo Project Zomboid): lo que tapa al héroe se vuelve translúcido
 const FADE_ALPHA := 0.3
@@ -70,6 +72,7 @@ func covers_hero(s: Sprite2D) -> bool:
 	return false
 
 func _process(delta: float) -> void:
+	_tick_respawns(delta)
 	if not visible:
 		return
 	for s: Sprite2D in occluders:
@@ -143,3 +146,91 @@ func next_waypoint(from_g: Vector2, to_g: Vector2, r: float) -> Vector2:
 
 func hits_obstacle(p_ground: Vector2) -> bool:  # los proyectiles chocan con estructuras, no con el agua
 	return hits_structure(main.ground_to_tile(p_ground), 0.12, true)
+
+# --- recursos recolectables (data/crafting.json "gather"): árboles, rocas, minerales y plantas.
+# Cada nodo guarda su sprite y su círculo de colisión (se pone a 0 mientras está agotado) y vuelve a crecer tras un tiempo.
+var res_nodes: Array = []
+var respawning: Array = []
+
+func _register_node(kind: String, tile: Vector2, spr: Sprite2D, circle: Variant) -> Dictionary:
+	var g: Dictionary = main.crafting.cfg["gather"][kind]
+	var n := {"kind": kind, "tile": tile, "g": main.tile_to_ground(tile), "spr": spr, "circle": circle, "hp": int(g["hp"]),
+		"r0": float(circle[1]) if circle != null else 0.0, "pr0": float(circle[2]) if circle != null else 0.0, "t": 0.0, "depleted": false}
+	res_nodes.append(n)
+	return n
+
+# crea sprite y colisión de un recurso nuevo (minerales de la mina, plantas del valle)
+func add_resource(kind: String, tile: Vector2, tex_path: String, feet: Array, radius: float, light_col := Color.TRANSPARENT) -> Dictionary:
+	var g: Vector2 = main.tile_to_ground(tile)
+	var s := Sprite2D.new()
+	s.texture = load(tex_path)
+	s.centered = false
+	s.scale = Vector2.ONE * main.SCALE
+	s.position = (g - Vector2(feet[0], feet[1])) * main.SCALE
+	s.z_index = int(g.y)
+	s.z_as_relative = false
+	add_child(s)
+	var circle: Variant = null
+	if radius > 0.0:
+		circle = [tile, radius, radius]
+		circles.append(circle)
+		var key := Vector2i(floori(tile.x / 2.0), floori(tile.y / 2.0))
+		if not grid.has(key):
+			grid[key] = []
+		grid[key].append(circle)
+	if light_col != Color.TRANSPARENT:
+		var l: PointLight2D = main.combat.light(light_col, 0.5, 1.2)
+		l.position = (g - Vector2(0, 14)) * main.SCALE
+		add_child(l)
+	return _register_node(kind, tile, s, circle)
+
+func node_near(p_ground: Vector2, reach := 1.9) -> Dictionary:  # recurso en pie más cercano al héroe (distancia en casillas)
+	var t: Vector2 = main.ground_to_tile(p_ground)
+	var best := {}
+	var best_d := reach
+	for n: Dictionary in res_nodes:
+		if n["depleted"] or absf(n["tile"].x - t.x) > reach or absf(n["tile"].y - t.y) > reach:
+			continue
+		var d: float = t.distance_to(n["tile"])
+		if d < best_d:
+			best_d = d
+			best = n
+	return best
+
+func hit_node(n: Dictionary, power: int) -> bool:  # true si este golpe lo agota
+	n["hp"] -= power
+	var s: Sprite2D = n["spr"]
+	var tw := create_tween()  # sacudida del golpe
+	tw.tween_property(s, "offset:x", 5.0, 0.04)
+	tw.tween_property(s, "offset:x", -4.0, 0.06)
+	tw.tween_property(s, "offset:x", 0.0, 0.06)
+	if n["hp"] > 0:
+		return false
+	n["depleted"] = true
+	n["t"] = float(main.crafting.cfg["gather"][n["kind"]]["respawn"])
+	respawning.append(n)
+	if n["circle"] != null:  # ya no estorba el paso
+		n["circle"][1] = 0.0
+		n["circle"][2] = 0.0
+	var fall := create_tween()
+	fall.tween_property(s, "self_modulate:a", 0.0, 0.3)
+	fall.parallel().tween_property(s, "offset:y", 10.0, 0.3)
+	fall.tween_callback(func() -> void: s.visible = false)
+	return true
+
+func _tick_respawns(delta: float) -> void:
+	for n: Dictionary in respawning.duplicate():
+		n["t"] -= delta
+		if n["t"] > 0.0:
+			continue
+		respawning.erase(n)
+		n["depleted"] = false
+		n["hp"] = int(main.crafting.cfg["gather"][n["kind"]]["hp"])
+		if n["circle"] != null:
+			n["circle"][1] = n["r0"]
+			n["circle"][2] = n["pr0"]
+		var s: Sprite2D = n["spr"]
+		s.offset = Vector2.ZERO
+		s.visible = true
+		s.self_modulate.a = 0.0
+		create_tween().tween_property(s, "self_modulate:a", 1.0, 0.6)

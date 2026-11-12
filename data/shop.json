@@ -3,19 +3,66 @@
 		"name": "Tomás",
 		"title": "Puesto de Tomás",
 		"stock": [
-			{"id": "pocion_vida", "price": 15},
-			{"id": "armadura_cuero", "price": 60},
-			{"id": "anillo_vigor", "price": 45},
-			{"id": "collar_hueso", "price": 45},
-			{"id": "anillo_furia", "price": 150},
-			{"id": "anillo_arcano", "price": 150},
-			{"id": "collar_viento", "price": 140},
-			{"id": "armadura_malla", "price": 220}
+			{
+				"id": "pocion_vida",
+				"price": 15
+			},
+			{
+				"id": "armadura_cuero",
+				"price": 60
+			},
+			{
+				"id": "anillo_vigor",
+				"price": 45
+			},
+			{
+				"id": "collar_hueso",
+				"price": 45
+			},
+			{
+				"id": "anillo_furia",
+				"price": 150
+			},
+			{
+				"id": "anillo_arcano",
+				"price": 150
+			},
+			{
+				"id": "collar_viento",
+				"price": 140
+			},
+			{
+				"id": "armadura_malla",
+				"price": 220
+			},
+			{
+				"id": "plano_pocion_vigor",
+				"price": 50
+			},
+			{
+				"id": "plano_pocion_mana",
+				"price": 60
+			}
 		]
 	},
 	"smith": {
 		"name": "Bram",
 		"title": "Herrería de Bram",
-		"buys": {"gel_slime": 4, "hueso_antiguo": 6, "ojo_ciclope": 25, "escama_dragon": 60, "nucleo_tormenta": 80}
+		"buys": {
+			"gel_slime": 4,
+			"hueso_antiguo": 6,
+			"ojo_ciclope": 25,
+			"escama_dragon": 60,
+			"nucleo_tormenta": 80,
+			"mena_hierro": 5,
+			"carbon": 3,
+			"cristal_arcano": 35,
+			"hongo_luminoso": 6,
+			"piel_conejo": 3,
+			"piel_zorro": 6,
+			"lingote_hierro": 14,
+			"madera": 2,
+			"piedra": 1
+		}
 	}
 }

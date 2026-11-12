@@ -41,7 +41,7 @@ func _ready() -> void:
 	var gap := Control.new()
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(gap)
-	for pair in [["inv", "Inventario"], ["stats", "Estadísticas"], ["opt", "Opciones"]]:
+	for pair in [["inv", "Inventario"], ["craft", "Crafteo"], ["stats", "Estadísticas"], ["opt", "Opciones"]]:
 		var b := Button.new()
 		b.text = pair[1]
 		b.focus_mode = Control.FOCUS_NONE
@@ -107,6 +107,8 @@ func refresh() -> void:
 		c.queue_free()
 	if tab == "inv":
 		_build_inv()
+	elif tab == "craft":
+		_build_craft()
 	elif tab == "opt":
 		_build_options()
 	else:
@@ -282,6 +284,97 @@ func _build_inv() -> void:
 		main._apply_stats()
 		refresh())
 	right.add_child(act)
+
+# --- crafteo a mano (estilo Terraria): recetas a la izquierda, tus materiales y consumibles a la derecha
+var side_card: VBoxContainer
+
+func _build_craft() -> void:
+	var cols := HBoxContainer.new()
+	cols.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	cols.add_theme_constant_override("separation", 16)
+	body.add_child(cols)
+	var panel: HBoxContainer = preload("res://scripts/craft_panel.gd").new()
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.setup(main, "hand")
+	cols.add_child(panel)
+	side_card = _card(cols, Vector2(330, 0))
+	panel.crafted.connect(func(_r: Dictionary) -> void: _build_side())
+	_build_side()
+
+func _build_side() -> void:  # materiales con su cantidad y consumibles que se usan con un clic
+	for c in side_card.get_children():
+		c.queue_free()
+	var cr = main.crafting
+	var p = main.prog
+	_label("Consumibles", side_card, 20, GOLD)
+	var owned: Array = cr.consumables_owned()
+	if owned.is_empty():
+		_label("Nada aún. Cocina en la fogata o prepara pociones en la mesa de alquimia.", side_card, 14, MUTED).autowrap_mode = TextServer.AUTOWRAP_WORD
+	for id: String in owned:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		side_card.add_child(row)
+		var ic := TextureRect.new()
+		ic.texture = load(cr.icon(id))
+		ic.custom_minimum_size = Vector2(36, 36)
+		ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		row.add_child(ic)
+		var tx := VBoxContainer.new()
+		tx.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(tx)
+		_label("%s  ×%d" % [cr.item_name(id), cr.count(id)], tx, 15)
+		_label(cr.item_desc(id), tx, 12, MUTED).autowrap_mode = TextServer.AUTOWRAP_WORD
+		var use := Button.new()
+		use.text = "Usar"
+		use.focus_mode = Control.FOCUS_NONE
+		use.pressed.connect(func() -> void:
+			var m: String = cr.use(main, id)
+			if m != "":
+				main.say(m, 2.0)
+			_build_side())
+		row.add_child(use)
+		var q := Button.new()
+		q.text = "G" if p.quick != id else "★G"
+		q.tooltip_text = "Asignar a la tecla G"
+		q.focus_mode = Control.FOCUS_NONE
+		q.pressed.connect(func() -> void:
+			p.quick = id
+			_build_side())
+		row.add_child(q)
+	side_card.add_child(HSeparator.new())
+	_label("Materiales", side_card, 20, GOLD)
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	side_card.add_child(scroll)
+	var grid := GridContainer.new()
+	grid.columns = 4
+	grid.add_theme_constant_override("h_separation", 6)
+	grid.add_theme_constant_override("v_separation", 6)
+	scroll.add_child(grid)
+	for id: String in p.materials:
+		if cr.is_consumable(id) or cr.is_blueprint(id) or p.materials[id] <= 0:
+			continue
+		var cell := Panel.new()
+		cell.custom_minimum_size = Vector2(66, 66)
+		cell.add_theme_stylebox_override("panel", _box(Color(0.07, 0.09, 0.15), Color(0.3, 0.34, 0.45), 1, 6, 2))
+		cell.tooltip_text = "%s\n%s" % [cr.item_name(id), cr.item_desc(id)]
+		var im := TextureRect.new()
+		im.texture = load(cr.icon(id))
+		im.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		im.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		im.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 4)
+		cell.add_child(im)
+		var n := Label.new()
+		n.text = str(p.materials[id])
+		n.add_theme_font_size_override("font_size", 14)
+		n.add_theme_color_override("font_outline_color", Color.BLACK)
+		n.add_theme_constant_override("outline_size", 5)
+		n.position = Vector2(40, 44)
+		cell.add_child(n)
+		grid.add_child(cell)
+	if p.materials.is_empty():
+		_label("(ninguno)", side_card, 14, MUTED)
 
 func _slider_row(grid: GridContainer, text: String, hint: String, value: float, on: Callable) -> void:  # etiqueta, control 0-100 % y pista
 	_label(text, grid, 19)

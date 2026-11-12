@@ -56,6 +56,7 @@ var burn_t := 0.0                   # segundos restantes de katana en llamas
 var burn_mult := 1.0
 var bars := {}                      # nombre -> ProgressBar
 var burn_label: Label
+var buff_label: Label            # bonus temporales activos (comida y elixires)
 var cam: Camera2D
 var shake_amp := 0.0
 var facing := "S"
@@ -123,6 +124,9 @@ func _ready() -> void:
 	dialogue_data = _read_json("res://data/dialogue.json")
 	hero_data = creatures["hero"]
 	prog = load("res://scripts/progress.gd").new(_read_json("res://data/equipment.json"))
+	crafting = load("res://scripts/crafting.gd").new(prog, _read_json("res://data/crafting.json"))
+	for b: String in crafting.cfg["starting_blueprints"]:
+		crafting.learn(b)
 	hero_base = {"hp": hero_data["hp"], "mana": hero_data["mana"], "stamina": hero_data["stamina"]}
 	hero_max_hp = hero_data["hp"]
 	hero_hp = hero_max_hp
@@ -252,6 +256,11 @@ func _ready() -> void:
 			village_houses += 1
 			var dd := _add_door(Vector2(o["tile"][0], o["rect"][3] + 0.6), "Entrar: " + interiors_data[iid]["title"], enter_interior.bind(iid), false)
 			dd.reach = 1.8
+	station_ui = CanvasLayer.new()
+	station_ui.set_script(load("res://scripts/station_ui.gd"))
+	station_ui.main = self
+	add_child(station_ui)
+	_build_world_props()
 	shop = CanvasLayer.new()
 	shop.set_script(load("res://scripts/shop.gd"))
 	shop.main = self
@@ -301,7 +310,7 @@ func save_game() -> void:
 		return
 	var d := {"version": 1, "level": prog.level, "xp": prog.xp, "points": prog.points, "spent": prog.spent,
 		"coins": prog.coins, "potions": prog.potions, "materials": prog.materials, "owned": prog.owned,
-		"equipped": prog.equipped, "dungeon_floor": dungeon_floor, "quests": quests.to_dict()}
+		"equipped": prog.equipped, "blueprints": prog.blueprints, "quick": prog.quick, "dungeon_floor": dungeon_floor, "quests": quests.to_dict()}
 	var f := FileAccess.open(save_path, FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(d, "\t"))
@@ -335,6 +344,15 @@ func load_game() -> bool:  # valida cada campo: el archivo puede estar editado o
 			var id := str(eq[slot])
 			if prog.equipment.has(id) and prog.owned.has(id) and prog.equipment[id]["slot"] == slot:
 				prog.equipped[slot] = id
+	prog.blueprints.clear()
+	var bps: Variant = d.get("blueprints", [])
+	if bps is Array:
+		for b: Variant in bps:
+			if crafting.cfg["blueprints"].has(str(b)) and not prog.blueprints.has(str(b)):
+				prog.blueprints.append(str(b))
+	for b: String in crafting.cfg["starting_blueprints"]:
+		crafting.learn(b)
+	prog.quick = str(d.get("quick", "")) if crafting.is_consumable(str(d.get("quick", ""))) else ""
 	dungeon_floor = clampi(int(d.get("dungeon_floor", 1)), 1, 4)
 	if d.get("quests") is Dictionary:
 		quests.from_dict(d["quests"])
@@ -456,6 +474,14 @@ func _interact() -> void:
 	var m := _near_merchant()
 	if m != null:
 		shop.open(m.role)
+		return
+	var st := _near_station()
+	if not st.is_empty():
+		station_ui.open(st["station"])
+		return
+	var rn := _near_node()
+	if not rn.is_empty():
+		_gather(rn)
 
 func _near_villager() -> Node2D:
 	if in_dungeon:
@@ -506,6 +532,12 @@ func _update_prompt(delta: float) -> void:
 		prompt.text = "[E] Hablar con %s" % _near_npc().display
 	elif _near_merchant() != null:
 		prompt.text = "[E] Comprar a Tomás  (tienes %d monedas)" % prog.coins if _near_merchant().role == "merchant" else "[E] Vender materiales a Bram"
+	elif not _near_station().is_empty():
+		prompt.text = "[E] " + _near_station()["label"]
+	elif not _near_node().is_empty():
+		var nn := _near_node()
+		var why: String = crafting.can_gather(nn["kind"])
+		prompt.text = "%s — %s" % [crafting.cfg["gather"][nn["kind"]]["name"], why] if why != "" else "[E] Recoger: %s" % crafting.cfg["gather"][nn["kind"]]["name"]
 	else:
 		prompt.text = ""
 
@@ -691,6 +723,7 @@ func npc_lines(npc: Node2D) -> Array:  # conversaciones que se cumplen ahora; ro
 # --- enemigos, botín y progresión (progress.gd)
 var enemies: Array = []          # dragón y monstruos de la dungeon: alive, pos, radius, take_damage()
 var prog: RefCounted
+var crafting: RefCounted      # recetas, alquimia, consumibles y recolección (scripts/crafting.gd)
 var hero_base := {}              # vida, maná y estamina base (sin nivel, puntos ni equipo)
 var floors: Node
 var dungeon_floor := 1
@@ -738,6 +771,9 @@ func _equip_look() -> void:
 		equip_aura.energy = 0.0 if t == 0 else 0.12 + 0.06 * t
 
 func sword_trail_color() -> Color:  # color del tajo según la espada equipada (la katana en llamas manda)
+	var sid: String = prog.equipped.get("sword", "")
+	if sid != "" and prog.equipment[sid].has("trail"):  # las espadas forjadas llevan su propio color
+		return Color.html(prog.equipment[sid]["trail"])
 	return SWORD_TRAIL.get(_tier("sword"), Color.html(current["trail_color"]))
 
 func spawn_enemy(id: String, ground: Vector2) -> Node2D:
@@ -804,6 +840,9 @@ func on_kill(e: Node) -> void:  # botín de un enemigo: XP, monedas y objetos (d
 		if drop["item"] == "pocion_vida":
 			prog.potions += 1
 			lines.append("Poción de vida")
+		elif crafting.is_blueprint(drop["item"]):
+			if crafting.learn(drop["item"]):
+				lines.append("¡%s!" % crafting.item_name(drop["item"]).replace("Plano:", "Plano aprendido:"))
 		else:
 			prog.materials[drop["item"]] = prog.materials.get(drop["item"], 0) + 1
 			lines.append(prog.material_names[drop["item"]])
@@ -883,6 +922,13 @@ func _load_inventory() -> void:
 	info_label.add_theme_font_size_override("font_size", 20)
 	info_label.position = Vector2(16, 136)
 	ui.add_child(info_label)
+	buff_label = Label.new()
+	buff_label.position = Vector2(16, 188)
+	buff_label.add_theme_font_size_override("font_size", 18)
+	buff_label.add_theme_color_override("font_color", Color(0.6, 0.95, 0.7))
+	buff_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	buff_label.add_theme_constant_override("outline_size", 5)
+	ui.add_child(buff_label)
 	burn_label = Label.new()
 	burn_label.position = Vector2(16, 162)
 	burn_label.add_theme_color_override("font_color", Color(1.0, 0.6, 0.2))
@@ -1105,6 +1151,9 @@ func _respawn() -> void:
 	burn_t = 0.0
 	if in_interior:
 		_exit_interior()
+	elif in_mine:
+		_exit_mine()
+		say("Despiertas en el pueblo", 2.5)
 	elif in_dungeon:  # despierta en el pueblo; el piso alcanzado y la misión se conservan
 		_exit_dungeon()
 		say("Despiertas en el pueblo", 2.5)
@@ -1215,6 +1264,7 @@ func _chest_aim() -> Vector2:  # dirección del pecho del héroe al cursor, en p
 func _dash() -> bool:  # true si el dash empezó
 	if dashing or dash_cd > 0.0 or aiming or stamina < hero_data["dash_stamina"]:
 		return false
+	gathering = false  # esquivar corta la recolección
 	if attacking and (not struck or current_mode == "heavy"):  # cancelar: el ligero solo en su recuperación; el pesado, nunca (compromiso)
 		return false
 	stamina -= hero_data["dash_stamina"]
@@ -1257,7 +1307,7 @@ func _pay(spec: Dictionary) -> void:
 
 # clic izquierdo = "light", clic derecho = "heavy" del objeto equipado (data/items.json)
 func _attack(mode: String) -> bool:  # true si el ataque empezó (y se cobró)
-	if attacking or dashing or aiming or cooldown > 0.0:
+	if attacking or dashing or aiming or gathering or cooldown > 0.0:
 		return false
 	var spec: Dictionary = items[hotbar[selected]][mode]
 	if not _afford(spec):
@@ -1492,6 +1542,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			debug_hitboxes = not debug_hitboxes  # dibuja las hitbox sobre los sprites
 		elif event.physical_keycode == KEY_H:
 			_use_potion()
+		elif event.physical_keycode == KEY_G:
+			_use_quick()
 		elif event.physical_keycode == KEY_ESCAPE:
 			_cancel_aim()
 		elif not attacking:
@@ -1554,7 +1606,21 @@ func _physics_process(delta: float) -> void:
 	dash_cd = maxf(0.0, dash_cd - delta)
 	dodge_cd = maxf(0.0, dodge_cd - delta)
 	dash_bonus_t = maxf(0.0, dash_bonus_t - delta)
+	if not prog.buffs.is_empty():
+		if prog.tick_buffs(delta):
+			_apply_stats()
+		var parts: Array[String] = []
+		for f: Dictionary in prog.buffs:
+			parts.append("+%d %s  %ds" % [int(f["amount"]), prog.STAT_NAMES[f["stat"]], ceili(f["t"])])
+		buff_label.text = "
+".join(parts)
+	elif buff_label.text != "":
+		buff_label.text = ""
 	_try_buffer()
+	if gathering:
+		_gather_tick(delta)
+		_place()
+		return
 	burn_t = maxf(0.0, burn_t - delta)
 	# regeneración tras una pausa sin gastar
 	stamina_idle += delta
@@ -1670,3 +1736,200 @@ func _place() -> void:
 	if equip_aura:
 		equip_aura.position = (pos - Vector2(0, 34)) * SCALE
 		contact_shadow.z_index = hero.z_index - 1
+
+# --- creación: estaciones del mundo, recolección y mina (data/crafting.json)
+var stations: Array = []     # {station, scene, tile, reach, label}: dónde se usa cada oficio
+var station_ui: CanvasLayer
+var in_mine := false
+var gathering := false       # balanceando el pico, el hacha o las manos sobre un recurso
+var gather_t := 0.0
+var gather_node: Dictionary = {}
+var gather_hit_done := false
+const GATHER_TIME := 0.5
+
+func _scene_id() -> String:
+	if in_interior:
+		return "interior:" + current_interior
+	if in_mine:
+		return "mine"
+	return "dungeon" if in_dungeon else "overworld"
+
+func _build_world_props() -> void:  # mesa de alquimia y fogata junto al mercader, plantas del valle, entrada de la mina y yunque de Bram
+	for pr: Dictionary in crafting.cfg["world_props"]:
+		var node := Node2D.new()
+		node.set_script(load("res://scripts/station_prop.gd"))
+		node.main = self
+		node.sprite_key = pr["sprite"]
+		node.tile = Vector2(pr["tile"][0], pr["tile"][1])
+		if pr.has("light"):
+			node.light_col = Color(pr["light"][0], pr["light"][1], pr["light"][2])
+		add_child(node)
+		var half := Vector2(pr["footprint"][0], pr["footprint"][1])
+		world.rects.append(Rect2(node.tile - half, half * 2.0))  # no se atraviesa
+		stations.append({"station": pr["station"], "scene": "overworld", "tile": node.tile, "reach": float(pr["reach"]), "label": pr["label"]})
+	stations.append({"station": "forge", "scene": "interior:forge", "tile": Vector2(3.1, 4.0), "reach": 2.3, "label": "Forjar en el yunque de Bram"})
+	for nd: Dictionary in crafting.cfg["overworld_nodes"]:
+		var spec: Dictionary = crafting.cfg["world_sprites"]["herb_bush" if nd["kind"] == "herb" else "berry_bush"]
+		world.add_resource(nd["kind"], Vector2(nd["tile"][0], nd["tile"][1]), spec["paths"][0], spec["feet"], 0.0)
+	var mine: Dictionary = crafting.cfg["mine"]
+	var ent := Node2D.new()
+	ent.set_script(load("res://scripts/station_prop.gd"))
+	ent.main = self
+	ent.sprite_key = "mine_entrance"
+	ent.tile = Vector2(mine["entrance_tile"][0], mine["entrance_tile"][1])
+	add_child(ent)
+	var r: Array = mine["entrance_rect"]
+	world.rects.append(Rect2(r[0], r[1], r[2] - r[0], r[3] - r[1]))
+	var door := _add_door(Vector2(mine["door_tile"][0], mine["door_tile"][1]), "Entrar a la mina", enter_mine, false)
+	door.reach = 1.9
+
+func _near_station() -> Dictionary:
+	var here := _scene_id()
+	var t := ground_to_tile(pos)
+	for s: Dictionary in stations:
+		if s["scene"] == here and t.distance_to(s["tile"]) < s["reach"]:
+			return s
+	return {}
+
+func _near_node() -> Dictionary:  # árbol, roca, veta o planta al alcance del héroe
+	if gathering or dying or not world.has_method("node_near"):
+		return {}
+	return world.node_near(pos)
+
+func _gather(n: Dictionary) -> void:
+	if gathering or attacking or dashing or aiming:
+		return
+	var why: String = crafting.can_gather(n["kind"])
+	if why != "":
+		say(why, 1.6)
+		return
+	var dir: Vector2 = n["g"] - pos
+	facing = DIRS[posmod(roundi(dir.angle() / (PI / 4.0)), 8)]
+	gathering = true
+	gather_t = 0.0
+	gather_node = n
+	gather_hit_done = false
+	move_vel = Vector2.ZERO
+	var key := "slash_light_" + facing
+	hero.sprite_frames.set_animation_speed(key, 6.0 / GATHER_TIME)
+	hero.play(key)
+
+func _gather_tick(delta: float) -> void:
+	gather_t += delta
+	if not gather_hit_done and gather_t >= GATHER_TIME * 0.5:
+		gather_hit_done = true
+		_gather_hit()
+	if gather_t >= GATHER_TIME:
+		gathering = false
+		var n := gather_node
+		if not n.is_empty() and not n["depleted"] and Input.is_physical_key_pressed(KEY_E) and crafting.can_gather(n["kind"]) == "":
+			_gather(n)  # mantener E sigue golpeando
+
+func _gather_hit() -> void:
+	var n := gather_node
+	var g: Dictionary = crafting.cfg["gather"][n["kind"]]
+	var broken: bool = world.hit_node(n, crafting.swing_power(g["tool"]))
+	var chips := preload("res://scripts/splatter.gd").new()  # astillas, esquirlas u hojas del color del recurso
+	chips.tint = Color(g["chips"])
+	chips.dir = (n["g"] - pos).normalized()
+	chips.count = 10 if broken else 5
+	chips.origin_h = 40.0
+	chips.position = n["g"] * SCALE
+	chips.z_index = int(n["g"].y) + 2
+	add_child(chips)
+	combat.play("light")
+	shake(2.5 if broken else 1.2)
+	if not broken:
+		return
+	var lines: Array[String] = []
+	var drops: Dictionary = crafting.roll_drops(n["kind"])
+	for id: String in drops:
+		crafting.add(id, int(drops[id]))
+		lines.append("+%d %s" % [int(drops[id]), crafting.item_name(id)])
+		quest_event("loot", id)
+	popup(n["g"], "\n".join(lines))
+	quest_event("gather", n["kind"])
+
+func _use_quick() -> void:
+	var id: String = prog.quick
+	if id == "" or crafting.count(id) <= 0:
+		var owned: Array = crafting.consumables_owned().filter(func(x: String) -> bool: return x != "pocion_vida")
+		if owned.is_empty():
+			say("No tienes consumibles: cocina en la fogata o prepara pociones.", 2.0)
+			return
+		id = owned[0]
+	var m: String = crafting.use(self, id)
+	if m != "":
+		say(m, 2.0)
+
+# --- la mina: cueva de minerales fuera del pueblo (mine.gd)
+func enter_mine() -> void:
+	_transition(_enter_mine)
+
+func _enter_mine() -> void:
+	var cfg: Dictionary = crafting.cfg["mine"]
+	in_dungeon = true  # fauna, civiles y el dragón se pausan igual que bajo tierra
+	in_mine = true
+	overworld = {"pos": pos, "C1": C1, "E1": E1, "E2": E2, "tiles": TILES, "world": world, "doors": doors, "dragon_alive": dragon.alive}
+	world.visible = false
+	for d: Node2D in doors:
+		d.visible = false
+	doors = []
+	dragon.visible = false
+	dragon.alive = false
+	var n: int = cfg["tiles"]
+	var s := n / TILES
+	E1 *= s
+	E2 *= s
+	TILES = n
+	C1 = -(E1 + E2) / 2.0
+	RenderingServer.set_default_clear_color(Color("#07060a"))
+	combat.set_zone(true)
+	dungeon_node = Node2D.new()
+	dungeon_node.set_script(load("res://scripts/mine.gd"))
+	dungeon_node.main = self
+	add_child(dungeon_node)
+	dungeon_node.setup(cfg)
+	world = dungeon_node
+	var exit_door := _add_door(Vector2(n / 2.0 + 0.5, 0.9), "Salir de la mina", exit_mine)
+	exit_door.reach = 2.0
+	pos = tile_to_ground(dungeon_node.spawn_tile())
+	cam.position = (pos - Vector2(0, 40)) * SCALE
+	floor_hp = 1.0
+	floor_dmg = 1.0
+	var taken: Array = []
+	for id: String in cfg["enemies"]:
+		for i in int(cfg["enemies"][id]):
+			var t: Vector2 = dungeon_node.free_tile(taken, 8.0)
+			taken.append(t)
+			spawn_enemy(id, tile_to_ground(t))
+	say("La mina: vetas de hierro, carbón y cristal. Cuidado con lo que vive aquí.", 3.0)
+
+func exit_mine() -> void:
+	_transition(_exit_mine)
+
+func _exit_mine() -> void:
+	in_dungeon = false
+	in_mine = false
+	for e in enemies.duplicate():
+		if e != dragon:
+			enemies.erase(e)
+			e.queue_free()
+	for d: Node2D in doors:
+		d.queue_free()
+	dungeon_node.queue_free()
+	world = overworld["world"]
+	world.visible = true
+	doors = overworld["doors"]
+	for d: Node2D in doors:
+		d.visible = true
+	C1 = overworld["C1"]
+	E1 = overworld["E1"]
+	E2 = overworld["E2"]
+	TILES = overworld["tiles"]
+	pos = overworld["pos"]
+	dragon.visible = true
+	dragon.alive = overworld["dragon_alive"]
+	RenderingServer.set_default_clear_color(Color("#0f1a2a"))
+	combat.set_zone(false)
+	cam.position = (pos - Vector2(0, 40)) * SCALE

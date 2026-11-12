@@ -1,0 +1,134 @@
+{
+ "alchemy_table": {
+  "path": "res://art/map/alchemy_table.png",
+  "frame": [
+   192,
+   192
+  ],
+  "feet": [
+   100.0,
+   145.7
+  ]
+ },
+ "campfire_0": {
+  "path": "res://art/map/campfire_0.png",
+  "frame": [
+   128,
+   128
+  ],
+  "feet": [
+   68.0,
+   113.7
+  ]
+ },
+ "campfire_1": {
+  "path": "res://art/map/campfire_1.png",
+  "frame": [
+   128,
+   128
+  ],
+  "feet": [
+   68.0,
+   113.7
+  ]
+ },
+ "campfire_2": {
+  "path": "res://art/map/campfire_2.png",
+  "frame": [
+   128,
+   128
+  ],
+  "feet": [
+   68.0,
+   113.7
+  ]
+ },
+ "campfire_3": {
+  "path": "res://art/map/campfire_3.png",
+  "frame": [
+   128,
+   128
+  ],
+  "feet": [
+   68.0,
+   113.7
+  ]
+ },
+ "mine_entrance": {
+  "path": "res://art/map/mine_entrance.png",
+  "frame": [
+   320,
+   320
+  ],
+  "feet": [
+   164.0,
+   209.7
+  ]
+ },
+ "node_iron": {
+  "path": "res://art/map/node_iron.png",
+  "frame": [
+   96,
+   96
+  ],
+  "feet": [
+   52.0,
+   97.7
+  ]
+ },
+ "node_coal": {
+  "path": "res://art/map/node_coal.png",
+  "frame": [
+   96,
+   96
+  ],
+  "feet": [
+   52.0,
+   97.7
+  ]
+ },
+ "node_crystal": {
+  "path": "res://art/map/node_crystal.png",
+  "frame": [
+   96,
+   96
+  ],
+  "feet": [
+   52.0,
+   97.7
+  ]
+ },
+ "node_mushroom": {
+  "path": "res://art/map/node_mushroom.png",
+  "frame": [
+   96,
+   96
+  ],
+  "feet": [
+   52.0,
+   97.7
+  ]
+ },
+ "herb_bush": {
+  "path": "res://art/map/herb_bush.png",
+  "frame": [
+   96,
+   96
+  ],
+  "feet": [
+   52.0,
+   97.7
+  ]
+ },
+ "berry_bush": {
+  "path": "res://art/map/berry_bush.png",
+  "frame": [
+   96,
+   96
+  ],
+  "feet": [
+   52.0,
+   97.7
+  ]
+ }
+}

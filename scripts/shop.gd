@@ -23,7 +23,7 @@ func is_open() -> bool:
 func stock() -> Array:  # lo que vende el mercader y aún no tienes (el equipo no se repite)
 	var out: Array = []
 	for s: Dictionary in cfg["merchant"]["stock"]:
-		if s["id"] == "pocion_vida" or not main.prog.owned.has(s["id"]):
+		if s["id"] == "pocion_vida" or (not main.prog.owned.has(s["id"]) and not main.crafting.knows(s["id"])):
 			out.append(s)
 	return out
 
@@ -39,6 +39,13 @@ func buy(id: String) -> String:  # devuelve el aviso para el jugador
 		return "Eso no está en venta."
 	if main.prog.coins < price:
 		return "Te faltan monedas (%d / %d)." % [main.prog.coins, price]
+	if main.crafting.is_blueprint(id):
+		if main.crafting.knows(id):
+			return "Ya conoces ese plano."
+		main.prog.coins -= price
+		main.crafting.learn(id)
+		main.save_game()
+		return "Plano aprendido: %s" % main.crafting.item_name(main.crafting.cfg["blueprints"][id]["output"])
 	if id != "pocion_vida" and main.prog.owned.has(id):
 		return "Ya tienes eso."
 	main.prog.coins -= price
@@ -123,8 +130,9 @@ func _refresh(msg: String) -> void:
 	if role == "merchant":
 		for s: Dictionary in stock():
 			var id: String = s["id"]
-			var label: String = "Poción de vida" if id == "pocion_vida" else main.prog.equipment[id]["name"]
-			var desc: String = "Cura 40 de vida" if id == "pocion_vida" else _mods_text(main.prog.equipment[id])
+			var is_bp: bool = main.crafting.is_blueprint(id)
+			var label: String = "Poción de vida" if id == "pocion_vida" else (main.crafting.item_name(id) if is_bp else main.prog.equipment[id]["name"])
+			var desc: String = "Cura 40 de vida" if id == "pocion_vida" else ("para la mesa de alquimia" if is_bp else _mods_text(main.prog.equipment[id]))
 			var b := _button("%s  —  %d monedas   (%s)" % [label, s["price"], desc], func() -> void: _refresh(buy(id)))
 			b.disabled = main.prog.coins < int(s["price"])
 			first = first if first else b

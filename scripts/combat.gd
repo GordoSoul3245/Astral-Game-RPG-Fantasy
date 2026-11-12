@@ -198,14 +198,17 @@ func consume(e: Node) -> bool:
 	return marks.erase(e)
 
 func detonate(ground: Vector2) -> void:  # la explosión no marca ni consume marcas: no puede encadenarse
+	detonate_at(ground, mark_spec["radius"], mark_spec["damage"])
+
+func detonate_at(ground: Vector2, radius: float, damage: int) -> void:  # también la usa el frasco de Ignis (alquimia)
 	play("blast")
 	flash(ground, Color(1.0, 0.5, 0.15), 1.4, 3.5, 0.45)
 	ground_impact(ground, 1.8)
 	_spark(ground, KINDS["blast"]["col"], KINDS["blast"]["size"])
 	main.shake(KINDS["blast"]["shake"])
 	for e in main.targets():
-		if e.alive and preload("res://scripts/hitbox.gd").foot_dist(e, ground) < mark_spec["radius"]:
-			hit(e, roundi(mark_spec["damage"] * main.prog.magic_mult()), "blast", ground, false)
+		if e.alive and preload("res://scripts/hitbox.gd").foot_dist(e, ground) < radius:
+			hit(e, roundi(damage * main.prog.magic_mult()), "blast", ground, false)
 
 func _process(delta: float) -> void:
 	for e in marks.keys():

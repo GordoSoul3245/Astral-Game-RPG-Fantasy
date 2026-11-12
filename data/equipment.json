@@ -7,18 +7,242 @@
 		"escama_dragon": "Escama de dragón"
 	},
 	"items": {
-		"armadura_cuero": {"name": "Armadura de cuero", "slot": "armor", "tier": 1, "mods": {"defense": 3}, "desc": "Cuero curtido de la dungeon."},
-		"armadura_malla": {"name": "Cota de malla", "slot": "armor", "tier": 2, "mods": {"defense": 6, "endurance": 1}, "desc": "Eslabones de acero sombrío."},
-		"armadura_dorada": {"name": "Armadura dorada", "slot": "armor", "tier": 3, "mods": {"defense": 10, "max_hp": 30}, "desc": "Reliquia del guardián de la tormenta."},
-		"anillo_vigor": {"name": "Anillo de vigor", "slot": "ring", "tier": 1, "mods": {"endurance": 2}, "desc": "Late como un corazón."},
-		"anillo_furia": {"name": "Anillo de furia", "slot": "ring", "tier": 2, "mods": {"strength": 3, "attack_speed": 2}, "desc": "Caliente al tacto."},
-		"anillo_arcano": {"name": "Anillo arcano", "slot": "ring", "tier": 2, "mods": {"magic": 3, "mana": 3}, "desc": "Una gema índigo gira en su interior."},
-		"collar_hueso": {"name": "Collar de hueso", "slot": "amulet", "tier": 1, "mods": {"defense": 2, "max_hp": 15}, "desc": "Falanges ensartadas."},
-		"collar_viento": {"name": "Collar del viento", "slot": "amulet", "tier": 2, "mods": {"move_speed": 4}, "desc": "Ligero como una pluma."},
-		"amuleto_tormenta": {"name": "Amuleto de la tormenta", "slot": "amulet", "tier": 3, "mods": {"magic": 4, "strength": 4, "defense": 2}, "desc": "Crepita al moverse."},
-		"katana_obsidiana": {"name": "Katana de obsidiana", "slot": "sword", "tier": 2, "mods": {"strength": 4, "attack_speed": 1}, "desc": "Filo negro, más pesada que la Ceniza."},
-		"katana_tormenta": {"name": "Katana de la tormenta", "slot": "sword", "tier": 3, "mods": {"strength": 8, "attack_speed": 3}, "desc": "El acero zumba."},
-		"grimorio_brasas": {"name": "Grimorio de brasas", "slot": "grimoire", "tier": 2, "mods": {"magic": 4, "mana": 2}, "desc": "Sus páginas están chamuscadas."},
-		"grimorio_inferno": {"name": "Grimorio del infierno", "slot": "grimoire", "tier": 3, "mods": {"magic": 8, "mana": 4}, "desc": "Prohibido por tres órdenes."}
+		"armadura_cuero": {
+			"name": "Armadura de cuero",
+			"slot": "armor",
+			"tier": 1,
+			"mods": {
+				"defense": 3
+			},
+			"desc": "Cuero curtido de la dungeon."
+		},
+		"armadura_malla": {
+			"name": "Cota de malla",
+			"slot": "armor",
+			"tier": 2,
+			"mods": {
+				"defense": 6,
+				"endurance": 1
+			},
+			"desc": "Eslabones de acero sombrío."
+		},
+		"armadura_dorada": {
+			"name": "Armadura dorada",
+			"slot": "armor",
+			"tier": 3,
+			"mods": {
+				"defense": 10,
+				"max_hp": 30
+			},
+			"desc": "Reliquia del guardián de la tormenta."
+		},
+		"anillo_vigor": {
+			"name": "Anillo de vigor",
+			"slot": "ring",
+			"tier": 1,
+			"mods": {
+				"endurance": 2
+			},
+			"desc": "Late como un corazón."
+		},
+		"anillo_furia": {
+			"name": "Anillo de furia",
+			"slot": "ring",
+			"tier": 2,
+			"mods": {
+				"strength": 3,
+				"attack_speed": 2
+			},
+			"desc": "Caliente al tacto."
+		},
+		"anillo_arcano": {
+			"name": "Anillo arcano",
+			"slot": "ring",
+			"tier": 2,
+			"mods": {
+				"magic": 3,
+				"mana": 3
+			},
+			"desc": "Una gema índigo gira en su interior."
+		},
+		"collar_hueso": {
+			"name": "Collar de hueso",
+			"slot": "amulet",
+			"tier": 1,
+			"mods": {
+				"defense": 2,
+				"max_hp": 15
+			},
+			"desc": "Falanges ensartadas."
+		},
+		"collar_viento": {
+			"name": "Collar del viento",
+			"slot": "amulet",
+			"tier": 2,
+			"mods": {
+				"move_speed": 4
+			},
+			"desc": "Ligero como una pluma."
+		},
+		"amuleto_tormenta": {
+			"name": "Amuleto de la tormenta",
+			"slot": "amulet",
+			"tier": 3,
+			"mods": {
+				"magic": 4,
+				"strength": 4,
+				"defense": 2
+			},
+			"desc": "Crepita al moverse."
+		},
+		"katana_obsidiana": {
+			"name": "Katana de obsidiana",
+			"slot": "sword",
+			"tier": 2,
+			"mods": {
+				"strength": 4,
+				"attack_speed": 1
+			},
+			"desc": "Filo negro, más pesada que la Ceniza."
+		},
+		"katana_tormenta": {
+			"name": "Katana de la tormenta",
+			"slot": "sword",
+			"tier": 3,
+			"mods": {
+				"strength": 8,
+				"attack_speed": 3
+			},
+			"desc": "El acero zumba."
+		},
+		"grimorio_brasas": {
+			"name": "Grimorio de brasas",
+			"slot": "grimoire",
+			"tier": 2,
+			"mods": {
+				"magic": 4,
+				"mana": 2
+			},
+			"desc": "Sus páginas están chamuscadas."
+		},
+		"grimorio_inferno": {
+			"name": "Grimorio del infierno",
+			"slot": "grimoire",
+			"tier": 3,
+			"mods": {
+				"magic": 8,
+				"mana": 4
+			},
+			"desc": "Prohibido por tres órdenes."
+		},
+		"pico_piedra": {
+			"name": "Pico de piedra",
+			"slot": "pickaxe",
+			"tier": 1,
+			"mods": {},
+			"tool": {
+				"kind": "pickaxe",
+				"tier": 1
+			},
+			"desc": "Rompe rocas y vetas de hierro y carbón."
+		},
+		"pico_hierro": {
+			"name": "Pico de hierro",
+			"slot": "pickaxe",
+			"tier": 2,
+			"mods": {},
+			"tool": {
+				"kind": "pickaxe",
+				"tier": 2
+			},
+			"desc": "Más rápido; parte el cristal arcano."
+		},
+		"pico_acero": {
+			"name": "Pico de acero",
+			"slot": "pickaxe",
+			"tier": 3,
+			"mods": {},
+			"tool": {
+				"kind": "pickaxe",
+				"tier": 3
+			},
+			"desc": "El mejor pico: casi cada golpe cuenta doble."
+		},
+		"hacha_piedra": {
+			"name": "Hacha de piedra",
+			"slot": "axe",
+			"tier": 1,
+			"mods": {},
+			"tool": {
+				"kind": "axe",
+				"tier": 1
+			},
+			"desc": "Tala árboles con rapidez."
+		},
+		"hacha_hierro": {
+			"name": "Hacha de hierro",
+			"slot": "axe",
+			"tier": 2,
+			"mods": {},
+			"tool": {
+				"kind": "axe",
+				"tier": 2
+			},
+			"desc": "Un árbol cae en pocos golpes."
+		},
+		"hacha_acero": {
+			"name": "Hacha de acero",
+			"slot": "axe",
+			"tier": 3,
+			"mods": {},
+			"tool": {
+				"kind": "axe",
+				"tier": 3
+			},
+			"desc": "Tala sin esfuerzo."
+		},
+		"espada_hierro": {
+			"name": "Espada de hierro",
+			"slot": "sword",
+			"tier": 2,
+			"mods": {
+				"strength": 5,
+				"attack_speed": 1
+			},
+			"trail": "#d8d8ee",
+			"desc": "Forjada por ti: honesta y pesada."
+		},
+		"espada_acero": {
+			"name": "Espada de acero",
+			"slot": "sword",
+			"tier": 3,
+			"mods": {
+				"strength": 9,
+				"attack_speed": 2
+			},
+			"trail": "#bfe6ff",
+			"desc": "Acero templado con ojo de cíclope."
+		},
+		"espada_cristal": {
+			"name": "Hoja de cristal",
+			"slot": "sword",
+			"tier": 3,
+			"mods": {
+				"strength": 6,
+				"magic": 6
+			},
+			"trail": "#b48aff",
+			"desc": "Corta y canaliza el eco de los cristales."
+		},
+		"armadura_hierro": {
+			"name": "Armadura de hierro",
+			"slot": "armor",
+			"tier": 2,
+			"mods": {
+				"defense": 7,
+				"endurance": 1
+			},
+			"desc": "Placas de hierro sobre cuero curtido."
+		}
 	}
 }

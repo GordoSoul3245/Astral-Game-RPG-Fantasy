@@ -29,11 +29,69 @@
 			"muzzle_height": 22.0
 		},
 		"xp": 60,
-		"coins": [15, 25],
-		"drops": [{"item": "escama_dragon", "chance": 1.0}, {"item": "pocion_vida", "chance": 0.5}]
+		"coins": [
+			15,
+			25
+		],
+		"drops": [
+			{
+				"item": "escama_dragon",
+				"chance": 1.0
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 0.5
+			},
+			{
+				"item": "plano_pocion_vida_mayor",
+				"chance": 1.0
+			}
+		]
 	},
-	"rabbit": {"hp": 6, "radius": 6.0, "xp": 3, "coins": [0, 1], "drops": [], "respawn": 45.0},
-	"fox": {"hp": 24, "radius": 9.0, "xp": 14, "coins": [2, 5], "drops": [{"item": "pocion_vida", "chance": 0.25}], "respawn": 60.0},
+	"rabbit": {
+		"hp": 6,
+		"radius": 6.0,
+		"xp": 3,
+		"coins": [
+			0,
+			1
+		],
+		"drops": [
+			{
+				"item": "carne_conejo",
+				"chance": 0.8
+			},
+			{
+				"item": "piel_conejo",
+				"chance": 0.7
+			}
+		],
+		"respawn": 45.0
+	},
+	"fox": {
+		"hp": 24,
+		"radius": 9.0,
+		"xp": 14,
+		"coins": [
+			2,
+			5
+		],
+		"drops": [
+			{
+				"item": "pocion_vida",
+				"chance": 0.25
+			},
+			{
+				"item": "carne_zorro",
+				"chance": 0.9
+			},
+			{
+				"item": "piel_zorro",
+				"chance": 0.8
+			}
+		],
+		"respawn": 60.0
+	},
 	"slime": {
 		"kind": "slime",
 		"blood": "#7ad94a",
@@ -43,14 +101,36 @@
 		"radius": 10.0,
 		"r_t": 0.32,
 		"staggerable": true,
-		"sprites": {"prefix": "res://art/slime/slime_", "feet": [68.0, 113.7], "kinds": ["idle", "walk"]},
+		"sprites": {
+			"prefix": "res://art/slime/slime_",
+			"feet": [
+				68.0,
+				113.7
+			],
+			"kinds": [
+				"idle",
+				"walk"
+			]
+		},
 		"hop_time": 0.8,
 		"hop_rest": 0.5,
 		"contact_damage": 8,
 		"contact_cooldown": 0.9,
 		"xp": 10,
-		"coins": [2, 6],
-		"drops": [{"item": "gel_slime", "chance": 0.6}, {"item": "pocion_vida", "chance": 0.2}]
+		"coins": [
+			2,
+			6
+		],
+		"drops": [
+			{
+				"item": "gel_slime",
+				"chance": 0.6
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 0.2
+			}
+		]
 	},
 	"skeleton_archer": {
 		"kind": "archer",
@@ -59,7 +139,13 @@
 		"speed": 42.0,
 		"detect_range": 320.0,
 		"keep_distance": 150.0,
-		"sprites": {"prefix": "res://art/skeleton/skeleton_", "feet": [68.0, 113.7]},
+		"sprites": {
+			"prefix": "res://art/skeleton/skeleton_",
+			"feet": [
+				68.0,
+				113.7
+			]
+		},
 		"flee_distance": 90.0,
 		"attack_cooldown": 2.2,
 		"windup": 0.5,
@@ -67,10 +153,33 @@
 		"staggerable": true,
 		"radius": 10.0,
 		"r_t": 0.32,
-		"projectile": {"speed": 200.0, "radius": 4.0, "damage": 10, "muzzle_height": 38.0, "scale": 0.45, "tint": "#e8e2c8"},
+		"projectile": {
+			"speed": 200.0,
+			"radius": 4.0,
+			"damage": 10,
+			"muzzle_height": 38.0,
+			"scale": 0.45,
+			"tint": "#e8e2c8"
+		},
 		"xp": 18,
-		"coins": [4, 9],
-		"drops": [{"item": "hueso_antiguo", "chance": 0.5}, {"item": "pocion_vida", "chance": 0.25}]
+		"coins": [
+			4,
+			9
+		],
+		"drops": [
+			{
+				"item": "hueso_antiguo",
+				"chance": 0.5
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 0.25
+			},
+			{
+				"item": "plano_elixir_furia",
+				"chance": 0.1
+			}
+		]
 	},
 	"cyclops": {
 		"kind": "brute",
@@ -85,14 +194,36 @@
 		"slam_damage": 28,
 		"poise": 70,
 		"size": 2.5,
-		"sprites": {"prefix": "res://art/cyclops/cyclops_", "feet": [228.0, 273.7]},
+		"sprites": {
+			"prefix": "res://art/cyclops/cyclops_",
+			"feet": [
+				228.0,
+				273.7
+			]
+		},
 		"radius": 22.0,
 		"r_t": 0.7,
 		"recover": 0.9,
 		"knock_resist": 0.75,
 		"xp": 90,
-		"coins": [25, 40],
-		"drops": [{"item": "ojo_ciclope", "chance": 1.0}, {"item": "pocion_vida", "chance": 0.6}]
+		"coins": [
+			25,
+			40
+		],
+		"drops": [
+			{
+				"item": "ojo_ciclope",
+				"chance": 1.0
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 0.6
+			},
+			{
+				"item": "plano_frasco_ignis",
+				"chance": 0.3
+			}
+		]
 	},
 	"storm_mage": {
 		"kind": "mage",
@@ -103,17 +234,50 @@
 		"keep_distance": 150.0,
 		"attack_cooldown": 2.0,
 		"size": 1.5,
-		"sprites": {"prefix": "res://art/stormmage/stormmage_", "feet": [132.0, 177.7]},
+		"sprites": {
+			"prefix": "res://art/stormmage/stormmage_",
+			"feet": [
+				132.0,
+				177.7
+			]
+		},
 		"radius": 14.0,
 		"r_t": 0.45,
 		"windup": 0.7,
 		"recover": 0.6,
 		"knock_resist": 0.9,
 		"poise": 90,
-		"lightning": {"radius": 26.0, "damage": 38, "delay": 0.9},
-		"orb": {"speed": 110.0, "radius": 10.0, "damage": 18, "muzzle_height": 60.0, "scale": 1.6, "tint": "#7fe0ff"},
+		"lightning": {
+			"radius": 26.0,
+			"damage": 38,
+			"delay": 0.9
+		},
+		"orb": {
+			"speed": 110.0,
+			"radius": 10.0,
+			"damage": 18,
+			"muzzle_height": 60.0,
+			"scale": 1.6,
+			"tint": "#7fe0ff"
+		},
 		"xp": 250,
-		"coins": [100, 140],
-		"drops": [{"item": "nucleo_tormenta", "chance": 1.0}, {"item": "pocion_vida", "chance": 1.0}]
+		"coins": [
+			100,
+			140
+		],
+		"drops": [
+			{
+				"item": "nucleo_tormenta",
+				"chance": 1.0
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 1.0
+			},
+			{
+				"item": "plano_elixir_celeridad",
+				"chance": 1.0
+			}
+		]
 	}
 }

@@ -1,0 +1,927 @@
+{
+	"materials": {
+		"madera": {
+			"name": "Madera",
+			"desc": "Troncos limpios de los árboles del valle.",
+			"tags": [
+				"natural"
+			]
+		},
+		"piedra": {
+			"name": "Piedra",
+			"desc": "Roca partida, útil para herramientas y vidrio.",
+			"tags": [
+				"mineral"
+			]
+		},
+		"mena_hierro": {
+			"name": "Mena de hierro",
+			"desc": "Se funde en la forja de Bram con carbón.",
+			"tags": [
+				"mineral"
+			]
+		},
+		"carbon": {
+			"name": "Carbón",
+			"desc": "Combustible de forja y fogata.",
+			"tags": [
+				"mineral",
+				"fuego"
+			]
+		},
+		"cristal_arcano": {
+			"name": "Cristal arcano",
+			"desc": "Brilla con eco de magia antigua. Solo se parte con pico de hierro.",
+			"tags": [
+				"mineral",
+				"arcano"
+			]
+		},
+		"hongo_luminoso": {
+			"name": "Hongo luminoso",
+			"desc": "Crece en la oscuridad de la mina.",
+			"tags": [
+				"natural",
+				"arcano"
+			]
+		},
+		"hierba_vital": {
+			"name": "Hierba vital",
+			"desc": "Planta curativa que crece en el valle.",
+			"tags": [
+				"natural",
+				"vital"
+			]
+		},
+		"baya_roja": {
+			"name": "Baya roja",
+			"desc": "Dulce y energética.",
+			"tags": [
+				"natural",
+				"vital"
+			]
+		},
+		"carne_conejo": {
+			"name": "Carne de conejo",
+			"desc": "Se asa en la fogata.",
+			"tags": [
+				"comida"
+			]
+		},
+		"piel_conejo": {
+			"name": "Piel de conejo",
+			"desc": "Tres pieles dan un cuero.",
+			"tags": [
+				"natural"
+			]
+		},
+		"carne_zorro": {
+			"name": "Carne de zorro",
+			"desc": "Fuerte y grasa: buena para guisos.",
+			"tags": [
+				"comida"
+			]
+		},
+		"piel_zorro": {
+			"name": "Piel de zorro",
+			"desc": "Dos pieles dan un cuero.",
+			"tags": [
+				"natural"
+			]
+		},
+		"cuero": {
+			"name": "Cuero curtido",
+			"desc": "Para empuñaduras y armaduras.",
+			"tags": [
+				"natural"
+			]
+		},
+		"lingote_hierro": {
+			"name": "Lingote de hierro",
+			"desc": "Hierro fundido listo para forjar.",
+			"tags": [
+				"mineral"
+			]
+		},
+		"lingote_acero": {
+			"name": "Lingote de acero",
+			"desc": "Hierro templado con carbón: más duro y ligero.",
+			"tags": [
+				"mineral"
+			]
+		},
+		"frasco_vacio": {
+			"name": "Frasco de vidrio",
+			"desc": "Recipiente para toda poción.",
+			"tags": [
+				"alquimia"
+			]
+		}
+	},
+	"consumables": {
+		"pocion_vida": {
+			"name": "Poción de vida",
+			"desc": "Cura 40 de vida. [H]",
+			"heal": 40
+		},
+		"pocion_vida_mayor": {
+			"name": "Poción de vida mayor",
+			"desc": "Cura 100 de vida.",
+			"heal": 100
+		},
+		"pocion_mana": {
+			"name": "Poción de maná",
+			"desc": "Recupera 60 de maná.",
+			"mana": 60
+		},
+		"pocion_vigor": {
+			"name": "Poción de vigor",
+			"desc": "Recupera toda la estamina.",
+			"stamina": 999
+		},
+		"elixir_furia": {
+			"name": "Elixir de furia",
+			"desc": "+4 Fuerza durante 2 minutos.",
+			"buff": {
+				"stat": "strength",
+				"amount": 4,
+				"time": 120
+			}
+		},
+		"elixir_celeridad": {
+			"name": "Elixir de celeridad",
+			"desc": "+6 Vel. de movimiento durante 2 minutos.",
+			"buff": {
+				"stat": "move_speed",
+				"amount": 6,
+				"time": 120
+			}
+		},
+		"frasco_ignis": {
+			"name": "Frasco de Ignis",
+			"desc": "Explota a tu alrededor: 70 de daño de fuego.",
+			"bomb": {
+				"damage": 70,
+				"radius": 70
+			}
+		},
+		"carne_asada": {
+			"name": "Carne asada",
+			"desc": "Cura 35 de vida.",
+			"heal": 35
+		},
+		"asado_zorro": {
+			"name": "Asado de zorro",
+			"desc": "Cura 60 de vida.",
+			"heal": 60
+		},
+		"estofado_zorro": {
+			"name": "Estofado de zorro",
+			"desc": "Cura 40 y +2 Fuerza durante 3 minutos.",
+			"heal": 40,
+			"buff": {
+				"stat": "strength",
+				"amount": 2,
+				"time": 180
+			}
+		},
+		"tostada_hongo": {
+			"name": "Tostada de hongo",
+			"desc": "+3 Daño de magia durante 3 minutos.",
+			"buff": {
+				"stat": "magic",
+				"amount": 3,
+				"time": 180
+			}
+		},
+		"pastel_baya": {
+			"name": "Pastel de bayas",
+			"desc": "+3 Vel. de movimiento durante 2 minutos.",
+			"buff": {
+				"stat": "move_speed",
+				"amount": 3,
+				"time": 120
+			}
+		},
+		"sopa_hueso": {
+			"name": "Sopa de hueso",
+			"desc": "+3 Defensa y +2 Resistencia durante 3 minutos.",
+			"buff": {
+				"stat": "defense",
+				"amount": 3,
+				"time": 180
+			},
+			"buff2": {
+				"stat": "endurance",
+				"amount": 2,
+				"time": 180
+			}
+		}
+	},
+	"blueprints": {
+		"plano_pocion_vida": {
+			"name": "Plano: Poción de vida",
+			"output": "pocion_vida",
+			"qty": 2,
+			"glyph": "heart",
+			"color": "#e04a4a",
+			"inputs": {
+				"frasco_vacio": 1,
+				"hierba_vital": 2,
+				"gel_slime": 1
+			},
+			"hint": "Hierba vital, gel y un frasco."
+		},
+		"plano_pocion_vida_mayor": {
+			"name": "Plano: Poción de vida mayor",
+			"output": "pocion_vida_mayor",
+			"qty": 1,
+			"glyph": "heart",
+			"color": "#ff7a3a",
+			"inputs": {
+				"frasco_vacio": 1,
+				"hierba_vital": 3,
+				"escama_dragon": 1
+			},
+			"hint": "Exige una escama de dragón."
+		},
+		"plano_pocion_mana": {
+			"name": "Plano: Poción de maná",
+			"output": "pocion_mana",
+			"qty": 1,
+			"glyph": "star",
+			"color": "#4f8cff",
+			"inputs": {
+				"frasco_vacio": 1,
+				"hongo_luminoso": 2,
+				"cristal_arcano": 1
+			},
+			"hint": "Hongos de la mina y un cristal."
+		},
+		"plano_pocion_vigor": {
+			"name": "Plano: Poción de vigor",
+			"output": "pocion_vigor",
+			"qty": 1,
+			"glyph": "leaf",
+			"color": "#5fd37a",
+			"inputs": {
+				"frasco_vacio": 1,
+				"baya_roja": 3,
+				"hierba_vital": 1
+			},
+			"hint": "Bayas y hierba."
+		},
+		"plano_elixir_furia": {
+			"name": "Plano: Elixir de furia",
+			"output": "elixir_furia",
+			"qty": 1,
+			"glyph": "flame",
+			"color": "#ff9a2a",
+			"inputs": {
+				"frasco_vacio": 1,
+				"ojo_ciclope": 1,
+				"carbon": 2,
+				"hierba_vital": 1
+			},
+			"hint": "El ojo del cíclope arde con furia."
+		},
+		"plano_elixir_celeridad": {
+			"name": "Plano: Elixir de celeridad",
+			"output": "elixir_celeridad",
+			"qty": 1,
+			"glyph": "bolt",
+			"color": "#8fe0ff",
+			"inputs": {
+				"frasco_vacio": 1,
+				"nucleo_tormenta": 1,
+				"baya_roja": 2
+			},
+			"hint": "Un núcleo de tormenta da el rayo."
+		},
+		"plano_frasco_ignis": {
+			"name": "Plano: Frasco de Ignis",
+			"output": "frasco_ignis",
+			"qty": 2,
+			"glyph": "skull",
+			"color": "#ff5a1a",
+			"inputs": {
+				"frasco_vacio": 1,
+				"carbon": 3,
+				"hueso_antiguo": 2,
+				"gel_slime": 2
+			},
+			"hint": "Polvo, carbón y gel: una bomba."
+		}
+	},
+	"alchemy_catalyst": {
+		"id": "nucleo_tormenta",
+		"bonus": "El catalizador duplica lo que obtienes."
+	},
+	"starting_blueprints": [
+		"plano_pocion_vida"
+	],
+	"recipes": {
+		"frasco_vacio": {
+			"station": "hand",
+			"group": "Materiales",
+			"inputs": {
+				"piedra": 2,
+				"carbon": 1
+			},
+			"qty": 2
+		},
+		"cuero_conejo": {
+			"station": "hand",
+			"group": "Materiales",
+			"output": "cuero",
+			"inputs": {
+				"piel_conejo": 3
+			},
+			"qty": 1
+		},
+		"cuero_zorro": {
+			"station": "hand",
+			"group": "Materiales",
+			"output": "cuero",
+			"inputs": {
+				"piel_zorro": 2
+			},
+			"qty": 1
+		},
+		"pico_piedra": {
+			"station": "hand",
+			"group": "Herramientas",
+			"inputs": {
+				"madera": 3,
+				"piedra": 4
+			}
+		},
+		"hacha_piedra": {
+			"station": "hand",
+			"group": "Herramientas",
+			"inputs": {
+				"madera": 3,
+				"piedra": 3
+			}
+		},
+		"armadura_cuero": {
+			"station": "hand",
+			"group": "Armaduras",
+			"inputs": {
+				"cuero": 5
+			}
+		},
+		"lingote_hierro": {
+			"station": "forge",
+			"group": "Fundición",
+			"inputs": {
+				"mena_hierro": 2,
+				"carbon": 1
+			},
+			"qty": 1
+		},
+		"lingote_acero": {
+			"station": "forge",
+			"group": "Fundición",
+			"inputs": {
+				"lingote_hierro": 2,
+				"carbon": 2
+			},
+			"qty": 1
+		},
+		"pico_hierro": {
+			"station": "forge",
+			"group": "Herramientas",
+			"inputs": {
+				"lingote_hierro": 3,
+				"madera": 2
+			}
+		},
+		"hacha_hierro": {
+			"station": "forge",
+			"group": "Herramientas",
+			"inputs": {
+				"lingote_hierro": 2,
+				"madera": 2
+			}
+		},
+		"pico_acero": {
+			"station": "forge",
+			"group": "Herramientas",
+			"inputs": {
+				"lingote_acero": 3,
+				"madera": 2
+			}
+		},
+		"hacha_acero": {
+			"station": "forge",
+			"group": "Herramientas",
+			"inputs": {
+				"lingote_acero": 2,
+				"madera": 2
+			}
+		},
+		"espada_hierro": {
+			"station": "forge",
+			"group": "Espadas",
+			"inputs": {
+				"lingote_hierro": 4,
+				"cuero": 1,
+				"madera": 1
+			}
+		},
+		"espada_acero": {
+			"station": "forge",
+			"group": "Espadas",
+			"inputs": {
+				"lingote_acero": 4,
+				"cuero": 1,
+				"ojo_ciclope": 1
+			}
+		},
+		"espada_cristal": {
+			"station": "forge",
+			"group": "Espadas",
+			"inputs": {
+				"cristal_arcano": 3,
+				"lingote_hierro": 2,
+				"cuero": 1
+			}
+		},
+		"armadura_hierro": {
+			"station": "forge",
+			"group": "Armaduras",
+			"inputs": {
+				"lingote_hierro": 6,
+				"cuero": 2
+			}
+		},
+		"carne_asada": {
+			"station": "cook",
+			"group": "Comida",
+			"inputs": {
+				"carne_conejo": 1
+			},
+			"qty": 1
+		},
+		"asado_zorro": {
+			"station": "cook",
+			"group": "Comida",
+			"inputs": {
+				"carne_zorro": 1
+			},
+			"qty": 1
+		},
+		"estofado_zorro": {
+			"station": "cook",
+			"group": "Comida",
+			"inputs": {
+				"carne_zorro": 1,
+				"hierba_vital": 1,
+				"baya_roja": 1
+			},
+			"qty": 1
+		},
+		"tostada_hongo": {
+			"station": "cook",
+			"group": "Comida",
+			"inputs": {
+				"hongo_luminoso": 2,
+				"baya_roja": 1
+			},
+			"qty": 1
+		},
+		"pastel_baya": {
+			"station": "cook",
+			"group": "Comida",
+			"inputs": {
+				"baya_roja": 3
+			},
+			"qty": 1
+		},
+		"sopa_hueso": {
+			"station": "cook",
+			"group": "Comida",
+			"inputs": {
+				"hueso_antiguo": 1,
+				"carne_conejo": 1,
+				"hierba_vital": 1
+			},
+			"qty": 1
+		}
+	},
+	"stations": {
+		"hand": {
+			"name": "Manos",
+			"verb": "Crear",
+			"time": 0.6
+		},
+		"forge": {
+			"name": "Forja de Bram",
+			"verb": "Forjar",
+			"time": 1.6
+		},
+		"cook": {
+			"name": "Fogata",
+			"verb": "Cocinar",
+			"time": 1.4
+		},
+		"alchemy": {
+			"name": "Mesa de alquimia",
+			"verb": "Preparar",
+			"time": 3.2
+		}
+	},
+	"gather": {
+		"tree": {
+			"name": "Árbol",
+			"tool": "axe",
+			"need": 0,
+			"hp": 6,
+			"drops": {
+				"madera": [
+					2,
+					3
+				]
+			},
+			"chips": "#8a5a2c",
+			"respawn": 240
+		},
+		"rock": {
+			"name": "Roca",
+			"tool": "pickaxe",
+			"need": 0,
+			"hp": 6,
+			"drops": {
+				"piedra": [
+					2,
+					3
+				]
+			},
+			"chips": "#9aa0b0",
+			"respawn": 240
+		},
+		"iron": {
+			"name": "Veta de hierro",
+			"tool": "pickaxe",
+			"need": 1,
+			"hp": 8,
+			"drops": {
+				"mena_hierro": [
+					1,
+					3
+				]
+			},
+			"chips": "#b08a6a",
+			"respawn": 300
+		},
+		"coal": {
+			"name": "Veta de carbón",
+			"tool": "pickaxe",
+			"need": 1,
+			"hp": 6,
+			"drops": {
+				"carbon": [
+					2,
+					3
+				]
+			},
+			"chips": "#2a2a33",
+			"respawn": 300
+		},
+		"crystal": {
+			"name": "Cristal arcano",
+			"tool": "pickaxe",
+			"need": 2,
+			"hp": 10,
+			"drops": {
+				"cristal_arcano": [
+					1,
+					2
+				]
+			},
+			"chips": "#9a7aff",
+			"respawn": 420
+		},
+		"mushroom": {
+			"name": "Hongos luminosos",
+			"tool": "",
+			"need": 0,
+			"hp": 2,
+			"drops": {
+				"hongo_luminoso": [
+					1,
+					2
+				]
+			},
+			"chips": "#7ae0c8",
+			"respawn": 200
+		},
+		"herb": {
+			"name": "Hierba vital",
+			"tool": "",
+			"need": 0,
+			"hp": 2,
+			"drops": {
+				"hierba_vital": [
+					1,
+					2
+				]
+			},
+			"chips": "#5fd37a",
+			"respawn": 180
+		},
+		"berry": {
+			"name": "Arbusto de bayas",
+			"tool": "",
+			"need": 0,
+			"hp": 2,
+			"drops": {
+				"baya_roja": [
+					2,
+					3
+				]
+			},
+			"chips": "#d94a5a",
+			"respawn": 180
+		}
+	},
+	"tool_power": {
+		"0": 1,
+		"1": 2,
+		"2": 3,
+		"3": 4
+	},
+	"overworld_nodes": [
+		{
+			"kind": "herb",
+			"tile": [
+				24.5,
+				36.5
+			]
+		},
+		{
+			"kind": "berry",
+			"tile": [
+				7.5,
+				24.5
+			]
+		},
+		{
+			"kind": "herb",
+			"tile": [
+				9.5,
+				29.5
+			]
+		},
+		{
+			"kind": "berry",
+			"tile": [
+				12.5,
+				28.5
+			]
+		},
+		{
+			"kind": "herb",
+			"tile": [
+				27.5,
+				38.5
+			]
+		},
+		{
+			"kind": "berry",
+			"tile": [
+				7.5,
+				27.5
+			]
+		},
+		{
+			"kind": "herb",
+			"tile": [
+				8.5,
+				20.5
+			]
+		},
+		{
+			"kind": "berry",
+			"tile": [
+				11.5,
+				20.5
+			]
+		},
+		{
+			"kind": "herb",
+			"tile": [
+				4.5,
+				27.5
+			]
+		},
+		{
+			"kind": "berry",
+			"tile": [
+				13.5,
+				25.5
+			]
+		},
+		{
+			"kind": "herb",
+			"tile": [
+				21.5,
+				45.5
+			]
+		},
+		{
+			"kind": "berry",
+			"tile": [
+				22.5,
+				40.5
+			]
+		},
+		{
+			"kind": "herb",
+			"tile": [
+				29.5,
+				34.5
+			]
+		},
+		{
+			"kind": "berry",
+			"tile": [
+				17.5,
+				43.5
+			]
+		},
+		{
+			"kind": "herb",
+			"tile": [
+				7.5,
+				31.5
+			]
+		},
+		{
+			"kind": "berry",
+			"tile": [
+				4.5,
+				22.5
+			]
+		},
+		{
+			"kind": "herb",
+			"tile": [
+				26.5,
+				44.5
+			]
+		}
+	],
+	"mine": {
+		"tiles": 26,
+		"entrance_tile": [
+			15.5,
+			20.5
+		],
+		"enemies": {
+			"slime": 3,
+			"skeleton_archer": 2
+		},
+		"nodes": {
+			"iron": 9,
+			"coal": 7,
+			"crystal": 3,
+			"mushroom": 6
+		},
+		"entrance_rect": [
+			13.8,
+			19.2,
+			17.2,
+			21.4
+		],
+		"door_tile": [
+			15.5,
+			22.3
+		]
+	},
+	"world_sprites": {
+		"alchemy_table": {
+			"paths": [
+				"res://art/map/alchemy_table.png"
+			],
+			"feet": [
+				100.0,
+				145.7
+			]
+		},
+		"mine_entrance": {
+			"paths": [
+				"res://art/map/mine_entrance.png"
+			],
+			"feet": [
+				164.0,
+				209.7
+			]
+		},
+		"node_iron": {
+			"paths": [
+				"res://art/map/node_iron.png"
+			],
+			"feet": [
+				52.0,
+				97.7
+			]
+		},
+		"node_coal": {
+			"paths": [
+				"res://art/map/node_coal.png"
+			],
+			"feet": [
+				52.0,
+				97.7
+			]
+		},
+		"node_crystal": {
+			"paths": [
+				"res://art/map/node_crystal.png"
+			],
+			"feet": [
+				52.0,
+				97.7
+			]
+		},
+		"node_mushroom": {
+			"paths": [
+				"res://art/map/node_mushroom.png"
+			],
+			"feet": [
+				52.0,
+				97.7
+			]
+		},
+		"herb_bush": {
+			"paths": [
+				"res://art/map/herb_bush.png"
+			],
+			"feet": [
+				52.0,
+				97.7
+			]
+		},
+		"berry_bush": {
+			"paths": [
+				"res://art/map/berry_bush.png"
+			],
+			"feet": [
+				52.0,
+				97.7
+			]
+		},
+		"campfire": {
+			"paths": [
+				"res://art/map/campfire_0.png",
+				"res://art/map/campfire_1.png",
+				"res://art/map/campfire_2.png",
+				"res://art/map/campfire_3.png"
+			],
+			"feet": [
+				68.0,
+				113.7
+			],
+			"fps": 8
+		}
+	},
+	"world_props": [
+		{
+			"kind": "alchemy",
+			"sprite": "alchemy_table",
+			"tile": [
+				12.7,
+				34.8
+			],
+			"footprint": [
+				0.9,
+				0.55
+			],
+			"label": "Usar la mesa de alquimia",
+			"reach": 2.3,
+			"station": "alchemy"
+		},
+		{
+			"kind": "cook",
+			"sprite": "campfire",
+			"tile": [
+				15.3,
+				35.0
+			],
+			"footprint": [
+				0.6,
+				0.6
+			],
+			"label": "Cocinar en la fogata",
+			"reach": 2.1,
+			"station": "cook",
+			"light": [
+				1.0,
+				0.55,
+				0.2
+			]
+		}
+	]
+}

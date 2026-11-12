@@ -82,6 +82,17 @@ Lee este archivo y sigue desde "Pendiente". Lo que está escrito aquí es la fue
 - Marca de Ignis: el fuego del grimorio marca 4 s; el tajo pesado de la katana la consume y explota (sin cadenas). `data/items.json` → `grimorio_ignis.mark`.
 - Luz: CanvasModulate por zona + PointLight2D locales; sin sombras (sprites con luz horneada). Detalle en `docs/COMBAT_LIGHTING_REPORT.md`.
 
+## 5c. Creación: crafteo, forja, cocina y alquimia
+- **Datos:** `data/crafting.json` (materiales, consumibles, planos, recetas, estaciones, recolección, props del mundo y mina). Lógica pura en `scripts/crafting.gd` (probada en `tests/test_crafting.gd`); integración con el juego real en `tests/test_crafting_world.gd`.
+- **Inventario unificado:** materiales, comida y pociones viven en `prog.materials`; la poción de vida sigue en `prog.potions` (tecla H). Planos en `prog.blueprints` (guardados). Bonus temporales en `prog.buffs`; tecla **G** usa el consumible elegido en la pestaña Crafteo.
+- **Crafteo a mano** (pestaña *Crafteo* del menú): herramientas de piedra, cuero, frascos y armadura de cuero. **Forja** (yunque de Bram, dentro de su casa): lingotes, picos, hachas, espadas y armadura de hierro. **Cocina** (fogata junto al mercader): comida con curación y bonus. **Alquimia** (mesa junto al mercader): planos + ingredientes colocados uno a uno + animación; los planos no se gastan y un catalizador duplica el resultado.
+- **Planos:** el inicial es de la poción de vida; Tomás vende dos; los otros caen de esqueleto, cíclope, mago de tormenta y dragón (`drops` en `data/creatures.json`).
+- **Recolección:** E sobre árboles, rocas, vetas, plantas y hongos; el golpe cae a mitad de la animación del tajo ligero. Herramienta por nivel (`tool_power`): hierro y carbón exigen pico de piedra; el cristal arcano, de hierro. Los recursos se agotan, dejan de bloquear y vuelven a crecer.
+- **Mina:** entrada al norte del pueblo; cueva generada con semilla fija (`scripts/mine.gd`), 9 vetas de hierro, 7 de carbón, 3 de cristal, 6 hongos y 5 monstruos.
+- **Arte:** iconos con `art/items/build_craft_items.py`; objetos del mundo con `art/map/build_craft_world.py` (necesita `build_map.py` en el mismo `ns`).
+- **Capturas de revisión:** `production/qa/evidence/creacion/` (`tests/capture_craft.gd`, sin `--headless`).
+- **Pendiente de jugar:** equilibrio de costes y tiempos, y que la mesa y la mina se sientan bien de recorrer.
+
 ## 6. Preferencias del usuario
 - Español, tono directo.
 - Cambios de diseño consistentes con lo ya hecho (misma cámara, escala y estilo).

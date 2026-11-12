@@ -12,8 +12,8 @@ const STAT_INFO := {
 	"move_speed": "+4 % al caminar y correr",
 	"attack_speed": "+5 % ataques más rápidos",
 }
-const SLOTS := ["sword", "grimoire", "armor", "ring", "amulet"]
-const SLOT_NAMES := {"sword": "Espada", "grimoire": "Grimorio", "armor": "Armadura", "ring": "Anillo", "amulet": "Collar"}
+const SLOTS := ["sword", "grimoire", "armor", "ring", "amulet", "pickaxe", "axe"]
+const SLOT_NAMES := {"sword": "Espada", "grimoire": "Grimorio", "armor": "Armadura", "ring": "Anillo", "amulet": "Collar", "pickaxe": "Pico", "axe": "Hacha"}
 const POINTS_PER_LEVEL := 5
 
 var level := 1
@@ -27,6 +27,9 @@ var owned: Array = []        # ids de equipo obtenido
 var equipped := {}           # ranura -> id
 var equipment := {}
 var material_names := {}
+var blueprints: Array = []   # planos de alquimia aprendidos (data/crafting.json)
+var buffs: Array = []        # bonus temporales de comida y elixires: {stat, amount, t}
+var quick := ""              # consumible de la tecla G
 
 func _init(data: Dictionary) -> void:
 	equipment = data["items"]
@@ -51,7 +54,27 @@ func bonus(stat: String) -> float:  # suma de lo que dan los objetos equipados
 	var b := 0.0
 	for slot: String in equipped:
 		b += equipment[equipped[slot]]["mods"].get(stat, 0)
+	for f: Dictionary in buffs:
+		if f["stat"] == stat:
+			b += f["amount"]
 	return b
+
+func add_buff(stat: String, amount: float, secs: float) -> void:  # un bonus de la misma estadística se renueva, no se suma
+	for f: Dictionary in buffs:
+		if f["stat"] == stat:
+			f["amount"] = maxf(f["amount"], amount)
+			f["t"] = maxf(f["t"], secs)
+			return
+	buffs.append({"stat": stat, "amount": amount, "t": secs})
+
+func tick_buffs(delta: float) -> bool:  # true si alguno terminó (hay que recalcular estadísticas)
+	var ended := false
+	for f: Dictionary in buffs:
+		f["t"] -= delta
+		ended = ended or f["t"] <= 0.0
+	if ended:
+		buffs = buffs.filter(func(f: Dictionary) -> bool: return f["t"] > 0.0)
+	return ended
 
 func stat(s: String) -> float:
 	return spent.get(s, 0) + bonus(s)

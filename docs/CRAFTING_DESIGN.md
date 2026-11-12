@@ -1,6 +1,6 @@
 # Diseño: sistema de creación conectado (forja, alquimia, runas, cocina, invocación)
 
-Estado: **diseño, sin implementar**. Investigación y propuesta para Ecos de la Ruina.
+Estado: **implementado en parte** (crafteo a mano, forja, cocina, alquimia con planos, recolección y mina; ver `docs/DESIGN_NOTES.md` §5c). Sin implementar: la matriz de elementos, runas e invocación. Investigación y propuesta para Ecos de la Ruina.
 Lo marcado como *(fuente)* viene de las páginas citadas al final; el resto es análisis propio y conocimiento general de diseño de juegos.
 
 ## 1. Qué hacen otros juegos y por qué funciona
