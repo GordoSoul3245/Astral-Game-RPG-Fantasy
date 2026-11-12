@@ -1333,6 +1333,8 @@ func _strike() -> void:
 				dash_bonus_t = 0.0
 				popup(pos, "¡Embestida!", Color(1.0, 0.8, 0.4))
 			var blasts: Array[Vector2] = []
+			if current_mode == "heavy":  # el pesado muerde el suelo delante aunque falle: el peso se ve
+				combat.ground_impact(pos + aim_dir * current["reach"] * 0.5 * Vector2(1, 0.6), 0.6)
 			var HB := preload("res://scripts/hitbox.gd")
 			var chest := pos - Vector2(0, 40)  # el tajo sale del pecho (como su estela) y se mide contra el cuerpo del sprite
 			for e in targets():

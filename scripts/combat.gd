@@ -87,6 +87,10 @@ func hit(e: Node, dmg: int, kind: String, from: Vector2, charge := true) -> void
 		e.knock((e.pos - from).normalized() * k["push"], kind == "heavy" or kind == "blast")
 	play(kind)
 	_spark(e.pos, k["col"], k["size"])
+	if e.alive and e.has_method("knock"):
+		_squash(e, kind == "heavy" or kind == "blast")
+	if kind == "heavy" or kind == "blast":
+		ground_impact(e.pos, 1.0 if kind == "heavy" else 1.6)
 	flash(e.pos, k["col"], 0.35 * k["size"], 0.8 * k["size"], 0.18)
 	if k["shake"] > 0.0:
 		main.shake(k["shake"])
@@ -143,6 +147,25 @@ func play(kind: String) -> void:
 	p.finished.connect(p.queue_free)
 	p.play()
 
+# reacción del cuerpo: se aplasta y rebota con sobreimpulso (el nodo del enemigo tiene el origen en los pies)
+func _squash(e: Node2D, heavy: bool) -> void:
+	var tw: Tween = e.get_meta("squash_tw") if e.has_meta("squash_tw") else null
+	if tw and tw.is_valid():
+		tw.kill()
+	var amt := 0.28 if heavy else 0.15
+	e.scale = Vector2(1.0 + amt, 1.0 - amt)
+	tw = e.create_tween()
+	tw.tween_property(e, "scale", Vector2.ONE, 0.22 if heavy else 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	e.set_meta("squash_tw", tw)
+
+func ground_impact(ground: Vector2, size: float) -> void:  # onda y grietas en el suelo bajo un golpe fuerte
+	var g := preload("res://scripts/ground_impact.gd").new()
+	g.position = ground * main.SCALE
+	g.size = size
+	g.tint = Color("#c4c3dc") if main.in_dungeon else Color("#f2e6c8")
+	g.z_index = -2999  # sobre el suelo, bajo entidades
+	main.add_child(g)
+
 func _spark(ground: Vector2, col: Color, size: float) -> void:
 	var s := AnimatedSprite2D.new()
 	s.sprite_frames = main.fx_frames
@@ -166,6 +189,7 @@ func consume(e: Node) -> bool:
 func detonate(ground: Vector2) -> void:  # la explosión no marca ni consume marcas: no puede encadenarse
 	play("blast")
 	flash(ground, Color(1.0, 0.5, 0.15), 1.4, 3.5, 0.45)
+	ground_impact(ground, 1.8)
 	_spark(ground, KINDS["blast"]["col"], KINDS["blast"]["size"])
 	main.shake(KINDS["blast"]["shake"])
 	for e in main.targets():
