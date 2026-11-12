@@ -26,7 +26,7 @@ var dragon_start := Vector2.ZERO
 # orden por ángulo de pantalla (y hacia abajo), en pasos de 45° desde el este
 const DIRS := ["E", "SE", "S", "SW", "W", "NW", "N", "NE"]
 # animaciones del héroe sin bucle y su número de fotogramas
-const ANIMS := {"slash_light": 6, "slash_heavy": 8, "cast": 8, "dash": 6, "chop_pick": 6, "chop_axe": 6, "pluck": 6, "drink": 6, "eat": 6, "fslash_light": 6, "fslash_heavy": 8, "megadash": 6}
+const ANIMS := {"slash_light": 6, "slash_heavy": 8, "cast": 8, "dash": 6, "chop_pick": 6, "chop_axe": 6, "pluck": 6, "drink": 6, "eat": 6, "fish_cast": 6, "fish_wait": 2, "fish_reel": 4, "fslash_light": 6, "fslash_heavy": 8, "megadash": 6}
 
 # rueda del ratón: acercar / alejar la cámara
 const ZOOM_DEFAULT := 0.7
@@ -161,7 +161,9 @@ func _ready() -> void:
 		for anim: String in ANIMS:
 			var key := "%s_%s" % [anim, d]
 			frames.add_animation(key)
-			frames.set_animation_loop(key, false)
+			frames.set_animation_loop(key, anim in ["fish_wait", "fish_reel"])
+			if anim.begins_with("fish_"):
+				frames.set_animation_speed(key, {"fish_cast": 10.0, "fish_wait": 3.0, "fish_reel": 10.0}[anim])
 			for i in ANIMS[anim]:
 				var folder := "polished/" if "slash" in anim else ""
 				var timing: Array = [1.2, 1.35, 0.45, 0.55, 1.05, 1.4] if anim.ends_with("light") else ([1.0, 1.2, 1.25, 1.2, 0.35, 0.55, 1.0, 1.45] if anim.ends_with("heavy") else ([1.1, 1.2, 0.7, 1.0, 0.6, 0.9, 1.1, 1.4] if anim == "cast" else []))
@@ -963,6 +965,8 @@ func _load_inventory() -> void:
 	_refresh_hotbar(true)
 
 func _select(i: int) -> void:
+	if _fishing():
+		fishing.cancel()
 	_cancel_aim()
 	selected = i
 	for n in slots.size():
@@ -1109,6 +1113,8 @@ func _perfect_dodge() -> void:  # un ataque habría golpeado durante el dash: es
 	combat.play("light")
 
 func damage_hero(n: int) -> void:
+	if _fishing() and not dashing:
+		fishing.cancel("¡Te hieren!")
 	if dashing and not mega_active and dodge_cd <= 0.0 and not dying:
 		_perfect_dodge()
 	if dashing or dying or reaction_time > 0.0:
@@ -1249,6 +1255,9 @@ func _chest_aim() -> Vector2:  # dirección del pecho del héroe al cursor, en p
 
 # Espacio: dash hacia donde se mueve (o hacia donde mira si está quieto); cancela un ataque en curso
 func _dash() -> bool:  # true si el dash empezó
+	if _fishing():
+		fishing.cancel()  # esquivar recoge el sedal; el dash sale en cuanto se pueda
+		return false
 	if dashing or dash_cd > 0.0 or aiming or stamina < hero_data["dash_stamina"]:
 		return false
 	gathering = false  # esquivar corta la recolección
@@ -1294,6 +1303,8 @@ func _pay(spec: Dictionary) -> void:
 
 # clic izquierdo = "light", clic derecho = "heavy" del objeto equipado (data/items.json)
 func _attack(mode: String) -> bool:  # true si el ataque empezó (y se cobró)
+	if _fishing():
+		return false
 	if attacking or dashing or aiming or gathering or cooldown > 0.0:
 		return false
 	if items[hotbar[selected]].has("hand"):
@@ -1525,6 +1536,15 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if touch_mode and event is InputEventMouseButton:
 		return  # los toques emulan clics del ratón; aquí mandan los botones en pantalla
+	if _fishing():  # mientras pescas el clic es del sedal; Esc lo recoge
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			fishing.press()
+			return
+		if event is InputEventKey and event.pressed and event.physical_keycode == KEY_ESCAPE:
+			fishing.cancel()
+			return
+		if event is InputEventKey and event.physical_keycode in [KEY_E, KEY_R]:
+			return  # ni recolectar ni la ultimate mientras pescas
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.physical_keycode == KEY_SPACE:
 			_press("dash")
@@ -1607,6 +1627,10 @@ func _physics_process(delta: float) -> void:
 	elif buff_label.text != "":
 		buff_label.text = ""
 	_try_buffer()
+	if _fishing():
+		fishing.tick(delta)
+		_place()
+		return
 	if gathering:
 		_gather_tick(delta)
 		_place()
@@ -1845,12 +1869,13 @@ func _gather_hit() -> void:
 const HOTBAR_MAX := 6
 const BASE_HOTBAR := ["katana_ceniza", "grimorio_ignis"]
 var hotbar_row: HBoxContainer
+var fishing: Node2D   # fishing.gd: se crea al lanzar la caña por primera vez
 var hotbar_size := 72.0
 var count_labels := {}   # id -> etiqueta de cantidad
 
 func _hand_ids() -> Array:
 	var out: Array = []
-	for slot: String in ["pickaxe", "axe"]:
+	for slot: String in ["pickaxe", "axe", "rod"]:
 		if prog.equipped.has(slot):
 			out.append(prog.equipped[slot])
 	for id: String in prog.hand:
@@ -1863,7 +1888,7 @@ func _hand_item(id: String) -> Dictionary:  # entrada tipo items.json para una h
 	var act := "Usar"
 	if prog.equipment.has(id):
 		kind = prog.equipment[id]["tool"]["kind"]
-		act = "Golpear recurso cercano"
+		act = "Lanzar la caña (mantén el clic)" if kind == "rod" else "Golpear recurso cercano"
 	return {"name": crafting.item_name(id), "icon": crafting.icon(id), "hand": kind, "light": {"name": act}}
 
 func _refresh_hotbar(force := false) -> void:
@@ -1915,7 +1940,21 @@ func _update_counts() -> void:
 		count_labels[id].text = "×%d" % n
 		slots[hotbar.find(id)].modulate = Color.WHITE if n > 0 else Color(1, 1, 1, 0.45)
 
+func _fishing() -> bool:
+	return fishing != null and fishing.active
+
 func _use_hand(id: String, it: Dictionary) -> bool:  # clic izquierdo con una herramienta o un consumible seleccionado
+	if it["hand"] == "rod":
+		if not world.has_method("is_water"):
+			say("Aquí no hay dónde pescar.", 1.5)
+			cooldown = 0.5
+			return false
+		if fishing == null:
+			fishing = preload("res://scripts/fishing.gd").new()
+			add_child(fishing)
+			fishing.setup(self)
+		fishing.start(id)
+		return true
 	if it["hand"] == "consumable":
 		var c: Dictionary = crafting.cfg["consumables"][id]
 		if crafting.count(id) <= 0:

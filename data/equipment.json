@@ -243,6 +243,39 @@
 				"endurance": 1
 			},
 			"desc": "Placas de hierro sobre cuero curtido."
+		},
+		"cana_madera": {
+			"name": "Caña de madera",
+			"slot": "rod",
+			"tier": 1,
+			"mods": {},
+			"tool": {
+				"kind": "rod",
+				"tier": 1
+			},
+			"desc": "Aguanta peces pequeños. Mantén el clic para lanzar."
+		},
+		"cana_hierro": {
+			"name": "Caña de hierro",
+			"slot": "rod",
+			"tier": 2,
+			"mods": {},
+			"tool": {
+				"kind": "rod",
+				"tier": 2
+			},
+			"desc": "Lanza más lejos y la barra de pesca es más larga."
+		},
+		"cana_cristal": {
+			"name": "Caña de cristal",
+			"slot": "rod",
+			"tier": 3,
+			"mods": {},
+			"tool": {
+				"kind": "rod",
+				"tier": 3
+			},
+			"desc": "Alcanza las aguas hondas donde viven las leyendas."
 		}
 	}
 }

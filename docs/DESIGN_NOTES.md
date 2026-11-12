@@ -97,3 +97,13 @@ Lee este archivo y sigue desde "Pendiente". Lo que está escrito aquí es la fue
 - Español, tono directo.
 - Cambios de diseño consistentes con lo ya hecho (misma cámara, escala y estilo).
 - El mapa actual es de **prueba para mecánicas**, no de producción.
+
+
+## Pesca (estilo Stardew Valley)
+- Caña en la barra de objetos (`cana_madera`, `cana_hierro`, `cana_cristal`; ranura `rod`). Tomás vende la de madera; las otras se forjan (la de cristal pide un pez cristal).
+- Mantener el clic carga la fuerza; soltar lanza hacia el cursor. Debe caer en agua (cualquier casilla fuera de la isla, `world_map.is_water`). Más lejos = peces más raros (`min_tiles`), y la caña limita cuáles (`min_rod`).
+- Espera el pique (2.5–7 s menos 0.3 s por nivel de caña) con tirones falsos; al picar aparece «!» y hay unos 0.8 s para hacer clic. Clic antes de tiempo recoge el sedal. Dash, Esc, cambiar de objeto o recibir daño también cancelan.
+- Minijuego (`fish_game.gd`): mantener el clic sube la barra, soltar la deja caer; el pez se mueve según su patrón (`mixed`, `dart`, `smooth`, `sinker`, `floater`) y la dificultad. Progreso +0.22/s dentro y −(0.12 + dif·0.1)/s fuera. Pesca perfecta (nunca lo pierdes) = un pez extra. La caña da barra más larga (+0.05 por nivel).
+- Datos: `data/fishing.json`. 9 peces + alga marina (basura, 12 %). Se cocinan (pescado asado, sopa, brocheta de anguila, sashimi de pez lanza), se destilan (elixires de marea y de ceniza con planos de Tomás) y Bram los compra.
+- No hecho (a propósito): calidad de pez por estrellas, cofres del tesoro en el minijuego, cebos y señuelos, tiempo del día y estaciones, pozas distintas, libro de capturas.
+- Test: `tests/test_fishing.gd`. Capturas: `tests/capture_fishing.gd` → `production/qa/evidence/pesca/`.

@@ -83,6 +83,9 @@ func _process(delta: float) -> void:
 func _cell_walkable(i: int, j: int) -> bool:
 	return i >= 0 and i < tiles and j >= 0 and j < tiles and walk[i][j] == "1"
 
+func is_water(t: Vector2) -> bool:  # casillas fuera de la isla: mar abierto (se puede pescar)
+	return not _cell_walkable(floori(t.x), floori(t.y))
+
 func hits_structure(t: Vector2, r: float, proj := false) -> bool:  # árboles, rocas y edificios (t y r en casillas)
 	var cell := Vector2i(floori(t.x / 2.0), floori(t.y / 2.0))
 	for dx in [-1, 0, 1]:

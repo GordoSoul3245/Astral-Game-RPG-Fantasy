@@ -42,6 +42,18 @@
 			{
 				"id": "plano_pocion_mana",
 				"price": 60
+			},
+			{
+				"id": "cana_madera",
+				"price": 40
+			},
+			{
+				"id": "plano_elixir_marea",
+				"price": 70
+			},
+			{
+				"id": "plano_elixir_ceniza",
+				"price": 110
 			}
 		]
 	},
@@ -62,7 +74,17 @@
 			"piel_zorro": 6,
 			"lingote_hierro": 14,
 			"madera": 2,
-			"piedra": 1
+			"piedra": 1,
+			"sardina": 5,
+			"carpa_dorada": 8,
+			"trucha_plateada": 12,
+			"pez_globo": 14,
+			"anguila_luminosa": 22,
+			"pez_cristal": 30,
+			"pez_lanza": 28,
+			"pez_ceniza": 40,
+			"pez_abisal": 90,
+			"alga_marina": 2
 		}
 	}
 }

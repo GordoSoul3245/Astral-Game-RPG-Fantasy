@@ -1,0 +1,125 @@
+{
+	"cast": {
+		"min_tiles": 2.5,
+		"max_tiles": 7.5,
+		"rod_bonus": 0.5,
+		"charge_time": 1.1
+	},
+	"bite_wait": [
+		2.5,
+		7.0
+	],
+	"bite_window": 0.9,
+	"junk_chance": 0.12,
+	"junk": {
+		"alga_marina": [
+			1,
+			2
+		]
+	},
+	"bar_size": {
+		"base": 0.2,
+		"per_rod": 0.05
+	},
+	"fish": {
+		"sardina": {
+			"weight": 40,
+			"min_tiles": 0,
+			"min_rod": 1,
+			"diff": 15,
+			"move": "smooth",
+			"size": [
+				12,
+				22
+			]
+		},
+		"carpa_dorada": {
+			"weight": 30,
+			"min_tiles": 0,
+			"min_rod": 1,
+			"diff": 25,
+			"move": "mixed",
+			"size": [
+				25,
+				50
+			]
+		},
+		"trucha_plateada": {
+			"weight": 22,
+			"min_tiles": 3,
+			"min_rod": 1,
+			"diff": 38,
+			"move": "dart",
+			"size": [
+				28,
+				55
+			]
+		},
+		"pez_globo": {
+			"weight": 16,
+			"min_tiles": 3,
+			"min_rod": 1,
+			"diff": 35,
+			"move": "sinker",
+			"size": [
+				15,
+				30
+			]
+		},
+		"anguila_luminosa": {
+			"weight": 10,
+			"min_tiles": 5,
+			"min_rod": 2,
+			"diff": 48,
+			"move": "floater",
+			"size": [
+				50,
+				110
+			]
+		},
+		"pez_cristal": {
+			"weight": 6,
+			"min_tiles": 6,
+			"min_rod": 2,
+			"diff": 62,
+			"move": "dart",
+			"size": [
+				20,
+				40
+			]
+		},
+		"pez_lanza": {
+			"weight": 6,
+			"min_tiles": 6,
+			"min_rod": 2,
+			"diff": 60,
+			"move": "mixed",
+			"size": [
+				70,
+				130
+			]
+		},
+		"pez_ceniza": {
+			"weight": 4,
+			"min_tiles": 7,
+			"min_rod": 2,
+			"diff": 70,
+			"move": "floater",
+			"size": [
+				30,
+				55
+			]
+		},
+		"pez_abisal": {
+			"weight": 1.2,
+			"min_tiles": 8,
+			"min_rod": 3,
+			"diff": 88,
+			"move": "dart",
+			"size": [
+				150,
+				260
+			]
+		}
+	}
+}

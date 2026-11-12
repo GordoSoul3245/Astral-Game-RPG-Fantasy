@@ -116,6 +116,76 @@
 			"tags": [
 				"alquimia"
 			]
+		},
+		"sardina": {
+			"name": "Sardina",
+			"desc": "Pequeña y plateada. Se cocina en sopa.",
+			"tags": [
+				"pesca"
+			]
+		},
+		"carpa_dorada": {
+			"name": "Carpa dorada",
+			"desc": "Escamas de oro viejo. Buen asado.",
+			"tags": [
+				"pesca"
+			]
+		},
+		"trucha_plateada": {
+			"name": "Trucha plateada",
+			"desc": "Rápida y nerviosa. Muy sabrosa.",
+			"tags": [
+				"pesca"
+			]
+		},
+		"pez_globo": {
+			"name": "Pez globo",
+			"desc": "Hincha el cuerpo al sentirse en peligro.",
+			"tags": [
+				"pesca"
+			]
+		},
+		"anguila_luminosa": {
+			"name": "Anguila luminosa",
+			"desc": "Brilla en las aguas profundas. Se cocina en brocheta.",
+			"tags": [
+				"pesca"
+			]
+		},
+		"pez_cristal": {
+			"name": "Pez cristal",
+			"desc": "Su cuerpo canaliza el eco de los cristales. Para alquimia y cañas.",
+			"tags": [
+				"pesca"
+			]
+		},
+		"pez_lanza": {
+			"name": "Pez lanza",
+			"desc": "Su hocico es una espada. Manjar de guerreros.",
+			"tags": [
+				"pesca"
+			]
+		},
+		"pez_ceniza": {
+			"name": "Pez ceniza",
+			"desc": "Pez de ascuas: nunca se apaga. Para alquimia.",
+			"tags": [
+				"pesca"
+			]
+		},
+		"pez_abisal": {
+			"name": "Pez abisal",
+			"desc": "Leyenda de las profundidades. Muy valioso.",
+			"tags": [
+				"pesca"
+			]
+		},
+		"alga_marina": {
+			"name": "Alga marina",
+			"desc": "Se enreda en el sedal. Sirve en cocina y alquimia.",
+			"tags": [
+				"pesca"
+			]
 		}
 	},
 	"consumables": {
@@ -216,6 +286,59 @@
 				"amount": 2,
 				"time": 180
 			}
+		},
+		"pescado_asado": {
+			"name": "Pescado asado",
+			"desc": "Cura 55 de vida.",
+			"heal": 55
+		},
+		"sopa_pescado": {
+			"name": "Sopa de pescado",
+			"desc": "Cura 40 y +3 Resistencia durante 3 minutos.",
+			"heal": 40,
+			"buff": {
+				"stat": "endurance",
+				"amount": 3,
+				"time": 180
+			}
+		},
+		"brocheta_anguila": {
+			"name": "Brocheta de anguila",
+			"desc": "Cura 30 y +4 Vel. de movimiento durante 2 minutos.",
+			"heal": 30,
+			"buff": {
+				"stat": "move_speed",
+				"amount": 4,
+				"time": 120
+			}
+		},
+		"sashimi_lanza": {
+			"name": "Sashimi de pez lanza",
+			"desc": "Cura 20 y +3 Fuerza durante 3 minutos.",
+			"heal": 20,
+			"buff": {
+				"stat": "strength",
+				"amount": 3,
+				"time": 180
+			}
+		},
+		"elixir_marea": {
+			"name": "Elixir de marea",
+			"desc": "+4 Vel. de ataque durante 2 minutos.",
+			"buff": {
+				"stat": "attack_speed",
+				"amount": 4,
+				"time": 120
+			}
+		},
+		"elixir_ceniza": {
+			"name": "Elixir de ceniza",
+			"desc": "+5 Daño de magia durante 2 minutos.",
+			"buff": {
+				"stat": "magic",
+				"amount": 5,
+				"time": 120
+			}
 		}
 	},
 	"blueprints": {
@@ -311,6 +434,32 @@
 				"gel_slime": 2
 			},
 			"hint": "Polvo, carbón y gel: una bomba."
+		},
+		"plano_elixir_marea": {
+			"name": "Plano: Elixir de marea",
+			"output": "elixir_marea",
+			"qty": 1,
+			"glyph": "star",
+			"color": "#2ad6c0",
+			"inputs": {
+				"frasco_vacio": 1,
+				"pez_cristal": 1,
+				"alga_marina": 2
+			},
+			"hint": "Un pez cristal y algas del fondo."
+		},
+		"plano_elixir_ceniza": {
+			"name": "Plano: Elixir de ceniza",
+			"output": "elixir_ceniza",
+			"qty": 1,
+			"glyph": "flame",
+			"color": "#ff7a3a",
+			"inputs": {
+				"frasco_vacio": 1,
+				"pez_ceniza": 1,
+				"carbon": 1
+			},
+			"hint": "Un pez de ascuas aún caliente."
 		}
 	},
 	"alchemy_catalyst": {
@@ -506,6 +655,69 @@
 				"hueso_antiguo": 1,
 				"carne_conejo": 1,
 				"hierba_vital": 1
+			},
+			"qty": 1
+		},
+		"cana_madera": {
+			"station": "hand",
+			"group": "Herramientas",
+			"inputs": {
+				"madera": 4,
+				"cuero": 1
+			}
+		},
+		"cana_hierro": {
+			"station": "forge",
+			"group": "Herramientas",
+			"inputs": {
+				"lingote_hierro": 2,
+				"madera": 2,
+				"cuero": 1
+			}
+		},
+		"cana_cristal": {
+			"station": "forge",
+			"group": "Herramientas",
+			"inputs": {
+				"lingote_acero": 1,
+				"cristal_arcano": 2,
+				"pez_cristal": 1,
+				"madera": 1
+			}
+		},
+		"pescado_asado": {
+			"station": "cook",
+			"group": "Comida",
+			"inputs": {
+				"carpa_dorada": 1
+			},
+			"qty": 1
+		},
+		"sopa_pescado": {
+			"station": "cook",
+			"group": "Comida",
+			"inputs": {
+				"trucha_plateada": 1,
+				"sardina": 1,
+				"hierba_vital": 1
+			},
+			"qty": 1
+		},
+		"brocheta_anguila": {
+			"station": "cook",
+			"group": "Comida",
+			"inputs": {
+				"anguila_luminosa": 1,
+				"baya_roja": 1
+			},
+			"qty": 1
+		},
+		"sashimi_lanza": {
+			"station": "cook",
+			"group": "Comida",
+			"inputs": {
+				"pez_lanza": 1,
+				"alga_marina": 1
 			},
 			"qty": 1
 		}

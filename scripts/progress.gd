@@ -12,8 +12,8 @@ const STAT_INFO := {
 	"move_speed": "+4 % al caminar y correr",
 	"attack_speed": "+5 % ataques más rápidos",
 }
-const SLOTS := ["sword", "grimoire", "armor", "ring", "amulet", "pickaxe", "axe"]
-const SLOT_NAMES := {"sword": "Espada", "grimoire": "Grimorio", "armor": "Armadura", "ring": "Anillo", "amulet": "Collar", "pickaxe": "Pico", "axe": "Hacha"}
+const SLOTS := ["sword", "grimoire", "armor", "ring", "amulet", "pickaxe", "axe", "rod"]
+const SLOT_NAMES := {"sword": "Espada", "grimoire": "Grimorio", "armor": "Armadura", "ring": "Anillo", "amulet": "Collar", "pickaxe": "Pico", "axe": "Hacha", "rod": "Caña"}
 const POINTS_PER_LEVEL := 5
 
 var level := 1
