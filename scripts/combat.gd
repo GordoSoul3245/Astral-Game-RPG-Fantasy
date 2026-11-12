@@ -46,6 +46,7 @@ func set_zone(dungeon: bool) -> void:  # ambiente por mapa; las luces transitori
 	if main.music:
 		main.music.set_zone(dungeon)
 	ambient.color = AMBIENT_DUNGEON if dungeon else AMBIENT_OUT
+	main.clock.outdoors = not dungeon
 	lantern.energy = 0.55 if dungeon else 0.0
 	marks.clear()
 
@@ -53,6 +54,7 @@ const AMBIENT_INDOOR := Color(0.9, 0.78, 0.66)   # interior de una casa: luz cá
 
 func set_indoors() -> void:  # tras set_zone(false): sala cálida, con la linterna del héroe apagada
 	ambient.color = AMBIENT_INDOOR
+	main.clock.outdoors = false
 	lantern.energy = 0.0
 
 func light(col: Color, energy: float, size: float) -> PointLight2D:
@@ -211,6 +213,8 @@ func detonate_at(ground: Vector2, radius: float, damage: int) -> void:  # tambi�
 			hit(e, roundi(damage * main.prog.magic_mult()), "blast", ground, false)
 
 func _process(delta: float) -> void:
+	if main.clock.outdoors:  # el exterior sigue la hora del día; el resto de zonas tiene su ambiente fijo
+		ambient.color = main.clock.tint()
 	for e in marks.keys():
 		marks[e] -= delta
 		if marks[e] <= 0.0 or not is_instance_valid(e) or not e.alive:

@@ -60,6 +60,8 @@ func run_checks() -> void:
 	main.add_child(fishing)
 	fishing.setup(main)
 	# tabla de peces: la distancia y la caña desbloquean los raros
+	main.clock.hour = 23.0  # de noche y con lluvia salen los peces que solo pican entonces
+	main.clock.rain = true
 	var near := {}
 	var deep := {}
 	for i in 3000:
@@ -68,6 +70,11 @@ func run_checks() -> void:
 	assert(not near.has("pez_abisal") and not near.has("pez_cristal") and not near.has("anguila_luminosa"), "cerca y con caña básica solo salen peces comunes")
 	assert(near.has("sardina") and near.has("alga_marina"), "lo común y la basura salen")
 	assert(deep.has("pez_cristal") and deep.has("pez_ceniza") and deep.has("anguila_luminosa"), "lejos y con buena caña salen los raros")
+	main.clock.hour = 12.0
+	main.clock.rain = false
+	for i in 1500:
+		var rid: String = fishing.roll(9.0, 3)["id"]
+		assert(rid != "anguila_luminosa" and rid != "pez_cristal" and rid != "pez_lanza" and rid != "pez_abisal", "de día y sin lluvia no pican los peces nocturnos ni de lluvia")
 
 	# ciclo completo en la orilla norte de la isla
 	main.fishing = fishing
@@ -124,6 +131,8 @@ func run_checks() -> void:
 	assert(not main._fishing(), "el dash cancela la pesca")
 
 	# usos: cocina y alquimia con peces, venta
+	while cr.favorite_dish(main.clock.day) == "pescado_asado":  # el plato favorito del día multiplica los efectos
+		main.clock.day += 1
 	cr.add("carpa_dorada", 1)
 	assert(cr.why_not("pescado_asado") == "", "la carpa se cocina")
 	cr.craft("pescado_asado")

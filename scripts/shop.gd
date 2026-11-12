@@ -58,18 +58,21 @@ func buy(id: String) -> String:  # devuelve el aviso para el jugador
 	main.save_game()
 	return msg
 
-func sell_value(id: String) -> int:
-	return int(cfg["smith"]["buys"].get(id, 0)) * int(main.prog.materials.get(id, 0))
+func sell_value(id: String) -> int:  # la calidad paga más: plata +25 %, oro +50 %
+	var st: Array = main.crafting.stars_of(id)
+	var n := int(main.prog.materials.get(id, 0))
+	return roundi(float(cfg["smith"]["buys"].get(id, 0)) * (float(n) + 0.25 * float(st[0]) + 0.5 * float(st[1])))
 
 func sell(id: String) -> String:  # vende todas las unidades de un material
 	var n := int(main.prog.materials.get(id, 0))
 	var unit := int(cfg["smith"]["buys"].get(id, 0))
 	if n <= 0 or unit <= 0:
 		return "No tienes eso para vender."
-	main.prog.materials.erase(id)
-	main.prog.coins += n * unit
+	var value := sell_value(id)
+	main.crafting.take(id, n)
+	main.prog.coins += value
 	main.save_game()
-	return "Vendiste %d × %s por %d monedas." % [n, main.prog.material_names[id], n * unit]
+	return "Vendiste %d × %s por %d monedas." % [n, main.prog.material_names[id], value]
 
 # --- interfaz
 func open(who: String) -> void:
@@ -127,6 +130,13 @@ func _refresh(msg: String) -> void:
 	var t: Dictionary = cfg[role]
 	title.text = "%s  ·  %d monedas" % [t["title"], main.prog.coins]
 	var first: Button = null
+	var o: Dictionary = main.angler.order(role)  # encargo de pesca del día
+	if not o.is_empty():
+		var done: bool = main.angler.order_done(role)
+		var ob := _button("Encargo de hoy: %d × %s  —  %d monedas%s" % [int(o["qty"]), main.crafting.item_name(str(o["item"])), int(o["coins"]), "  (entregado)" if done else ""],
+			func() -> void: _refresh(main.angler.deliver(role)))
+		ob.disabled = done or main.crafting.count(str(o["item"])) < int(o["qty"])
+		first = ob if not ob.disabled else null
 	if role == "merchant":
 		for s: Dictionary in stock():
 			var id: String = s["id"]

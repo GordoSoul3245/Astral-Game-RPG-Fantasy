@@ -119,6 +119,36 @@ def build_fish(i):
     elif i == 'elixir_ceniza':
         flask(kit, p, m['liq_ash'], m)
         kit.beam((0, -0.3, -0.18), (0, -0.3, 0.0), 0.06, 0.0, m['ember'], p, 4)
+    elif i == 'cebo_gusano':
+        kit.ell((0, 0, -0.2), (0.42, 0.3, 0.08), m['kelp'], p)
+        for k, (x0, z0) in enumerate([(-0.28, -0.05), (0.0, 0.1), (0.2, -0.08)]):
+            for j in range(5):
+                kit.ell((x0 + j * 0.1 - 0.2, 0, z0 + math.sin(j * 1.3 + k) * 0.07), (0.075, 0.07, 0.07), m['pink'], p)
+    elif i == 'cebo_baya':
+        kit.ell((0, 0, -0.2), (0.42, 0.3, 0.07), m['kelpl'], p)
+        for x, z in [(-0.18, 0.0), (0.12, 0.08), (0.0, -0.12)]:
+            kit.ell((x, 0, z), (0.17, 0.17, 0.17), m['berry'], p)
+            kit.ell((x + 0.05, -0.15, z + 0.07), (0.04, 0.02, 0.04), m['eyew'], p)
+    elif i == 'cebo_carne':
+        kit.ell((0, 0, -0.2), (0.42, 0.3, 0.07), m['plate'], p)
+        kit.ell((0, 0, 0.0), (0.34, 0.2, 0.2), m['fillet'], p)
+        kit.ell((0.05, -0.12, 0.08), (0.2, 0.08, 0.1), m['roastf'], p)
+        kit.beam((0.15, 0, 0.0), (0.5, 0, 0.14), 0.05, 0.04, m['bone'], p, 6)
+    elif i == 'nasa':
+        kit.ell((0, 0, 0), (0.45, 0.3, 0.3), m['woodl'], p)
+        for x in (-0.3, -0.1, 0.1, 0.3):
+            kit.torus((x, 0, 0), 0.28, 0.025, m['wood'], p, rot=(0, math.pi / 2, 0))
+        kit.beam((-0.45, 0, 0), (-0.1, 0, 0.0), 0.2, 0.0, m['leather'], p, 10)
+        kit.beam((0.4, 0, 0.2), (0.6, 0, 0.45), 0.015, 0.015, m['line'], p, 4)
+        kit.ell((0.62, 0, 0.5), (0.06, 0.06, 0.06), m['berry'], p)
+    elif i == 'trampa':
+        kit.ell((0, 0, -0.12), (0.5, 0.35, 0.05), m['rodiron'], p)
+        kit.torus((0, 0, -0.05), 0.34, 0.035, m['rodiron'], p, rot=(math.pi / 2.6, 0, 0))
+        kit.torus((0, 0, -0.05), 0.34, 0.035, m['rodiron'], p, rot=(-math.pi / 2.6, 0, 0))
+        for x in (-0.2, -0.07, 0.07, 0.2):
+            kit.beam((x, -0.3, 0.0), (x, -0.3, 0.12), 0.02, 0.0, m['bone'], p, 4)
+            kit.beam((x, 0.3, 0.0), (x, 0.3, 0.12), 0.02, 0.0, m['bone'], p, 4)
+        kit.ell((0, 0, -0.04), (0.09, 0.09, 0.05), m['berry'], p)
     kit.upd()
 
 
@@ -149,7 +179,7 @@ def render_fish(item_id, res=128):
 FISH_IDS = [
     'sardina', 'carpa_dorada', 'trucha_plateada', 'pez_globo', 'anguila_luminosa', 'pez_cristal', 'pez_lanza', 'pez_ceniza', 'pez_abisal',
     'alga_marina', 'cana_madera', 'cana_hierro', 'cana_cristal', 'pescado_asado', 'sopa_pescado', 'brocheta_anguila', 'sashimi_lanza',
-    'elixir_marea', 'elixir_ceniza',
+    'elixir_marea', 'elixir_ceniza', 'cebo_gusano', 'cebo_baya', 'cebo_carne', 'nasa', 'trampa',
 ]
 
 

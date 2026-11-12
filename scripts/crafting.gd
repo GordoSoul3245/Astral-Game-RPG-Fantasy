@@ -23,21 +23,45 @@ func _init(p: RefCounted, data: Dictionary) -> void:
 func count(id: String) -> int:
 	return prog.potions if id == "pocion_vida" else int(prog.materials.get(id, 0))
 
-func add(id: String, n: int) -> void:
+func add(id: String, n: int, star := 0) -> void:  # star: 0 normal, 1 plata, 2 oro (calidad de pesca y cocina)
 	if id == "pocion_vida":
 		prog.potions += n
 	else:
 		prog.materials[id] = int(prog.materials.get(id, 0)) + n
+		if star > 0:
+			var st: Array = prog.stars.get(id, [0, 0])
+			st[star - 1] += n
+			prog.stars[id] = st
 
-func take(id: String, n: int) -> void:
+func stars_of(id: String) -> Array:  # [unidades de plata, unidades de oro]; nunca más que las que hay
+	var st: Array = prog.stars.get(id, [0, 0])
+	var total := count(id)
+	return [mini(int(st[0]), total), mini(int(st[1]), maxi(0, total - int(st[0])))]
+
+func take(id: String, n: int, best_first := false) -> int:  # devuelve la mejor calidad entre las unidades gastadas
 	if id == "pocion_vida":
 		prog.potions = maxi(0, prog.potions - n)
-		return
+		return 0
+	var st := stars_of(id)
+	var plain := count(id) - int(st[0]) - int(st[1])
+	var order: Array = [[2, int(st[1])], [1, int(st[0])], [0, plain]] if best_first else [[0, plain], [1, int(st[0])], [2, int(st[1])]]
+	var left_n := n
+	var best := 0
+	for o: Array in order:
+		var k := mini(left_n, int(o[1]))
+		if k > 0:
+			left_n -= k
+			best = maxi(best, int(o[0]))
+			if int(o[0]) > 0:
+				st[int(o[0]) - 1] -= k
 	var left := int(prog.materials.get(id, 0)) - n
 	if left > 0:
 		prog.materials[id] = left
+		prog.stars[id] = st
 	else:
 		prog.materials.erase(id)
+		prog.stars.erase(id)
+	return best
 
 func item_name(id: String) -> String:
 	if prog.equipment.has(id):
@@ -103,15 +127,16 @@ func craft(rid: String) -> Dictionary:  # {ok, id, qty, msg}
 	if reason != "":
 		return {"ok": false, "id": "", "qty": 0, "msg": reason}
 	var inp := inputs_of(rid)
+	var q := 0
 	for id: String in inp:
-		take(id, int(inp[id]))
+		q = maxi(q, take(id, int(inp[id]), true))  # un plato con pescado de calidad sale de calidad
 	var out := output_of(rid)
 	var n := qty_of(rid)
 	if prog.equipment.has(out):
 		prog.add_item(out)
 		n = 1
 	else:
-		add(out, n)
+		add(out, n, q if cfg["consumables"].has(out) else 0)
 	return {"ok": true, "id": out, "qty": n, "msg": "%s%s" % [item_name(out), " ×%d" % n if n > 1 else ""]}
 
 # --- alquimia: los planos se aprenden y no se gastan; los ingredientes y el catalizador sí
@@ -159,11 +184,22 @@ func use(main: Node, id: String) -> String:
 	var c: Dictionary = cfg["consumables"][id]
 	if c.has("heal") and not c.has("buff") and main.hero_hp >= main.hero_max_hp:
 		return "Ya tienes la vida completa."
-	take(id, 1)
+	var q := take(id, 1, true)
+	var fav := id == favorite_dish(main.clock.day)
+	var k: float = [1.0, 1.25, 1.5][q] * (float(cfg["favorite"]["mult"]) if fav else 1.0)  # calidad y plato favorito del día
 	var parts: Array[String] = []
+	if fav:
+		parts.append("¡plato favorito del día!")
+	if q > 0:
+		parts.append("calidad " + "★".repeat(q))
 	if c.has("heal"):
-		main.hero_hp = mini(main.hero_max_hp, main.hero_hp + int(c["heal"]))
-		parts.append("+%d vida" % int(c["heal"]))
+		var heal := roundi(float(c["heal"]) * k)
+		main.hero_hp = mini(main.hero_max_hp, main.hero_hp + heal)
+		parts.append("+%d vida" % heal)
+	if c.has("regen"):
+		main.regen_left += float(c["regen"]["amount"]) * k
+		main.regen_rate = float(c["regen"]["amount"]) * k / float(c["regen"]["time"])
+		parts.append("regenera %d" % roundi(float(c["regen"]["amount"]) * k))
 	if c.has("mana"):
 		main.mana = minf(main.hero_data["mana"], main.mana + float(c["mana"]))
 		parts.append("+%d maná" % int(c["mana"]))
@@ -172,13 +208,20 @@ func use(main: Node, id: String) -> String:
 		parts.append("estamina llena")
 	for key in ["buff", "buff2"]:
 		if c.has(key):
-			prog.add_buff(c[key]["stat"], float(c[key]["amount"]), float(c[key]["time"]))
-			parts.append("+%d %s" % [int(c[key]["amount"]), prog.STAT_NAMES[c[key]["stat"]]])
+			var amount := float(c[key]["amount"]) * (1.5 if fav else 1.0)
+			prog.add_buff(c[key]["stat"], amount, float(c[key]["time"]) * (2.0 if fav else 1.0))
+			parts.append("+%d %s" % [roundi(amount), prog.STAT_NAMES[c[key]["stat"]]])
 	if c.has("bomb"):
 		main.combat.detonate_at(main.pos, float(c["bomb"]["radius"]), int(c["bomb"]["damage"]))
 		parts.append("¡explosión!")
 	main._apply_stats()
 	return "%s: %s" % [item_name(id), ", ".join(parts)]
+
+func favorite_dish(day: int) -> String:  # el plato que hoy le gusta al héroe: sus efectos mejoran
+	var dishes: Array = []
+	for rid: String in recipes_for("cook"):
+		dishes.append(output_of(rid))
+	return dishes[(day * 5 + 2) % dishes.size()] if not dishes.is_empty() else ""
 
 # --- recolección
 func tool_tier(kind: String) -> int:  # 0 = manos

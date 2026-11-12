@@ -102,6 +102,6 @@ func run_checks() -> void:
 	# cada consumible hace algo
 	for id: String in cr.cfg["consumables"]:
 		var c: Dictionary = cr.cfg["consumables"][id]
-		assert(c.has("heal") or c.has("mana") or c.has("stamina") or c.has("buff") or c.has("bomb"), "%s hace algo" % id)
+		assert(c.has("heal") or c.has("mana") or c.has("stamina") or c.has("buff") or c.has("bomb") or c.has("place"), "%s hace algo" % id)
 	print("PASS crafting: manos, forja, cocina, alquimia con planos, buffs y recolección por nivel de herramienta")
 	quit()

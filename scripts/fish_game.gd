@@ -22,6 +22,14 @@ var perfect := true       # nunca perdió al pez
 var done := false
 var won := false
 var rng := RandomNumberGenerator.new()
+# cofre del fondo (opcional): aparece tras un rato; mantener la barra sobre él lo llena, salir lo vacía
+var chest := -1.0         # altura del cofre (-1 = no hay)
+var chest_wait := 0.0     # segundos hasta que aparece
+var chest_progress := 0.0
+var chest_got := false
+var chest_fill := 0.45
+var chest_drain := 0.25
+var t := 0.0
 
 func setup(move_kind: String, difficulty: float, bar_size: float) -> void:
 	move = move_kind
@@ -31,6 +39,15 @@ func setup(move_kind: String, difficulty: float, bar_size: float) -> void:
 	fish = rng.randf_range(0.2, 0.8)
 	target = fish
 	bar = clampf(fish - size * 0.5, 0.0, 1.0 - size)
+
+func with_chest(delay: float, fill: float, drain: float) -> void:
+	chest_wait = delay
+	chest_fill = fill
+	chest_drain = drain
+	chest = -2.0  # pendiente de aparecer
+
+func chest_inside() -> bool:
+	return chest >= 0.0 and chest >= bar and chest <= bar + size
 
 func inside() -> bool:
 	return fish >= bar and fish <= bar + size
@@ -46,6 +63,13 @@ func step(dt: float, hold: bool) -> void:
 	elif bar > 1.0 - size:
 		bar = 1.0 - size
 		bar_v = 0.0
+	t += dt
+	if chest == -2.0 and t >= chest_wait:
+		chest = rng.randf_range(0.1, 0.9)
+	if chest >= 0.0 and not chest_got:
+		chest_progress = clampf(chest_progress + (chest_fill if chest_inside() else -chest_drain) * dt, 0.0, 1.0)
+		if chest_progress >= 1.0:
+			chest_got = true
 	retarget -= dt
 	if retarget <= 0.0:
 		_pick_target()

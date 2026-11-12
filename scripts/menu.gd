@@ -42,7 +42,7 @@ func _ready() -> void:
 	var gap := Control.new()
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(gap)
-	for pair in [["inv", "Inventario"], ["craft", "Crafteo"], ["stats", "Estadísticas"], ["opt", "Opciones"]]:
+	for pair in [["inv", "Inventario"], ["craft", "Crafteo"], ["fish", "Pesca"], ["stats", "Estadísticas"], ["opt", "Opciones"]]:
 		var b := Button.new()
 		b.text = pair[1]
 		b.focus_mode = Control.FOCUS_NONE
@@ -110,6 +110,8 @@ func refresh() -> void:
 		_build_inv()
 	elif tab == "craft":
 		_build_craft()
+	elif tab == "fish":
+		_build_fishing()
 	elif tab == "opt":
 		_build_options()
 	else:
@@ -344,6 +346,9 @@ func _build_stack_detail(right: VBoxContainer) -> void:  # material o consumible
 	right.add_child(big)
 	_label(cr.item_name(selected), right, 22).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label("Cantidad: %d" % cr.count(selected), right, 15, MUTED).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var st: Array = cr.stars_of(selected)
+	if int(st[0]) + int(st[1]) > 0:
+		_label("Calidad: ★ ×%d   ★★ ×%d" % [int(st[0]), int(st[1])], right, 15, GOLD).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	right.add_child(HSeparator.new())
 	var d := _label(cr.item_desc(selected), right, 15, MUTED)
 	d.autowrap_mode = TextServer.AUTOWRAP_WORD
@@ -367,6 +372,71 @@ func _build_stack_detail(right: VBoxContainer) -> void:  # material o consumible
 		main._refresh_hotbar()
 		refresh())
 	right.add_child(act)
+
+# --- pesca: libro de capturas, acuario y estado del día
+func _build_fishing() -> void:
+	var an = main.angler
+	var cr = main.crafting
+	var cols := HBoxContainer.new()
+	cols.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	cols.add_theme_constant_override("separation", 16)
+	body.add_child(cols)
+	var left := _card(cols, Vector2(520, 0))
+	_label("Libro de capturas   %d / %d" % [an.book.size(), an.species_total()], left, 22, GOLD)
+	for id: String in an.cfg["fish"]:
+		var e: Variant = an.book.get(id)
+		if e == null:
+			_label("???", left, 16, MUTED)
+		else:
+			_label("%s  ·  ×%d  ·  récord %d cm%s" % [cr.item_name(id), int(e["count"]), int(e["best_cm"]), ("  " + "★".repeat(int(e["best_star"]))) if int(e["best_star"]) > 0 else ""], left, 16)
+	left.add_child(HSeparator.new())
+	for i: int in an.cfg["book"].size():
+		var m: Dictionary = an.cfg["book"][i]
+		_label("%s %d especies: %s" % ["✔" if an.claimed.has(i) else "○", int(m["species"]), ("%d monedas" % int(m["coins"])) if m.has("coins") else "%s ×%d" % [cr.item_name(str(m["item"])), int(m.get("qty", 1))]], left, 15, MUTED)
+	var right := _card(cols, Vector2(0, 0))
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_label(main.clock.text(), right, 18, GOLD)
+	_label("Plato favorito de hoy: %s (efectos mayores)" % cr.item_name(cr.favorite_dish(main.clock.day)), right, 15, MUTED)
+	_label("Cebo elegido: %s   ([B] con la caña en la barra)" % (cr.item_name(main.bait) if main.bait != "" else "ninguno"), right, 15, MUTED)
+	right.add_child(HSeparator.new())
+	_label("Acuario  %d / %d   (cada día producen)" % [an.tank.size(), an.slots()], right, 20, GOLD)
+	for i: int in an.tank.size():
+		var idx: int = i
+		var row := HBoxContainer.new()
+		right.add_child(row)
+		_label(cr.item_name(an.tank[i]), row, 16).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var b := Button.new()
+		b.text = "Sacar"
+		b.focus_mode = Control.FOCUS_NONE
+		b.pressed.connect(func() -> void:
+			main.say(an.release(idx), 1.5)
+			refresh())
+		row.add_child(b)
+	var collect := Button.new()
+	collect.text = "Recoger producción" + ("" if an.bin.is_empty() else " (lista)")
+	collect.focus_mode = Control.FOCUS_NONE
+	collect.disabled = an.bin.is_empty()
+	collect.pressed.connect(func() -> void:
+		main.say(an.collect(), 2.5)
+		refresh())
+	right.add_child(collect)
+	right.add_child(HSeparator.new())
+	_label("Meter un pez en el acuario:", right, 16, MUTED)
+	var any := false
+	for id: String in an.cfg["aquarium"]["yield"]:
+		if cr.count(id) > 0:
+			any = true
+			var fid := id
+			var b := Button.new()
+			b.text = "%s ×%d" % [cr.item_name(id), cr.count(id)]
+			b.focus_mode = Control.FOCUS_NONE
+			b.disabled = an.tank.size() >= an.slots()
+			b.pressed.connect(func() -> void:
+				main.say(an.deposit(fid), 1.5)
+				refresh())
+			right.add_child(b)
+	if not any:
+		_label("No llevas peces. Pesca alguno.", right, 15, MUTED)
 
 # --- crafteo a mano (estilo Terraria): recetas a la izquierda, tus materiales y consumibles a la derecha
 var side_card: VBoxContainer

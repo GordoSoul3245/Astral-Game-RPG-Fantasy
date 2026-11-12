@@ -29,6 +29,7 @@ var fish_icon: Texture2D
 var overlay
 var ui: CanvasLayer
 var end_t := 0.0
+var used_bait := ""         # el cebo gastado en este lanzamiento
 
 func setup(m: Node) -> void:
 	main = m
@@ -44,22 +45,28 @@ func setup(m: Node) -> void:
 	ui.add_child(overlay)
 
 # --- elección del pez: por distancia del lanzamiento y nivel de la caña
-func roll(dist_tiles: float, tier: int) -> Dictionary:
+func roll(dist_tiles: float, tier: int, bait := "") -> Dictionary:
 	var rng: RandomNumberGenerator = main.crafting.rng
 	var pool: Array = []
+	var weights := {}
 	var total := 0.0
+	var rare: float = float(cfg["baits"][bait]["rare"]) if cfg["baits"].has(bait) else 1.0
 	for id: String in cfg["fish"]:
 		var f: Dictionary = cfg["fish"][id]
+		var when: String = f.get("when", "")  # algunos peces solo pican de noche o con lluvia
+		if (when == "night" and not main.clock.is_night()) or (when == "rain" and not main.clock.rain):
+			continue
 		if dist_tiles >= float(f["min_tiles"]) and tier >= int(f["min_rod"]):
 			pool.append(id)
-			total += float(f["weight"])
+			weights[id] = float(f["weight"]) * (rare if float(f["weight"]) <= 12.0 else 1.0)  # el cebo favorece a los raros
+			total += weights[id]
 	if pool.is_empty() or rng.randf() < float(cfg["junk_chance"]):
 		var jid: String = (cfg["junk"] as Dictionary).keys()[0]
 		var r: Array = cfg["junk"][jid]
 		return {"id": jid, "junk": true, "qty": rng.randi_range(int(r[0]), int(r[1]))}
 	var pick := rng.randf() * total
 	for id: String in pool:
-		pick -= float(cfg["fish"][id]["weight"])
+		pick -= float(weights[id])
 		if pick <= 0.0:
 			return {"id": id, "junk": false, "qty": 1}
 	return {"id": pool[-1], "junk": false, "qty": 1}
@@ -173,6 +180,13 @@ func _launch() -> void:
 	var c: Dictionary = cfg["cast"]
 	var tiles := lerpf(float(c["min_tiles"]), float(c["max_tiles"]), power) + float(c["rod_bonus"]) * rod_tier
 	bob_from = tip()
+	used_bait = ""
+	if main.bait != "" and main.crafting.count(main.bait) > 0:
+		used_bait = main.bait
+		main.crafting.take(used_bait, 1)
+		if main.crafting.count(used_bait) == 0:
+			main.bait = ""
+			main.say("Se acabó el %s." % main.crafting.item_name(used_bait), 1.5)
 	bob_g = main.pos + aim * tiles / main._tiles_per_px(aim)
 	flight = 0.0
 	state = "flight"
@@ -184,7 +198,8 @@ func _land() -> void:
 		_close()
 		return
 	var wait: Array = cfg["bite_wait"]
-	wait_t = maxf(1.5, main.crafting.rng.randf_range(float(wait[0]), float(wait[1])) - 0.3 * rod_tier)
+	var cut: float = 1.0 - (float(cfg["baits"][used_bait]["wait"]) if used_bait != "" else 0.0) - (float(cfg["rain_wait_bonus"]) if main.clock.rain else 0.0)
+	wait_t = maxf(1.5, main.crafting.rng.randf_range(float(wait[0]), float(wait[1])) * cut - 0.3 * rod_tier)
 	nibble_t = 1.0
 	ripple = 0.0
 	state = "wait"
@@ -193,7 +208,7 @@ func _land() -> void:
 
 func _bite() -> void:
 	var dist: float = main.ground_to_tile(bob_g).distance_to(main.ground_to_tile(main.pos))
-	hooked = roll(dist, rod_tier)
+	hooked = roll(dist, rod_tier, used_bait)
 	var diff := 20.0 if hooked["junk"] else float(cfg["fish"][hooked["id"]]["diff"])
 	bite_t = maxf(0.5, float(cfg["bite_window"]) - diff * 0.003)
 	state = "bite"
@@ -207,6 +222,9 @@ func _hook() -> void:
 	game = FishGame.new()
 	game.setup(str(f["move"]), float(f["diff"]), float(cfg["bar_size"]["base"]) + float(cfg["bar_size"]["per_rod"]) * rod_tier)
 	fish_icon = load(main.crafting.icon(hooked["id"]))
+	var tc: Dictionary = cfg["treasure"]
+	if main.crafting.rng.randf() < float(tc["chance"]) + float(tc["per_rod"]) * rod_tier:
+		game.with_chest(float(tc["delay"]), float(tc["fill"]), float(tc["drain"]))
 	state = "fight"
 	main.hero.play("fish_reel_" + main.facing)
 
@@ -219,22 +237,68 @@ func _end(msg: String, won: bool) -> void:
 		return
 	var id: String = hooked["id"]
 	var qty: int = int(hooked["qty"])
+	var star := 0
 	var line: String = main.crafting.item_name(id)
 	if not hooked["junk"]:
-		var s: Array = cfg["fish"][id]["size"]
-		var cm: int = main.crafting.rng.randi_range(int(s[0]), int(s[1]))
-		if game != null and game.perfect:
-			qty += 1  # pesca perfecta: sale otro
-			line += " ×%d  ·  %d cm  ¡Perfecto!" % [qty, cm]
-		else:
-			line += "  ·  %d cm" % cm
+		var sz: Array = cfg["fish"][id]["size"]
+		var cm: int = main.crafting.rng.randi_range(int(sz[0]), int(sz[1]))
+		if game != null and game.perfect:  # pesca perfecta: calidad de plata; de oro si además es de los grandes
+			star = 2 if float(cm - int(sz[0])) >= float(cfg["stars"]["gold_size"]) * float(int(sz[1]) - int(sz[0])) else 1
+		line += "  ·  %d cm%s" % [cm, ("  " + "★".repeat(star) + " ¡Perfecto!") if star > 0 else ""]
+		var rec: String = main.angler.record(id, cm, star)
+		if rec != "":
+			main.say(rec, 3.0)
 	elif qty > 1:
 		line += " ×%d" % qty
-	main.crafting.add(id, qty)
+	main.crafting.add(id, qty, star)
+	if game != null and game.chest_got:
+		line += "\n" + _open_chest()
 	main.quest_event("loot", id)
 	main.show_loot([id])
 	main.popup(main.pos, line, Color(0.6, 0.95, 1.0))
 	main.shake(3.0)
+
+func _open_chest() -> String:  # botín del cofre del fondo, por peso
+	var rng: RandomNumberGenerator = main.crafting.rng
+	var loot: Array = cfg["treasure"]["loot"]
+	var total := 0.0
+	for l: Dictionary in loot:
+		total += float(l["w"])
+	var pick := rng.randf() * total
+	var got: Dictionary = loot[0]
+	for l: Dictionary in loot:
+		pick -= float(l["w"])
+		if pick <= 0.0:
+			got = l
+			break
+	if got.has("coins"):
+		var c := rng.randi_range(int(got["coins"][0]), int(got["coins"][1]))
+		main.prog.coins += c
+		return "¡Cofre! %d monedas" % c
+	var id: String = str(got.get("item", ""))
+	if got.has("blueprint"):  # un plano que aún no conozcas; si los tienes todos, monedas
+		var unknown: Array = []
+		for b: String in main.crafting.cfg["blueprints"]:
+			if not main.crafting.knows(b):
+				unknown.append(b)
+		if unknown.is_empty():
+			main.prog.coins += 120
+			return "¡Cofre! 120 monedas"
+		id = unknown[rng.randi_range(0, unknown.size() - 1)]
+		main.crafting.learn(id)
+		main.show_loot([id])
+		return "¡Cofre! Aprendes: %s" % main.crafting.item_name(id)
+	if main.prog.equipment.has(id):
+		if main.prog.owned.has(id):
+			main.prog.coins += 80
+			return "¡Cofre! 80 monedas"
+		main.give_item(id)
+		main.show_loot([id])
+		return "¡Cofre! %s" % main.crafting.item_name(id)
+	var n := rng.randi_range(int(got["qty"][0]), int(got["qty"][1]))
+	main.crafting.add(id, n)
+	main.show_loot([id])
+	return "¡Cofre! %s ×%d" % [main.crafting.item_name(id), n]
 
 # --- dibujo en el mundo: fuerza, sedal, flotador, ondas y el «!» del pique
 func _screen(g: Vector2, h := 0.0) -> Vector2:
@@ -304,6 +368,16 @@ class _Overlay extends Control:
 		var good: bool = g.inside()
 		draw_rect(Rect2(track.position.x, bar_y, track.size.x, bar_h), Color(0.3, 0.85, 0.4, 0.62 if good else 0.4))
 		draw_rect(Rect2(track.position.x, bar_y, track.size.x, bar_h), Color(0.6, 1.0, 0.65), false, 3.0)
+		if g.chest >= 0.0:  # cofre del fondo y su medidor dorado, a la izquierda de la pista
+			var cy: float = track.end.y - g.chest * track.size.y
+			var cr := Rect2(track.position.x + 7, cy - 14, 40, 28)
+			draw_rect(cr, Color(0.4, 0.4, 0.4) if g.chest_got else Color(0.55, 0.36, 0.14))
+			draw_rect(Rect2(cr.position.x, cr.position.y + 8, cr.size.x, 5), Color(0.95, 0.78, 0.25))
+			draw_rect(cr, Color(0.2, 0.12, 0.05), false, 2.0)
+			var tm := Rect2(track.position.x - 22, track.position.y, 10, track.size.y)
+			draw_rect(tm, Color(0.1, 0.12, 0.18))
+			draw_rect(Rect2(tm.position.x, tm.end.y - g.chest_progress * tm.size.y, tm.size.x, g.chest_progress * tm.size.y), Color(1.0, 0.82, 0.25))
+			draw_rect(tm, Color(0.7, 0.75, 0.85), false, 2.0)
 		var icon_c := Vector2(track.position.x + track.size.x * 0.5, track.end.y - g.fish * track.size.y)
 		if fishing.fish_icon:
 			draw_texture_rect(fishing.fish_icon, Rect2(icon_c - Vector2(24, 24), Vector2(48, 48)), false)

@@ -75,7 +75,8 @@
 			"size": [
 				50,
 				110
-			]
+			],
+			"when": "night"
 		},
 		"pez_cristal": {
 			"weight": 6,
@@ -86,7 +87,8 @@
 			"size": [
 				20,
 				40
-			]
+			],
+			"when": "rain"
 		},
 		"pez_lanza": {
 			"weight": 6,
@@ -97,7 +99,8 @@
 			"size": [
 				70,
 				130
-			]
+			],
+			"when": "rain"
 		},
 		"pez_ceniza": {
 			"weight": 4,
@@ -119,7 +122,193 @@
 			"size": [
 				150,
 				260
-			]
+			],
+			"when": "night"
 		}
+	},
+	"rain_wait_bonus": 0.25,
+	"baits": {
+		"cebo_gusano": {
+			"wait": 0.4,
+			"rare": 1.0
+		},
+		"cebo_baya": {
+			"wait": 0.0,
+			"rare": 1.7
+		},
+		"cebo_carne": {
+			"wait": 0.2,
+			"rare": 2.3
+		}
+	},
+	"stars": {
+		"gold_size": 0.8
+	},
+	"treasure": {
+		"chance": 0.14,
+		"per_rod": 0.04,
+		"delay": 2.0,
+		"fill": 0.45,
+		"drain": 0.25,
+		"loot": [
+			{
+				"w": 40,
+				"coins": [
+					30,
+					90
+				]
+			},
+			{
+				"w": 25,
+				"item": "cristal_arcano",
+				"qty": [
+					1,
+					2
+				]
+			},
+			{
+				"w": 15,
+				"item": "lingote_acero",
+				"qty": [
+					1,
+					1
+				]
+			},
+			{
+				"w": 10,
+				"item": "pocion_vida",
+				"qty": [
+					1,
+					2
+				]
+			},
+			{
+				"w": 8,
+				"blueprint": true
+			},
+			{
+				"w": 4,
+				"item": "anillo_vigor",
+				"qty": [
+					1,
+					1
+				]
+			}
+		]
+	},
+	"book": [
+		{
+			"species": 3,
+			"coins": 60
+		},
+		{
+			"species": 6,
+			"item": "cristal_arcano",
+			"qty": 3
+		},
+		{
+			"species": 9,
+			"coins": 400
+		}
+	],
+	"orders": {
+		"smith": [
+			{
+				"item": "sardina",
+				"qty": 4,
+				"coins": 30
+			},
+			{
+				"item": "carpa_dorada",
+				"qty": 2,
+				"coins": 40
+			},
+			{
+				"item": "trucha_plateada",
+				"qty": 3,
+				"coins": 70
+			},
+			{
+				"item": "anguila_luminosa",
+				"qty": 1,
+				"coins": 60
+			},
+			{
+				"item": "pez_lanza",
+				"qty": 1,
+				"coins": 90
+			}
+		],
+		"merchant": [
+			{
+				"item": "alga_marina",
+				"qty": 3,
+				"coins": 25
+			},
+			{
+				"item": "pez_globo",
+				"qty": 2,
+				"coins": 60
+			},
+			{
+				"item": "pez_cristal",
+				"qty": 1,
+				"coins": 70
+			},
+			{
+				"item": "pez_ceniza",
+				"qty": 1,
+				"coins": 100
+			}
+		]
+	},
+	"aquarium": {
+		"slots": 6,
+		"yield": {
+			"sardina": {
+				"alga_marina": 1
+			},
+			"carpa_dorada": {
+				"coins": 6
+			},
+			"trucha_plateada": {
+				"hierba_vital": 1
+			},
+			"pez_globo": {
+				"piedra": 2
+			},
+			"anguila_luminosa": {
+				"hongo_luminoso": 1
+			},
+			"pez_cristal": {
+				"cristal_arcano": 1
+			},
+			"pez_lanza": {
+				"mena_hierro": 1
+			},
+			"pez_ceniza": {
+				"carbon": 2
+			},
+			"pez_abisal": {
+				"cristal_arcano": 2
+			}
+		}
+	},
+	"traps": {
+		"max": 3,
+		"hours": 4.0,
+		"reach": 1.6,
+		"range": 3.0,
+		"land_loot": {
+			"carne_conejo": [
+				1,
+				2
+			],
+			"piel_conejo": [
+				1,
+				1
+			]
+		},
+		"land_hours": 3.0
 	}
 }

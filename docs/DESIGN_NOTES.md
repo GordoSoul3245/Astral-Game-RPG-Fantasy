@@ -105,5 +105,20 @@ Lee este archivo y sigue desde "Pendiente". Lo que está escrito aquí es la fue
 - Espera el pique (2.5–7 s menos 0.3 s por nivel de caña) con tirones falsos; al picar aparece «!» y hay unos 0.8 s para hacer clic. Clic antes de tiempo recoge el sedal. Dash, Esc, cambiar de objeto o recibir daño también cancelan.
 - Minijuego (`fish_game.gd`): mantener el clic sube la barra, soltar la deja caer; el pez se mueve según su patrón (`mixed`, `dart`, `smooth`, `sinker`, `floater`) y la dificultad. Progreso +0.22/s dentro y −(0.12 + dif·0.1)/s fuera. Pesca perfecta (nunca lo pierdes) = un pez extra. La caña da barra más larga (+0.05 por nivel).
 - Datos: `data/fishing.json`. 9 peces + alga marina (basura, 12 %). Se cocinan (pescado asado, sopa, brocheta de anguila, sashimi de pez lanza), se destilan (elixires de marea y de ceniza con planos de Tomás) y Bram los compra.
-- No hecho (a propósito): calidad de pez por estrellas, cofres del tesoro en el minijuego, cebos y señuelos, tiempo del día y estaciones, pozas distintas, libro de capturas.
+- Pesca perfecta ya no da un pez extra: da **calidad** (ver abajo).
 - Test: `tests/test_fishing.gd`. Capturas: `tests/capture_fishing.gd` → `production/qa/evidence/pesca/`.
+
+## Pesca ampliada (reloj, cebos, calidad, cofres, libro, acuario, nasas y encargos)
+- **Reloj** (`scripts/clock.gd`): un día = 8 min reales, arranca a las 9:00. Tinta el ambiente exterior (`combat.gd`), llueve el 25 % de los días (gotas en pantalla) y se muestra en la HUD. Se guarda (`clock`). Dentro de casas, mina y dungeon no oscurece ni llueve (`clock.outdoors`).
+- **Peces por hora y clima** (`when` en `data/fishing.json`): anguila luminosa y pez abisal solo de noche (20:00–6:00); pez lanza y pez cristal solo con lluvia. Con lluvia el pique llega un 25 % antes.
+- **Cebos** (tecla **B** con la caña en la barra): gusano (−40 % de espera), baya (peces raros ×1.7), carne (raros ×2.3 y −20 % de espera). Se gastan al lanzar. Se fabrican a mano con hierba vital, bayas y carne de conejo.
+- **Calidad** (`prog.stars`, subconjunto de `materials`): pesca perfecta = ★; perfecta y de las grandes (80 % del rango de tamaño) = ★★. Se vende +25 % / +50 % (`shop.sell_value`) y un plato cocinado con pescado de calidad sale de calidad y cura +25 % / +50 %. Al cocinar y comer se gasta primero lo mejor; al gastar sin más, lo normal.
+- **Cofre del fondo:** en el minijuego aparece a veces (14 % + 4 % por nivel de caña) un cofre en la pista; mantener la barra sobre él llena su medidor dorado. Botín por peso en `treasure.loot` (monedas, cristales, lingote de acero, pociones, un plano que no conozcas, un anillo).
+- **Libro de capturas** (`scripts/angler.gd`, pestaña *Pesca* del menú): especies, veces y récord de tamaño/calidad; hitos a 3, 6 y 9 especies con recompensa.
+- **Acuario** (misma pestaña; no es un mueble de la casa): hasta 6 peces vivos; cada día producen materiales (`aquarium.yield`) que se recogen en la pestaña.
+- **Encargos diarios:** Bram y Tomás piden cada día un pescado distinto (`orders`); botón en su panel de tienda, uno por día y comerciante.
+- **Nasas y trampas** (`scripts/traps.gd`, objetos de la barra): la nasa va en la orilla (pesca sola 4 h de juego), la trampa en tierra (carne y piel de conejo, 3 h); máximo 3; se recogen solas al pasar cerca. Se guardan con la partida.
+- **Comida duradera:** los platos de pescado dan además regeneración de vida (`regen`). Cada día hay un **plato favorito** (`crafting.favorite_dish`): sus efectos ×1.5 y los bonus duran el doble.
+- Tests: `tests/test_angling.gd`. Capturas: `tests/capture_angling.gd` → `production/qa/evidence/pesca_plus/`.
+- Ideas medianas y grandes pendientes: `docs/IDEAS_FUTURAS.md`.
+- **No hecho / por probar:** nada de esto se jugó a mano; el equilibrio (tiempos, precios, probabilidades) es inicial. La nasa y la trampa se dibujan con formas simples (sin sprite propio) y los iconos de cebos son sencillos. Las trampas de caza no cazan otra cosa que conejo.

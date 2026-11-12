@@ -186,6 +186,30 @@
 			"tags": [
 				"pesca"
 			]
+		},
+		"cebo_gusano": {
+			"name": "Cebo de gusano",
+			"desc": "Acorta la espera del pique. Se gasta al lanzar. [B] para elegir cebo.",
+			"tags": [
+				"pesca",
+				"cebo"
+			]
+		},
+		"cebo_baya": {
+			"name": "Cebo de baya",
+			"desc": "Atrae peces raros. Se gasta al lanzar.",
+			"tags": [
+				"pesca",
+				"cebo"
+			]
+		},
+		"cebo_carne": {
+			"name": "Cebo de carne",
+			"desc": "Atrae peces raros y acorta algo la espera. Se gasta al lanzar.",
+			"tags": [
+				"pesca",
+				"cebo"
+			]
 		}
 	},
 	"consumables": {
@@ -289,37 +313,53 @@
 		},
 		"pescado_asado": {
 			"name": "Pescado asado",
-			"desc": "Cura 55 de vida.",
-			"heal": 55
+			"desc": "Cura 55 de vida. Regenera 30 de vida durante 15 s.",
+			"heal": 55,
+			"regen": {
+				"amount": 30,
+				"time": 15
+			}
 		},
 		"sopa_pescado": {
 			"name": "Sopa de pescado",
-			"desc": "Cura 40 y +3 Resistencia durante 3 minutos.",
+			"desc": "Cura 40 y +3 Resistencia durante 3 minutos. Regenera 30 de vida durante 20 s.",
 			"heal": 40,
 			"buff": {
 				"stat": "endurance",
 				"amount": 3,
 				"time": 180
+			},
+			"regen": {
+				"amount": 30,
+				"time": 20
 			}
 		},
 		"brocheta_anguila": {
 			"name": "Brocheta de anguila",
-			"desc": "Cura 30 y +4 Vel. de movimiento durante 2 minutos.",
+			"desc": "Cura 30 y +4 Vel. de movimiento durante 2 minutos. Regenera 25 de vida durante 15 s.",
 			"heal": 30,
 			"buff": {
 				"stat": "move_speed",
 				"amount": 4,
 				"time": 120
+			},
+			"regen": {
+				"amount": 25,
+				"time": 15
 			}
 		},
 		"sashimi_lanza": {
 			"name": "Sashimi de pez lanza",
-			"desc": "Cura 20 y +3 Fuerza durante 3 minutos.",
+			"desc": "Cura 20 y +3 Fuerza durante 3 minutos. Regenera 20 de vida durante 12 s.",
 			"heal": 20,
 			"buff": {
 				"stat": "strength",
 				"amount": 3,
 				"time": 180
+			},
+			"regen": {
+				"amount": 20,
+				"time": 12
 			}
 		},
 		"elixir_marea": {
@@ -339,6 +379,16 @@
 				"amount": 5,
 				"time": 120
 			}
+		},
+		"nasa": {
+			"name": "Nasa",
+			"desc": "Colócala en la orilla: pesca sola con el tiempo. Pasa cerca para recogerla.",
+			"place": "water"
+		},
+		"trampa": {
+			"name": "Trampa de caza",
+			"desc": "Colócala en tierra: caza sola con el tiempo. Pasa cerca para recogerla.",
+			"place": "land"
 		}
 	},
 	"blueprints": {
@@ -718,6 +768,48 @@
 			"inputs": {
 				"pez_lanza": 1,
 				"alga_marina": 1
+			},
+			"qty": 1
+		},
+		"cebo_gusano": {
+			"station": "hand",
+			"group": "Pesca",
+			"inputs": {
+				"hierba_vital": 1
+			},
+			"qty": 4
+		},
+		"cebo_baya": {
+			"station": "hand",
+			"group": "Pesca",
+			"inputs": {
+				"baya_roja": 1
+			},
+			"qty": 3
+		},
+		"cebo_carne": {
+			"station": "hand",
+			"group": "Pesca",
+			"inputs": {
+				"carne_conejo": 1
+			},
+			"qty": 3
+		},
+		"nasa": {
+			"station": "hand",
+			"group": "Pesca",
+			"inputs": {
+				"madera": 3,
+				"cuero": 1
+			},
+			"qty": 1
+		},
+		"trampa": {
+			"station": "hand",
+			"group": "Pesca",
+			"inputs": {
+				"madera": 2,
+				"mena_hierro": 1
 			},
 			"qty": 1
 		}
@@ -1135,5 +1227,8 @@
 				0.2
 			]
 		}
-	]
+	],
+	"favorite": {
+		"mult": 1.5
+	}
 }

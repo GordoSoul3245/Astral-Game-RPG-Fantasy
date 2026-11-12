@@ -23,6 +23,7 @@ var spent := {}              # estadística -> puntos gastados
 var coins := 0
 var potions := 1
 var materials := {}          # id -> cantidad
+var stars := {}              # id -> [unidades de plata, unidades de oro] (subconjunto de materials)
 var owned: Array = []        # ids de equipo obtenido
 var equipped := {}           # ranura -> id
 var equipment := {}

@@ -210,6 +210,12 @@ func _ready() -> void:
 	add_child(cam)
 	_build_fx()
 	_build_burn_fx()
+	clock = load("res://scripts/clock.gd").new()
+	add_child(clock)
+	angler = load("res://scripts/angler.gd").new(self, _read_json("res://data/fishing.json"))
+	traps = load("res://scripts/traps.gd").new()
+	traps.main = self
+	add_child(traps)
 	combat = Node2D.new()
 	combat.set_script(load("res://scripts/combat.gd"))
 	combat.main = self
@@ -312,7 +318,7 @@ func save_game() -> void:
 		return
 	var d := {"version": 1, "level": prog.level, "xp": prog.xp, "points": prog.points, "spent": prog.spent,
 		"coins": prog.coins, "potions": prog.potions, "materials": prog.materials, "owned": prog.owned,
-		"equipped": prog.equipped, "blueprints": prog.blueprints, "hand": prog.hand, "dungeon_floor": dungeon_floor, "quests": quests.to_dict()}
+		"equipped": prog.equipped, "blueprints": prog.blueprints, "hand": prog.hand, "dungeon_floor": dungeon_floor, "quests": quests.to_dict(), "clock": clock.to_dict(), "stars": prog.stars, "angler": angler.to_dict(), "bait": bait}
 	var f := FileAccess.open(save_path, FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(d, "\t"))
@@ -359,6 +365,17 @@ func load_game() -> bool:  # valida cada campo: el archivo puede estar editado o
 	dungeon_floor = clampi(int(d.get("dungeon_floor", 1)), 1, 4)
 	if d.get("quests") is Dictionary:
 		quests.from_dict(d["quests"])
+	if d.get("clock") is Dictionary:
+		clock.from_dict(d["clock"])
+	prog.stars.clear()
+	if d.get("stars") is Dictionary:
+		for k: String in d["stars"]:
+			if prog.materials.has(k) and d["stars"][k] is Array and (d["stars"][k] as Array).size() == 2:
+				prog.stars[k] = [maxi(0, int(d["stars"][k][0])), maxi(0, int(d["stars"][k][1]))]
+	if d.get("angler") is Dictionary:
+		angler.from_dict(d["angler"])
+		traps.rebuild()
+	bait = str(d.get("bait", "")) if angler.cfg["baits"].has(str(d.get("bait", ""))) else ""
 	return true
 
 func _notification(what: int) -> void:
@@ -527,6 +544,8 @@ func _update_prompt(delta: float) -> void:
 	var d := _near_door()
 	if say_t > 0.0:
 		prompt.text = say_text
+	elif _fishing():
+		prompt.text = ""
 	elif d != null and not transitioning:
 		prompt.text = ("[E] " + d.label) if not d.locked else d.lock_text
 	elif _near_villager() != null:
@@ -906,7 +925,7 @@ func _update_bars() -> void:
 	var full: bool = ult >= hero_data["ult_max"]
 	_set_bar("ult", ult, hero_data["ult_max"], "ULTIMATE LISTA  [R]" if full else "Ultimate %d%%" % roundi(ult))
 	_set_bar("xp", prog.xp, prog.xp_needed(), "Nivel %d  ·  XP %d / %d" % [prog.level, prog.xp, prog.xp_needed()])
-	info_label.text = "Monedas %d  ·  Menú [I]%s" % [prog.coins, ("  ·  ¡%d puntos!" % prog.points) if prog.points > 0 else ""]
+	info_label.text = "Monedas %d  ·  Menú [I]%s  ·  %s" % [prog.coins, ("  ·  ¡%d puntos!" % prog.points) if prog.points > 0 else "", clock.text()]
 	burn_label.text = "Espada en llamas  %.1f s" % burn_t if burn_t > 0.0 else ""
 
 func _load_inventory() -> void:
@@ -978,7 +997,8 @@ func _select(i: int) -> void:
 		slots[n].add_theme_stylebox_override("panel", sb)
 	var it: Dictionary = items[hotbar[i]]
 	if it.has("hand"):
-		hint_label.text = "%s%s  ·  clic izq: %s" % [it["name"], "  ×%d" % crafting.count(hotbar[i]) if it["hand"] == "consumable" else "", it["light"]["name"]]
+		hint_label.text = "%s%s  ·  clic izq: %s%s" % [it["name"], "  ×%d" % crafting.count(hotbar[i]) if it["hand"] == "consumable" else "", it["light"]["name"],
+			"  ·  [B] cebo: %s" % (crafting.item_name(bait) if bait != "" else "ninguno") if it["hand"] == "rod" else ""]
 		return
 	hint_label.text = "%s  ·  clic izq: %s  ·  clic der: %s  ·  R: %s" % [it["name"], it["light"]["name"], it["heavy"]["name"], it["ultimate"]["name"]]
 
@@ -1556,6 +1576,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			debug_hitboxes = not debug_hitboxes  # dibuja las hitbox sobre los sprites
 		elif event.physical_keycode == KEY_ESCAPE:
 			_cancel_aim()
+		elif event.physical_keycode == KEY_B:
+			cycle_bait()
 		elif not attacking:
 			var i: int = event.physical_keycode - KEY_1
 			if event.physical_keycode == KEY_Q:
@@ -1612,6 +1634,13 @@ func _physics_process(delta: float) -> void:
 			_respawn()
 		_place()
 		return
+	if regen_left > 0.0:  # comida duradera: la vida llega poco a poco
+		var h := minf(regen_left, regen_rate * delta)
+		regen_left -= h
+		regen_acc += h
+		if regen_acc >= 1.0:
+			hero_hp = mini(hero_max_hp, hero_hp + int(regen_acc))
+			regen_acc -= int(regen_acc)
 	cooldown = maxf(0.0, cooldown - delta)
 	dash_cd = maxf(0.0, dash_cd - delta)
 	dodge_cd = maxf(0.0, dodge_cd - delta)
@@ -1869,6 +1898,13 @@ func _gather_hit() -> void:
 const HOTBAR_MAX := 6
 const BASE_HOTBAR := ["katana_ceniza", "grimorio_ignis"]
 var hotbar_row: HBoxContainer
+var clock: Node        # clock.gd: hora, día y lluvia
+var angler: RefCounted # angler.gd: libro de capturas, acuario, encargos y nasas
+var traps: Node2D      # traps.gd: nasas y trampas colocadas en el mundo
+var bait := ""         # cebo elegido para la caña (tecla B)
+var regen_left := 0.0  # vida que aún regenera la comida; regen_rate por segundo
+var regen_rate := 0.0
+var regen_acc := 0.0
 var fishing: Node2D   # fishing.gd: se crea al lanzar la caña por primera vez
 var hotbar_size := 72.0
 var count_labels := {}   # id -> etiqueta de cantidad
@@ -1940,6 +1976,24 @@ func _update_counts() -> void:
 		count_labels[id].text = "×%d" % n
 		slots[hotbar.find(id)].modulate = Color.WHITE if n > 0 else Color(1, 1, 1, 0.45)
 
+func cycle_bait() -> void:  # B: sin cebo -> cada cebo con existencias -> sin cebo
+	if _fishing():
+		return
+	var opts: Array = [""]
+	for b: String in angler.cfg["baits"]:
+		if crafting.count(b) > 0 or b == bait:
+			opts.append(b)
+	bait = opts[(opts.find(bait) + 1) % opts.size()]
+	say("Cebo: %s" % (crafting.item_name(bait) + " ×%d" % crafting.count(bait) if bait != "" else "ninguno"), 1.5)
+	_select(selected)
+
+func fishing_node() -> Node2D:  # se crea al usarlo por primera vez
+	if fishing == null:
+		fishing = preload("res://scripts/fishing.gd").new()
+		add_child(fishing)
+		fishing.setup(self)
+	return fishing
+
 func _fishing() -> bool:
 	return fishing != null and fishing.active
 
@@ -1949,16 +2003,14 @@ func _use_hand(id: String, it: Dictionary) -> bool:  # clic izquierdo con una he
 			say("Aquí no hay dónde pescar.", 1.5)
 			cooldown = 0.5
 			return false
-		if fishing == null:
-			fishing = preload("res://scripts/fishing.gd").new()
-			add_child(fishing)
-			fishing.setup(self)
-		fishing.start(id)
+		fishing_node().start(id)
 		return true
 	if it["hand"] == "consumable":
 		var c: Dictionary = crafting.cfg["consumables"][id]
 		if crafting.count(id) <= 0:
 			say("Se acabó: %s." % it["name"], 1.5)
+		elif c.has("place"):
+			say(traps.place(id, str(c["place"])), 2.0)
 		elif c.has("heal") and not c.has("buff") and hero_hp >= hero_max_hp:
 			say("Ya tienes la vida completa.", 1.5)
 		else:
