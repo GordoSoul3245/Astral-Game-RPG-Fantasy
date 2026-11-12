@@ -85,6 +85,7 @@ const BUFFER_MS := 100          # punto de partida del estudio (probar 70/130)
 var buf := ""                   # una sola acción anticipada: "light", "heavy" o "dash"
 var buf_until := 0
 var dash_dir := Vector2.ZERO
+var dash_trail: Node2D = null   # estela del dash normal en curso (el mega dash tiene sus fantasmas de fuego)
 var dash_cd := 0.0
 var dash_time_cur := 0.55
 var dash_speed_cur := 220.0
@@ -1223,6 +1224,7 @@ func _dash() -> bool:  # true si el dash empezó
 	dashing = true
 	move_vel = Vector2.ZERO
 	_spawn_dash_dust(-dash_dir)
+	_spawn_dash_trail()
 	mega_active = false
 	attacking = false
 	dash_t = 0.0
@@ -1373,6 +1375,13 @@ func _spawn_dash_dust(direction: Vector2) -> void:
 	dust.tint = Color("#8e8da1") if in_dungeon else Color("#b7a38a")
 	dust.z_index = int(pos.y) + 1
 	add_child(dust)
+
+func _spawn_dash_trail() -> void:  # raya en el suelo que marca el rumbo del dash
+	dash_trail = preload("res://scripts/dash_trail.gd").new()
+	dash_trail.tint = Color("#c4c3dc") if in_dungeon else Color("#f2e6c8")  # más claro que el polvo: debe leerse sobre hierba y losas
+	dash_trail.z_index = -2999  # sobre el suelo, bajo todo lo demás (como el marcador de casillas)
+	dash_trail.add_point(pos * SCALE)
+	add_child(dash_trail)
 
 # --- ultimates (R): requieren la carga llena, que se gana golpeando entidades
 func _ultimate() -> void:
@@ -1549,6 +1558,8 @@ func _physics_process(delta: float) -> void:
 		var ease_k := 1.0 if mega_active else 1.5 * (1.0 - clampf(dash_t / dash_time_cur, 0.0, 1.0)) + 0.25
 		var step := dash_dir * dash_speed_cur * ease_k * step_dt * (Vector2.ONE if mega_active else Vector2(1, 0.6))
 		pos = world.move_collide(pos, pos + step, HERO_R_T)  # atraviesa al dragón pero no estructuras ni agua
+		if is_instance_valid(dash_trail):
+			dash_trail.add_point(pos * SCALE)
 		if mega_active:
 			ghost_t += delta
 			if ghost_t >= 0.035:
@@ -1562,6 +1573,9 @@ func _physics_process(delta: float) -> void:
 		if dash_t >= dash_time_cur:
 			dashing = false
 			_spawn_dash_dust(dash_dir)
+			if is_instance_valid(dash_trail):
+				dash_trail.done = true
+			dash_trail = null
 			if not mega_active:
 				dash_bonus_t = DASH_BONUS_TIME  # el siguiente tajo pega más
 			if mega_active:

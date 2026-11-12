@@ -79,6 +79,8 @@ func run_checks() -> void:
 	var start: Vector2 = main.pos
 	main._dash()
 	assert(main.dashing)
+	var trail: Node2D = main.dash_trail
+	assert(is_instance_valid(trail), "el dash deja estela")
 	var dt := 1.0 / 60.0
 	var first := 0.0
 	var last := 0.0
@@ -97,5 +99,10 @@ func run_checks() -> void:
 	assert(not main.dashing and main.dash_bonus_t > 0.0, "el dash termina")
 	assert(absf(total - expected) < expected * 0.08, "recorre la distancia prevista (%.1f vs %.1f)" % [total, expected])
 	assert(first > last * 2.0, "frena al final (paso inicial %.2f, final %.2f)" % [first, last])
+	assert(trail.points.size() > 10 and trail.done, "la estela sigue el recorrido y se apaga al terminar")
+	assert(trail.points[-1].x > trail.points[0].x, "la estela apunta hacia el rumbo (E)")
+	for i in 30:
+		trail._process(dt)
+	assert(trail.is_queued_for_deletion(), "la estela desaparece sola")
 	print("PASS movement: inercia, caminar atacando, cancelar ligero, dash con frenado")
 	quit()
