@@ -15,6 +15,7 @@ var tab := "inv"
 var selected := ""               # objeto elegido: se muestra en el panel de detalle
 var body: VBoxContainer
 var tab_buttons := {}
+var page := 0                    # página de la mochila (16 casillas por página)
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -94,7 +95,7 @@ func _set_tab(t: String) -> void:
 
 func refresh() -> void:
 	var p = main.prog
-	if selected != "" and not p.owned.has(selected):
+	if selected != "" and not _has(selected):
 		selected = ""
 	for k: String in tab_buttons:
 		var active: bool = k == tab
@@ -113,6 +114,19 @@ func refresh() -> void:
 		_build_options()
 	else:
 		_build_stats()
+
+func _has(id: String) -> bool:  # equipo conseguido o material/consumible con existencias
+	return main.prog.owned.has(id) or (not main.prog.equipment.has(id) and main.crafting.count(id) > 0)
+
+func _backpack() -> Array:  # todo lo que llevas: equipo, consumibles y materiales (los planos ya se aprenden al recibirlos)
+	var p = main.prog
+	var out: Array = p.owned.duplicate()
+	if p.potions > 0:
+		out.append("pocion_vida")
+	for id: String in p.materials:
+		if p.materials[id] > 0 and not main.crafting.is_blueprint(id):
+			out.append(id)
+	return out
 
 func _mods_lines(mods: Dictionary, vs: Dictionary = {}, compare := false) -> Array[String]:
 	var out: Array[String] = []
@@ -133,12 +147,13 @@ func _mods_lines(mods: Dictionary, vs: Dictionary = {}, compare := false) -> Arr
 	return out
 
 # casilla cuadrada con el icono del objeto y marco del color de su rareza; id vacío = casilla vacía
-func _slot_button(id: String, size: float, equipped := false) -> Button:
+func _slot_button(id: String, size: float, equipped := false, count := 0) -> Button:
 	var p = main.prog
 	var b := Button.new()
 	b.custom_minimum_size = Vector2(size, size)
 	b.focus_mode = Control.FOCUS_NONE
-	var tier := 0 if id == "" else int(p.equipment[id]["tier"])
+	var is_eq: bool = id != "" and p.equipment.has(id)
+	var tier := int(p.equipment[id]["tier"]) if is_eq else 0
 	var col: Color = TIER_COLORS.get(tier, Color(0.2, 0.23, 0.32))
 	var chosen := id != "" and id == selected
 	for st in ["normal", "hover", "pressed", "focus", "disabled"]:
@@ -148,18 +163,30 @@ func _slot_button(id: String, size: float, equipped := false) -> Button:
 		b.add_theme_stylebox_override(st, _box(bg, Color.WHITE if chosen else col, 3 if chosen else 2, 8, 4))
 	if id != "":
 		var icon := TextureRect.new()
-		icon.texture = load(main.item_icon(id))
+		icon.texture = load(main.crafting.icon(id))
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		icon.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 6)
 		b.add_child(icon)
-		b.tooltip_text = "%s\n%s" % [p.equipment[id]["name"], "\n".join(_mods_lines(p.equipment[id]["mods"]))]
+		if is_eq:
+			b.tooltip_text = "%s\n%s" % [p.equipment[id]["name"], "\n".join(_mods_lines(p.equipment[id]["mods"]))]
+		else:
+			b.tooltip_text = "%s\n%s" % [main.crafting.item_name(id), main.crafting.item_desc(id)]
+			if count > 0:
+				var n := Label.new()
+				n.text = "×%d" % count
+				n.add_theme_font_size_override("font_size", 14)
+				n.add_theme_color_override("font_outline_color", Color.BLACK)
+				n.add_theme_constant_override("outline_size", 5)
+				n.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 4)
+				n.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				b.add_child(n)
 		b.pressed.connect(func() -> void:
 			selected = id
 			refresh())
 		b.gui_input.connect(func(ev: InputEvent) -> void:  # doble clic: equipar
-			if ev is InputEventMouseButton and ev.pressed and ev.double_click and not equipped:
+			if is_eq and ev is InputEventMouseButton and ev.pressed and ev.double_click and not equipped:
 				p.equip(id)
 				main._apply_stats()
 				refresh())
@@ -213,36 +240,60 @@ func _build_inv() -> void:
 		nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	left.add_child(HSeparator.new())
 	_label("Monedas: %d" % p.coins, left, 18, GOLD)
-	_label("Pociones de vida: %d" % p.potions, left, 18, Color(0.95, 0.5, 0.5))
-	_label("Materiales", left, 18, GOLD)
-	if p.materials.is_empty():
-		_label("(ninguno)", left, 15, MUTED)
-	for id: String in p.materials:
-		_label("%s  ×%d" % [p.material_names[id], p.materials[id]], left, 15)
 	# --- mochila: cuadrícula de objetos (clic = ver, doble clic = equipar)
 	var mid := _card(cols, Vector2(430, 0))
 	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_label("Mochila  (%d)" % p.owned.size(), mid, 22, GOLD)
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	mid.add_child(scroll)
+	var all := _backpack()
+	var pages := maxi(1, ceili(all.size() / float(BACKPACK_SLOTS)))
+	page = clampi(page, 0, pages - 1)
+	_label("Mochila  (%d)" % all.size(), mid, 22, GOLD)
 	var grid := GridContainer.new()
 	grid.columns = 4
 	grid.add_theme_constant_override("h_separation", 10)
-	grid.add_theme_constant_override("v_separation", 10)
-	scroll.add_child(grid)
+	grid.add_theme_constant_override("v_separation", 6)
+	grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	mid.add_child(grid)
 	var equipped_ids: Array = p.equipped.values()
-	for id: String in p.owned:
-		grid.add_child(_slot_button(id, 84, equipped_ids.has(id)))
-	for i in maxi(0, BACKPACK_SLOTS - p.owned.size()):
-		grid.add_child(_slot_button("", 84))
-	if p.owned.is_empty():
+	for i in BACKPACK_SLOTS:
+		var idx := page * BACKPACK_SLOTS + i
+		var id: String = all[idx] if idx < all.size() else ""
+		var cell := VBoxContainer.new()
+		cell.add_theme_constant_override("separation", 2)
+		grid.add_child(cell)
+		cell.add_child(_slot_button(id, 76, equipped_ids.has(id), 0 if p.equipment.has(id) or id == "" else main.crafting.count(id)))
+		var nm := _label(main.crafting.item_name(id) if id != "" else " ", cell, 12, MUTED)
+		nm.custom_minimum_size = Vector2(76, 38)
+		nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		nm.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		nm.max_lines_visible = 2
+		nm.clip_text = true
+	if pages > 1:  # flechas bajo la cuadrícula para cambiar de página
+		var nav := HBoxContainer.new()
+		nav.alignment = BoxContainer.ALIGNMENT_CENTER
+		nav.add_theme_constant_override("separation", 14)
+		mid.add_child(nav)
+		for dir in [-1, 1]:
+			var ab := Button.new()
+			ab.text = "◀" if dir < 0 else "▶"
+			ab.focus_mode = Control.FOCUS_NONE
+			ab.custom_minimum_size = Vector2(60, 34)
+			ab.disabled = page + dir < 0 or page + dir >= pages
+			ab.pressed.connect(func() -> void:
+				page += dir
+				refresh())
+			nav.add_child(ab)
+			if dir < 0:
+				_label("%d / %d" % [page + 1, pages], nav, 17, MUTED)
+	if all.is_empty():
 		_label("Abre los cofres de la dungeon para conseguir equipo.", mid, 15, MUTED)
 	# --- detalle del objeto elegido, con comparación contra lo que llevas puesto
 	var right := _card(cols, Vector2(330, 0))
 	_label("Detalle", right, 22, GOLD)
 	if selected == "":
 		_label("Elige un objeto para ver sus estadísticas.", right, 16, MUTED).autowrap_mode = TextServer.AUTOWRAP_WORD
+		return
+	if not p.equipment.has(selected):
+		_build_stack_detail(right)
 		return
 	var it: Dictionary = p.equipment[selected]
 	var tier := int(it["tier"])
@@ -282,6 +333,38 @@ func _build_inv() -> void:
 		else:
 			p.equip(selected)
 		main._apply_stats()
+		refresh())
+	right.add_child(act)
+
+func _build_stack_detail(right: VBoxContainer) -> void:  # material o consumible: nombre, cantidad, descripción y, si se usa, botón de la barra
+	var cr = main.crafting
+	var p = main.prog
+	var big := _slot_button(selected, 128, false, cr.count(selected))
+	big.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	right.add_child(big)
+	_label(cr.item_name(selected), right, 22).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_label("Cantidad: %d" % cr.count(selected), right, 15, MUTED).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	right.add_child(HSeparator.new())
+	var d := _label(cr.item_desc(selected), right, 15, MUTED)
+	d.autowrap_mode = TextServer.AUTOWRAP_WORD
+	if not cr.is_consumable(selected):
+		return
+	var sp := Control.new()
+	sp.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right.add_child(sp)
+	var act := Button.new()
+	act.text = "Quitar de la barra" if p.hand.has(selected) else "Poner en la barra"
+	act.focus_mode = Control.FOCUS_NONE
+	act.custom_minimum_size = Vector2(0, 44)
+	act.add_theme_font_size_override("font_size", 18)
+	act.pressed.connect(func() -> void:
+		if p.hand.has(selected):
+			p.hand.erase(selected)
+		elif main._hand_ids().size() >= main.HOTBAR_MAX - main.BASE_HOTBAR.size():
+			main.say("La barra está llena: quita algo antes.", 2.0)
+		else:
+			p.hand.append(selected)
+		main._refresh_hotbar()
 		refresh())
 	right.add_child(act)
 
