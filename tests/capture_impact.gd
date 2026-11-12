@@ -23,10 +23,11 @@ func capture() -> void:
 	main.combat.hit(e, 1, "heavy", main.pos)
 	assert(e.scale.x > 1.1 and e.scale.y < 0.9, "el pesado aplasta al enemigo (%s)" % e.scale)
 	assert(main.get_child_count() > before, "deja huella en el suelo")
+	assert(e.spr.animation.begins_with("hurt"), "reproduce el golpe recibido de Blender (%s)" % e.spr.animation)
 	await create_timer(0.08).timeout
 	await RenderingServer.frame_post_draw
 	root.get_texture().get_image().save_png("res://docs/previews/heavy_impact.png")
 	await create_timer(0.4).timeout
 	assert(e.scale.is_equal_approx(Vector2.ONE), "vuelve a su forma (%s)" % e.scale)
-	print("PASS impact: aplastamiento con rebote y huella en el suelo")
+	print("PASS impact: aplastamiento con rebote, golpe recibido y huella en el suelo")
 	quit()

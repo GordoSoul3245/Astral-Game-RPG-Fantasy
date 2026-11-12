@@ -30,7 +30,10 @@ def pose(kind, k):
         sz = [0.78, 0.84, 1.12, 1.2, 1.15, 1.08, 0.8, 0.9][k]
         b.location = Vector(b['rest']) + Vector((0, 0, h))
         b.scale = (1 / math.sqrt(sz), 1 / math.sqrt(sz), sz)
+    elif kind == 'hurt':  # gelatina golpeada: se aplasta fuerte y tiembla hasta asentarse
+        sz = [0.62, 1.22, 0.86, 1.05][k]
+        b.scale = (1 / math.sqrt(sz), 1 / math.sqrt(sz), sz)
 
 
-def render(names, kinds=(('idle', 1), ('walk', 8))):
+def render(names, kinds=(('idle', 1), ('walk', 8), ('hurt', 4))):
     render_sprites('SLIME', 'sl_root', pose, OUT, 'slime_', names, RES, kinds)

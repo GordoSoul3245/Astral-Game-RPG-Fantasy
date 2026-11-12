@@ -143,6 +143,14 @@ func _build_sprite() -> void:  # <prefijo><DIR>_<idle|walk|attack>_<NN>.png, 8 d
 			frames.set_animation_loop(key, kind == "idle" or (kind == "walk" and data["kind"] != "slime"))  # el salto del slime y los ataques no se repiten
 			for i in (1 if kind == "idle" else 8):
 				frames.add_frame(key, load("%s%s_%s_%02d.png" % [data["sprites"]["prefix"], dir, kind, i]))
+		var hurt0 := "%s%s_hurt_00.png" % [data["sprites"]["prefix"], dir]
+		if ResourceLoader.exists(hurt0):  # golpe recibido (4 fotogramas renderizados en Blender), si la criatura lo tiene
+			var hk := "hurt_" + dir
+			frames.add_animation(hk)
+			frames.set_animation_speed(hk, 16.0)  # 0,25 s: pico en el primer fotograma, recupera rápido
+			frames.set_animation_loop(hk, false)
+			for i in 4:
+				frames.add_frame(hk, load("%s%s_hurt_%02d.png" % [data["sprites"]["prefix"], dir, i]))
 	spr = AnimatedSprite2D.new()
 	spr.sprite_frames = frames
 	spr.centered = false
@@ -154,7 +162,7 @@ func _build_sprite() -> void:  # <prefijo><DIR>_<idle|walk|attack>_<NN>.png, 8 d
 
 func _anim(kind: String) -> void:  # animación en bucle hacia donde mira (sin cortar un ataque en curso)
 	if spr:
-		if spr.animation.begins_with("attack") and spr.is_playing():
+		if (spr.animation.begins_with("attack") or spr.animation.begins_with("hurt")) and spr.is_playing():
 			return
 		var key := "%s_%s" % [kind, _dir_name(look)]
 		if spr.animation != key:
@@ -410,6 +418,10 @@ func take_damage(n: int, charge := true) -> void:
 	flash_tw = create_tween()
 	flash_tw.tween_interval(0.05)
 	flash_tw.tween_property(self, "modulate", Color.WHITE, 0.15)
+	if spr and hp > 0 and not (spr.animation.begins_with("attack") and spr.is_playing()):  # no corta un ataque: el aviso sigue siendo fiable
+		var hk := "hurt_" + _dir_name(look)
+		if spr.sprite_frames.has_animation(hk):
+			spr.play(hk)
 	if hp <= 0:
 		alive = false
 		for z in zones:

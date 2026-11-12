@@ -187,9 +187,14 @@ def pose(kind, k):
         rot('cy_armR', arm_r, 0, -0.1); rot('cy_armL', arm_l, 0, 0.1)
         rot('cy_body', lean); rot('cy_head', lean * 0.5)
         mv('cy_body', 0, [0, 0, 0, 0, 0, -0.18, -0.1, 0][k], [0, 0.02, 0.05, 0.08, 0.1, -0.12, -0.05, 0][k])
+    elif kind == 'hurt':  # golpe recibido: retrocede el torso, la cabeza se sacude y los brazos se abren
+        r = [1.0, 0.65, 0.3, 0.08][k]
+        rot('cy_body', -0.18 * r); mv('cy_body', 0, 0.12 * r, -0.04 * r)
+        rot('cy_head', -0.22 * r, 0, 0.1 * r)
+        rot('cy_armL', 0.35 * r, 0, 0.1 + 0.35 * r); rot('cy_armR', 0.35 * r, 0, -0.1 - 0.35 * r)
 
 
-def render(names, res=RES, prefix='cyclops_', kinds=(('idle', 1), ('walk', 8), ('attack', 8))):
+def render(names, res=RES, prefix='cyclops_', kinds=(('idle', 1), ('walk', 8), ('attack', 8), ('hurt', 4))):
     s = bpy.context.scene
     root, col, cam = bpy.data.objects['cy_root'], bpy.data.collections['CYCLOPS'], bpy.data.objects['SpriteCam']
     q = cam.matrix_world.to_quaternion()

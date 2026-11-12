@@ -81,9 +81,16 @@ def pose(kind, k):
         rot('sk_armR', 0, 1.57 * draw, 0)
         rot('sk_foreR', 0, -3.14 * draw, 0)
         show_arrow = k in (1, 2, 3)
+    elif kind == 'hurt':  # golpe recibido: echa el torso atrás de golpe y recupera en 4 fotogramas (pico en el 0)
+        r = [1.0, 0.65, 0.3, 0.08][k]
+        rot('sk_body', -0.35 * r, 0, 0.12 * r)
+        rot('sk_head', -0.3 * r)
+        rot('sk_armL', 0, -0.35 - 0.5 * r, 0)
+        rot('sk_armR', 0, 0.7 * r, 0)
+        rot('sk_legL', 0.25 * r); rot('sk_legR', -0.15 * r)
     for n in ('sk_arrow', 'sk_arrow_tip'):
         O[n].hide_render = not show_arrow
 
 
-def render(names, kinds=(('idle', 1), ('walk', 8), ('attack', 8))):
+def render(names, kinds=(('idle', 1), ('walk', 8), ('attack', 8), ('hurt', 4))):
     render_sprites('SKELETON', 'sk_root', pose, OUT, 'skeleton_', names, RES, kinds)
