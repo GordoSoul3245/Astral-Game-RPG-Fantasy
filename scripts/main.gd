@@ -212,6 +212,7 @@ func _ready() -> void:
 	_build_burn_fx()
 	clock = load("res://scripts/clock.gd").new()
 	add_child(clock)
+	call_deferred("_build_lamps")
 	angler = load("res://scripts/angler.gd").new(self, _read_json("res://data/fishing.json"))
 	traps = load("res://scripts/traps.gd").new()
 	traps.main = self
@@ -318,7 +319,7 @@ func save_game() -> void:
 		return
 	var d := {"version": 1, "level": prog.level, "xp": prog.xp, "points": prog.points, "spent": prog.spent,
 		"coins": prog.coins, "potions": prog.potions, "materials": prog.materials, "owned": prog.owned,
-		"equipped": prog.equipped, "blueprints": prog.blueprints, "hand": prog.hand, "dungeon_floor": dungeon_floor, "quests": quests.to_dict(), "clock": clock.to_dict(), "stars": prog.stars, "angler": angler.to_dict(), "bait": bait}
+		"equipped": prog.equipped, "blueprints": prog.blueprints, "slots": prog.slots, "dungeon_floor": dungeon_floor, "quests": quests.to_dict(), "clock": clock.to_dict(), "stars": prog.stars, "angler": angler.to_dict(), "bait": bait, "rod_parts": prog.rod_parts}
 	var f := FileAccess.open(save_path, FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(d, "\t"))
@@ -360,7 +361,25 @@ func load_game() -> bool:  # valida cada campo: el archivo puede estar editado o
 				prog.blueprints.append(str(b))
 	for b: String in crafting.cfg["starting_blueprints"]:
 		crafting.learn(b)
-	prog.hand = ((d["hand"] as Array).map(func(i: Variant) -> String: return str(i)).filter(func(i: String) -> bool: return crafting.is_consumable(i))) if d.get("hand") is Array else ["pocion_vida"]
+	var layout: Array = []
+	if d.get("slots") is Array:
+		for i in HOTBAR_MAX:
+			var sid := str(d["slots"][i]) if i < (d["slots"] as Array).size() else ""
+			layout.append(sid if (sid == "" or (can_hotbar(sid) and not layout.has(sid))) else "")
+	else:  # partida anterior a la barra editable: armas, herramientas equipadas y los consumibles elegidos
+		layout = WEAPONS.duplicate()
+		for kind: String in ["pickaxe", "axe", "rod"]:
+			if prog.equipped.has(kind):
+				layout.append(prog.equipped[kind])
+		var old: Array = d["hand"] if d.get("hand") is Array else ["pocion_vida"]
+		for h: Variant in old:
+			if can_hotbar(str(h)) and not layout.has(str(h)):
+				layout.append(str(h))
+		layout = layout.slice(0, HOTBAR_MAX)
+	while layout.size() < HOTBAR_MAX:
+		layout.append("")
+	prog.slots = layout
+	tool_seen = prog.equipped.duplicate()
 	_refresh_hotbar()
 	dungeon_floor = clampi(int(d.get("dungeon_floor", 1)), 1, 4)
 	if d.get("quests") is Dictionary:
@@ -375,6 +394,11 @@ func load_game() -> bool:  # valida cada campo: el archivo puede estar editado o
 	if d.get("angler") is Dictionary:
 		angler.from_dict(d["angler"])
 		traps.rebuild()
+	prog.rod_parts.clear()
+	if d.get("rod_parts") is Dictionary:
+		for k: String in ["reel", "line"]:
+			if d["rod_parts"].get(k) == true:
+				prog.rod_parts[k] = true
 	bait = str(d.get("bait", "")) if angler.cfg["baits"].has(str(d.get("bait", ""))) else ""
 	return true
 
@@ -495,6 +519,16 @@ func _interact() -> void:
 	if m != null:
 		shop.open(m.role)
 		return
+	var fu := _near_furniture()
+	if not fu.is_empty():
+		if fu["kind"] == "bed":
+			_sleep()
+		else:
+			menu.tab = "fish"
+			menu.visible = true
+			get_tree().paused = true
+			menu.refresh()
+		return
 	var st := _near_station()
 	if not st.is_empty():
 		station_ui.open(st["station"])
@@ -502,6 +536,33 @@ func _interact() -> void:
 	var rn := _near_node()
 	if not rn.is_empty():
 		_gather(rn)
+
+const FURNI_USE := {"bed": "Dormir hasta el amanecer", "aquarium": "Ver el acuario"}
+
+func _near_furniture() -> Dictionary:  # mueble utilizable de la casa en la que estás
+	if not in_interior:
+		return {}
+	var t := ground_to_tile(pos)
+	for f: Dictionary in interiors_data[current_interior]["furniture"]:
+		if FURNI_USE.has(f["kind"]):
+			var r: Array = f["rect"]
+			if Rect2(r[0], r[1], r[2] - r[0], r[3] - r[1]).grow(0.9).has_point(t):
+				return {"kind": f["kind"], "label": FURNI_USE[f["kind"]]}
+	return {}
+
+func _sleep() -> void:  # cama: salta la noche hasta las 7:00, cura todo y guarda
+	if clock.dark() <= 0.0:
+		say("Aún no tienes sueño: es de día.", 2.0)
+		return
+	_transition(func() -> void:
+		clock.sleep_until(7.0)
+		hero_hp = hero_max_hp
+		mana = hero_data["mana"]
+		stamina = hero_data["stamina"]
+		regen_left = 0.0
+		combat.play_at("sleep", pos)
+		save_game()
+		say("Duermes hasta el amanecer. Día %d." % clock.day, 3.0))
 
 func _near_villager() -> Node2D:
 	if in_dungeon:
@@ -554,6 +615,8 @@ func _update_prompt(delta: float) -> void:
 		prompt.text = "[E] Hablar con %s" % _near_npc().display
 	elif _near_merchant() != null:
 		prompt.text = "[E] Comprar a Tomás  (tienes %d monedas)" % prog.coins if _near_merchant().role == "merchant" else "[E] Vender materiales a Bram"
+	elif not _near_furniture().is_empty():
+		prompt.text = "[E] " + _near_furniture()["label"]
 	elif not _near_station().is_empty():
 		prompt.text = "[E] " + _near_station()["label"]
 	elif not _near_node().is_empty():
@@ -930,8 +993,9 @@ func _update_bars() -> void:
 
 func _load_inventory() -> void:
 	items = _read_json("res://data/items.json")
+	items[""] = {"name": "Manos libres", "icon": "", "hand": "empty", "light": {"name": "casilla vacía: arrastra un objeto desde el inventario [I]"}}
 	var inv := _read_json("res://data/inventory_test.json")
-	hotbar = inv["hotbar"]
+	hotbar = prog.slots
 	selected = int(inv["selected"])
 	var ui := CanvasLayer.new()
 	add_child(ui)
@@ -1242,16 +1306,32 @@ func _input_dir() -> Vector2:
 		float(_held([KEY_D, KEY_RIGHT])) - float(_held([KEY_A, KEY_LEFT])),
 		float(_held([KEY_S, KEY_DOWN])) - float(_held([KEY_W, KEY_UP])))
 
-func touch_default_aim() -> Vector2:  # táctil: apunta al enemigo más cercano; si no hay, hacia donde mira el héroe
-	var chest := pos - Vector2(0, 40)
+func _targets() -> Array:
+	return enemies + predators
+
+func touch_target() -> Node:  # táctil: el enemigo fijado con un toque; si no, el que más conviene (cerca y poca vida)
+	if is_instance_valid(touch.locked) and touch.locked.alive and touch.locked.pos.distance_to(pos) < 600.0:
+		return touch.locked
 	var best: Node = null
-	var best_d := 220.0
-	for e in enemies:
-		if e.alive and e.pos.distance_to(pos) < best_d:
+	var best_score := INF
+	for e in _targets():
+		if not is_instance_valid(e) or not e.alive:
+			continue
+		var d: float = e.pos.distance_to(pos)
+		if d > 320.0:
+			continue
+		var max_hp := maxf(1.0, float(e.data.get("hp", maxi(e.hp, 1))))
+		var frac := clampf(float(e.hp) / max_hp, 0.0, 1.0)
+		var score := d / 320.0 * 0.6 + frac * 0.4
+		if score < best_score:
+			best_score = score
 			best = e
-			best_d = e.pos.distance_to(pos)
-	if best != null:
-		return best.pos - chest
+	return best
+
+func touch_default_aim() -> Vector2:  # apunta al objetivo; sin enemigos cerca, hacia donde mira el héroe
+	var t := touch_target()
+	if t != null:
+		return t.pos - (pos - Vector2(0, 40))
 	return Vector2.from_angle(DIRS.find(facing) * PI / 4.0) * 60.0
 
 func _mouse() -> Vector2:
@@ -1634,6 +1714,8 @@ func _physics_process(delta: float) -> void:
 			_respawn()
 		_place()
 		return
+	night_vision_t = maxf(0.0, night_vision_t - delta)
+	fish_luck_t = maxf(0.0, fish_luck_t - delta)
 	if regen_left > 0.0:  # comida duradera: la vida llega poco a poco
 		var h := minf(regen_left, regen_rate * delta)
 		regen_left -= h
@@ -1775,7 +1857,10 @@ func _place() -> void:
 	hero.position = (pos - FEET) * SCALE
 	hero.z_index = int(pos.y)
 	if is_instance_valid(contact_shadow):
-		contact_shadow.position = pos * SCALE
+		var sh: Dictionary = clock.shadow() if clock.outdoors else {"dx": 0.0, "len": 1.0, "alpha": 1.0}
+		contact_shadow.position = pos * SCALE + Vector2(float(sh["dx"]) * 10.0 * SCALE, 0.0)
+		contact_shadow.scale = Vector2(float(sh["len"]), 1.0)
+		contact_shadow.modulate.a = float(sh["alpha"])
 	if equip_aura:
 		equip_aura.position = (pos - Vector2(0, 34)) * SCALE
 		contact_shadow.z_index = hero.z_index - 1
@@ -1866,7 +1951,7 @@ func _gather_tick(delta: float) -> void:
 	if gather_t >= GATHER_TIME:
 		gathering = false
 		var n := gather_node
-		if not n.is_empty() and not n["depleted"] and Input.is_physical_key_pressed(KEY_E) and crafting.can_gather(n["kind"]) == "":
+		if not n.is_empty() and not n["depleted"] and (Input.is_physical_key_pressed(KEY_E) or (touch_mode and bool(touch.interact_held))) and crafting.can_gather(n["kind"]) == "":
 			_gather(n)  # mantener E sigue golpeando
 
 func _gather_hit() -> void:
@@ -1894,30 +1979,23 @@ func _gather_hit() -> void:
 	popup(n["g"], "\n".join(lines))
 	quest_event("gather", n["kind"])
 
-# --- barra de objetos: katana y grimorio fijos + herramientas equipadas + consumibles elegidos (máx. HOTBAR_MAX)
+# --- barra de objetos: 6 casillas (prog.slots) que se colocan arrastrando desde el inventario; las herramientas nuevas entran solas
 const HOTBAR_MAX := 6
-const BASE_HOTBAR := ["katana_ceniza", "grimorio_ignis"]
+const WEAPONS := ["katana_ceniza", "grimorio_ignis"]
 var hotbar_row: HBoxContainer
 var clock: Node        # clock.gd: hora, día y lluvia
 var angler: RefCounted # angler.gd: libro de capturas, acuario, encargos y nasas
+var lamps: Node2D      # lamps.gd: farolas del pueblo
 var traps: Node2D      # traps.gd: nasas y trampas colocadas en el mundo
 var bait := ""         # cebo elegido para la caña (tecla B)
 var regen_left := 0.0  # vida que aún regenera la comida; regen_rate por segundo
 var regen_rate := 0.0
 var regen_acc := 0.0
+var night_vision_t := 0.0   # segundos de visión nocturna (elixir)
+var fish_luck_t := 0.0      # segundos de suerte de pescador (elixir de sirena)
 var fishing: Node2D   # fishing.gd: se crea al lanzar la caña por primera vez
 var hotbar_size := 72.0
 var count_labels := {}   # id -> etiqueta de cantidad
-
-func _hand_ids() -> Array:
-	var out: Array = []
-	for slot: String in ["pickaxe", "axe", "rod"]:
-		if prog.equipped.has(slot):
-			out.append(prog.equipped[slot])
-	for id: String in prog.hand:
-		if not out.has(id):
-			out.append(id)
-	return out.slice(0, HOTBAR_MAX - BASE_HOTBAR.size())
 
 func _hand_item(id: String) -> Dictionary:  # entrada tipo items.json para una herramienta o un consumible
 	var kind := "consumable"
@@ -1927,16 +2005,81 @@ func _hand_item(id: String) -> Dictionary:  # entrada tipo items.json para una h
 		act = "Lanzar la caña (mantén el clic)" if kind == "rod" else "Golpear recurso cercano"
 	return {"name": crafting.item_name(id), "icon": crafting.icon(id), "hand": kind, "light": {"name": act}}
 
+var tool_seen := {}    # ranura de herramienta -> última equipada que ya se colocó en la barra
+var hotbar_sig := ""
+
+func can_hotbar(id: String) -> bool:  # qué puede ir en la barra: armas base, consumibles y herramientas que tengas
+	return WEAPONS.has(id) or crafting.is_consumable(id) or (prog.equipment.has(id) and prog.equipment[id].has("tool") and prog.owned.has(id))
+
+func icon_of(id: String) -> String:
+	return items[id]["icon"] if WEAPONS.has(id) else crafting.icon(id)
+
+func name_of(id: String) -> String:
+	return items[id]["name"] if WEAPONS.has(id) else crafting.item_name(id)
+
+func hotbar_drop(id: String, to: int) -> bool:  # suelta un objeto en una casilla: si había otro, se intercambian (o vuelve a la mochila)
+	if not can_hotbar(id) or to < 0 or to >= HOTBAR_MAX:
+		return false
+	var from: int = hotbar.find(id)
+	var displaced: String = hotbar[to]
+	hotbar[to] = id
+	if from >= 0 and from != to:
+		hotbar[from] = displaced
+	if prog.equipment.has(id):  # una herramienta en la barra pasa a ser la equipada
+		var kind: String = prog.equipment[id]["slot"]
+		prog.equipped[kind] = id
+		tool_seen[kind] = id
+		_apply_stats()
+	_refresh_hotbar(true)
+	save_game()
+	return true
+
+func hotbar_clear(slot: int) -> void:  # devuelve lo de la casilla a la mochila
+	if slot >= 0 and slot < HOTBAR_MAX and hotbar[slot] != "":
+		hotbar[slot] = ""
+		_refresh_hotbar(true)
+		save_game()
+
+func hotbar_add(id: String) -> bool:  # a la primera casilla libre
+	var free: int = hotbar.find("")
+	return free >= 0 and hotbar_drop(id, free)
+
+func hotbar_remove(id: String) -> void:
+	hotbar_clear(hotbar.find(id))
+
+func _sync_tools() -> void:  # una herramienta recién equipada ocupa el sitio de la anterior de su tipo o la primera casilla libre
+	for kind: String in ["pickaxe", "axe", "rod"]:
+		var e: String = prog.equipped.get(kind, "")
+		if e == "" or tool_seen.get(kind, "") == e:
+			continue
+		tool_seen[kind] = e
+		if prog.slots.has(e):
+			continue
+		var put := -1
+		for i in prog.slots.size():
+			var o: String = prog.slots[i]
+			if o != "" and prog.equipment.has(o) and prog.equipment[o]["slot"] == kind:
+				put = i
+				break
+		if put < 0:
+			put = prog.slots.find("")
+		if put >= 0:
+			prog.slots[put] = e
+		else:
+			say("La barra está llena: arrastra %s desde el inventario." % crafting.item_name(e), 3.0)
+
 func _refresh_hotbar(force := false) -> void:
 	if hotbar_row == null:
 		return
-	var want: Array = BASE_HOTBAR + _hand_ids()
-	if not force and want == hotbar:
+	_sync_tools()
+	hotbar = prog.slots
+	for id: String in hotbar:
+		if id != "" and not WEAPONS.has(id):
+			items[id] = _hand_item(id)
+	var sig := ",".join(hotbar)
+	if not force and sig == hotbar_sig:
 		return
-	var keep: String = hotbar[selected] if selected < hotbar.size() else BASE_HOTBAR[0]
-	hotbar = want
-	for id: String in _hand_ids():
-		items[id] = _hand_item(id)
+	hotbar_sig = sig
 	for c in hotbar_row.get_children():
 		c.queue_free()
 	slots.clear()
@@ -1947,14 +2090,15 @@ func _refresh_hotbar(force := false) -> void:
 		panel.clip_contents = true
 		panel.mouse_filter = Control.MOUSE_FILTER_IGNORE  # que los clics sigan llegando al juego
 		hotbar_row.add_child(panel)
-		var icon := TextureRect.new()
-		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE  # antes del tamaño: si no, el icono de 128 px desborda el cuadro
-		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.texture = load(items[hotbar[i]]["icon"])
-		icon.position = Vector2(4, 4)
-		icon.size = Vector2(hotbar_size - 8, hotbar_size - 8)
-		panel.add_child(icon)
+		if hotbar[i] != "":
+			var icon := TextureRect.new()
+			icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE  # antes del tamaño: si no, el icono de 128 px desborda el cuadro
+			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			icon.texture = load(items[hotbar[i]]["icon"])
+			icon.position = Vector2(4, 4)
+			icon.size = Vector2(hotbar_size - 8, hotbar_size - 8)
+			panel.add_child(icon)
 		var num := Label.new()
 		num.text = str(i + 1)
 		num.position = Vector2(6, 2)
@@ -1968,7 +2112,7 @@ func _refresh_hotbar(force := false) -> void:
 			count_labels[hotbar[i]] = cnt
 		slots.append(panel)
 	_update_counts()
-	_select(maxi(0, hotbar.find(keep)))
+	_select(clampi(selected, 0, HOTBAR_MAX - 1))
 
 func _update_counts() -> void:
 	for id: String in count_labels:
@@ -1987,6 +2131,19 @@ func cycle_bait() -> void:  # B: sin cebo -> cada cebo con existencias -> sin ce
 	say("Cebo: %s" % (crafting.item_name(bait) + " ×%d" % crafting.count(bait) if bait != "" else "ninguno"), 1.5)
 	_select(selected)
 
+func _build_lamps() -> void:  # farolas en las puertas de las casas y junto a los comerciantes; solo se encienden de noche
+	var pts: Array = []
+	for d: Node2D in doors:
+		if d.label.begins_with("Entrar:"):
+			pts.append(tile_to_ground(d.tile) + Vector2(26, 6))
+	for m: Node2D in merchants:
+		pts.append(m.pos + Vector2(30, 8))
+	lamps = Node2D.new()
+	lamps.set_script(load("res://scripts/lamps.gd"))
+	lamps.main = self
+	lamps.points = pts
+	add_child(lamps)
+
 func fishing_node() -> Node2D:  # se crea al usarlo por primera vez
 	if fishing == null:
 		fishing = preload("res://scripts/fishing.gd").new()
@@ -1998,6 +2155,12 @@ func _fishing() -> bool:
 	return fishing != null and fishing.active
 
 func _use_hand(id: String, it: Dictionary) -> bool:  # clic izquierdo con una herramienta o un consumible seleccionado
+	if it["hand"] == "empty":
+		say("Casilla vacía: arrastra un objeto desde el inventario [I].", 2.0)
+		cooldown = 0.4
+		return false
+	if prog.equipment.has(id):  # la herramienta de la casilla es la que cuenta para recolectar y pescar
+		prog.equipped[prog.equipment[id]["slot"]] = id
 	if it["hand"] == "rod":
 		if not world.has_method("is_water"):
 			say("Aquí no hay dónde pescar.", 1.5)

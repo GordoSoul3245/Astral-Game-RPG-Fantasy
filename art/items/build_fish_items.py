@@ -13,7 +13,7 @@ def fish_palette():
         'emberf': (1.0, 0.35, 0.08), 'abyss': (0.1, 0.22, 0.32), 'abyssl': (0.2, 0.4, 0.5), 'kelp': (0.1, 0.5, 0.45),
         'kelpl': (0.3, 0.8, 0.6), 'liq_teal': (0.15, 0.8, 0.7), 'liq_ash': (0.9, 0.3, 0.1), 'fillet': (0.95, 0.6, 0.5),
         'plate': (0.85, 0.85, 0.9), 'roastf': (0.6, 0.35, 0.15), 'rodiron': (0.4, 0.42, 0.5), 'rodcry': (0.62, 0.4, 1.0),
-        'line': (0.9, 0.9, 0.85),
+        'line': (0.9, 0.9, 0.85), 'liq_blue': (0.45, 0.78, 1.0), 'liq_green': (0.3, 0.9, 0.55),
     }.items():
         m[n] = cmat(n, c)
     return m
@@ -149,6 +149,42 @@ def build_fish(i):
             kit.beam((x, -0.3, 0.0), (x, -0.3, 0.12), 0.02, 0.0, m['bone'], p, 4)
             kit.beam((x, 0.3, 0.0), (x, 0.3, 0.12), 0.02, 0.0, m['bone'], p, 4)
         kit.ell((0, 0, -0.04), (0.09, 0.09, 0.05), m['berry'], p)
+    elif i == 'estofado_marino':
+        bowl(kit, p, m['copper'], m)
+        kit.ell((-0.12, -0.1, 0.04), (0.14, 0.05, 0.07), m['sardina'], p)
+        kit.ell((0.12, -0.1, 0.04), (0.12, 0.05, 0.06), m['kelpl'], p)
+        kit.ell((0.0, -0.12, 0.06), (0.07, 0.04, 0.05), m['glow'], p)
+    elif i == 'parrillada_dorada':
+        kit.ell((0, 0, -0.18), (0.55, 0.38, 0.07), m['plate'], p)
+        fish_body(kit, p, m, m['gold'], m['goldl'], m['orange'], 0.3, 0.1)
+        kit.ell((0.0, -0.12, -0.02), (0.3, 0.1, 0.06), m['trout'], p)
+        kit.ell((0.0, 0.14, 0.02), (0.3, 0.1, 0.06), m['roastf'], p)
+    elif i == 'pastel_cristal':
+        kit.ell((0, 0, -0.18), (0.5, 0.36, 0.06), m['plate'], p)
+        kit.ell((0, 0, -0.02), (0.38, 0.38, 0.17), m['cryst'], p)
+        kit.ell((0, 0, 0.12), (0.3, 0.3, 0.06), m['cryl'], p)
+        kit.beam((0, 0, 0.14), (0, 0, 0.42), 0.07, 0.0, m['cryl'], p, 5)
+    elif i == 'caldo_abisal':
+        bowl(kit, p, m['abyss'], m)
+        kit.ell((0.0, -0.1, 0.04), (0.2, 0.05, 0.07), m['abyssl'], p)
+        kit.ell((0.06, -0.12, 0.07), (0.05, 0.03, 0.05), m['yellow'], p)
+    elif i == 'elixir_vision':
+        flask(kit, p, m['liq_blue'], m)
+        kit.ell((0, -0.3, -0.1), (0.07, 0.02, 0.05), m['yellow'], p)
+    elif i == 'elixir_sirena':
+        flask(kit, p, m['liq_green'], m)
+        kit.ell((0, -0.3, -0.1), (0.07, 0.02, 0.05), m['kelpl'], p)
+    elif i == 'carrete_pesca':
+        kit.torus((0, 0, 0), 0.34, 0.07, m['gold'], p, rot=(math.pi / 2, 0, 0))
+        kit.ell((0, 0, 0), (0.12, 0.12, 0.12), m['rodiron'], p)
+        kit.beam((0.1, -0.05, 0.1), (0.44, -0.05, 0.3), 0.04, 0.04, m['leather'], p, 6)
+        kit.ell((0.46, -0.05, 0.32), (0.07, 0.07, 0.07), m['wood'], p)
+        kit.beam((-0.34, 0, 0), (-0.55, 0, -0.1), 0.05, 0.05, m['rodiron'], p, 6)
+    elif i == 'sedal_trenzado':
+        for k in range(4):
+            kit.torus((0, 0, -0.1 + k * 0.1), 0.3 - k * 0.02, 0.035, m['line'], p)
+        kit.beam((0.28, 0, 0.2), (0.5, 0, 0.5), 0.015, 0.015, m['line'], p, 4)
+        kit.torus((0.52, 0, 0.5), 0.06, 0.012, m['rodiron'], p, rot=(math.pi / 2, 0, 0))
     kit.upd()
 
 
@@ -180,6 +216,7 @@ FISH_IDS = [
     'sardina', 'carpa_dorada', 'trucha_plateada', 'pez_globo', 'anguila_luminosa', 'pez_cristal', 'pez_lanza', 'pez_ceniza', 'pez_abisal',
     'alga_marina', 'cana_madera', 'cana_hierro', 'cana_cristal', 'pescado_asado', 'sopa_pescado', 'brocheta_anguila', 'sashimi_lanza',
     'elixir_marea', 'elixir_ceniza', 'cebo_gusano', 'cebo_baya', 'cebo_carne', 'nasa', 'trampa',
+    'estofado_marino', 'parrillada_dorada', 'pastel_cristal', 'caldo_abisal', 'elixir_vision', 'elixir_sirena', 'carrete_pesca', 'sedal_trenzado',
 ]
 
 

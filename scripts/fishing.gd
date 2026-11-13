@@ -50,7 +50,7 @@ func roll(dist_tiles: float, tier: int, bait := "") -> Dictionary:
 	var pool: Array = []
 	var weights := {}
 	var total := 0.0
-	var rare: float = float(cfg["baits"][bait]["rare"]) if cfg["baits"].has(bait) else 1.0
+	var rare: float = (float(cfg["baits"][bait]["rare"]) if cfg["baits"].has(bait) else 1.0) * (1.5 if main.fish_luck_t > 0.0 else 1.0)
 	for id: String in cfg["fish"]:
 		var f: Dictionary = cfg["fish"][id]
 		var when: String = f.get("when", "")  # algunos peces solo pican de noche o con lluvia
@@ -178,7 +178,7 @@ func tip() -> Vector2:  # punta de la caña, en suelo: el píxel medido del foto
 
 func _launch() -> void:
 	var c: Dictionary = cfg["cast"]
-	var tiles := lerpf(float(c["min_tiles"]), float(c["max_tiles"]), power) + float(c["rod_bonus"]) * rod_tier
+	var tiles := lerpf(float(c["min_tiles"]), float(c["max_tiles"]), power) + float(c["rod_bonus"]) * rod_tier + (1.0 if main.prog.rod_parts.has("line") else 0.0)
 	bob_from = tip()
 	used_bait = ""
 	if main.bait != "" and main.crafting.count(main.bait) > 0:
@@ -190,6 +190,7 @@ func _launch() -> void:
 	bob_g = main.pos + aim * tiles / main._tiles_per_px(aim)
 	flight = 0.0
 	state = "flight"
+	main.combat.play_at("cast", main.pos)
 
 func _land() -> void:
 	var tile: Vector2 = main.ground_to_tile(bob_g)
@@ -198,21 +199,23 @@ func _land() -> void:
 		_close()
 		return
 	var wait: Array = cfg["bite_wait"]
-	var cut: float = 1.0 - (float(cfg["baits"][used_bait]["wait"]) if used_bait != "" else 0.0) - (float(cfg["rain_wait_bonus"]) if main.clock.rain else 0.0)
+	var cut: float = 1.0 - (float(cfg["baits"][used_bait]["wait"]) if used_bait != "" else 0.0) - (float(cfg["rain_wait_bonus"]) if main.clock.rain else 0.0) - (0.3 if main.fish_luck_t > 0.0 else 0.0)
 	wait_t = maxf(1.5, main.crafting.rng.randf_range(float(wait[0]), float(wait[1])) * cut - 0.3 * rod_tier)
 	nibble_t = 1.0
 	ripple = 0.0
 	state = "wait"
 	main.hero.play("fish_wait_" + main.facing)
 	main.shake(1.0)
+	main.combat.play_at("splash", bob_g)
 
 func _bite() -> void:
 	var dist: float = main.ground_to_tile(bob_g).distance_to(main.ground_to_tile(main.pos))
 	hooked = roll(dist, rod_tier, used_bait)
 	var diff := 20.0 if hooked["junk"] else float(cfg["fish"][hooked["id"]]["diff"])
-	bite_t = maxf(0.5, float(cfg["bite_window"]) - diff * 0.003)
+	bite_t = maxf(0.5, float(cfg["bite_window"]) - diff * 0.003) + (0.3 if main.prog.rod_parts.has("line") else 0.0)
 	state = "bite"
 	main.shake(2.0)
+	main.combat.play_at("bite", main.pos)
 
 func _hook() -> void:
 	if hooked["junk"]:
@@ -220,13 +223,15 @@ func _hook() -> void:
 		return
 	var f: Dictionary = cfg["fish"][hooked["id"]]
 	game = FishGame.new()
-	game.setup(str(f["move"]), float(f["diff"]), float(cfg["bar_size"]["base"]) + float(cfg["bar_size"]["per_rod"]) * rod_tier)
+	game.setup(str(f["move"]), float(f["diff"]), float(cfg["bar_size"]["base"]) + float(cfg["bar_size"]["per_rod"]) * rod_tier + (0.04 if main.prog.rod_parts.has("reel") else 0.0))
+	game.gain_mult = 1.25 if main.prog.rod_parts.has("reel") else 1.0
 	fish_icon = load(main.crafting.icon(hooked["id"]))
 	var tc: Dictionary = cfg["treasure"]
 	if main.crafting.rng.randf() < float(tc["chance"]) + float(tc["per_rod"]) * rod_tier:
 		game.with_chest(float(tc["delay"]), float(tc["fill"]), float(tc["drain"]))
 	state = "fight"
 	main.hero.play("fish_reel_" + main.facing)
+	main.combat.play_at("hook", main.pos)
 
 func _end(msg: String, won: bool) -> void:
 	state = "end"
@@ -251,7 +256,9 @@ func _end(msg: String, won: bool) -> void:
 	elif qty > 1:
 		line += " ×%d" % qty
 	main.crafting.add(id, qty, star)
+	main.combat.play_at("catch", main.pos)
 	if game != null and game.chest_got:
+		main.combat.play_at("chest", main.pos)
 		line += "\n" + _open_chest()
 	main.quest_event("loot", id)
 	main.show_loot([id])

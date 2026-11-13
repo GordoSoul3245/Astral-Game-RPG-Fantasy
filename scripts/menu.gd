@@ -16,6 +16,7 @@ var selected := ""               # objeto elegido: se muestra en el panel de det
 var body: VBoxContainer
 var tab_buttons := {}
 var page := 0                    # página de la mochila (16 casillas por página)
+var bar_row: HBoxContainer       # la barra de objetos, abierta bajo el panel: casillas donde soltar objetos arrastrados
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -53,6 +54,15 @@ func _ready() -> void:
 		tab_buttons[pair[0]] = b
 	_label("[I] cerrar", head, 16, MUTED)
 	v.add_child(HSeparator.new())
+	var bar_wrap := CenterContainer.new()
+	bar_wrap.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	bar_wrap.offset_top = -128.0
+	bar_wrap.offset_bottom = -14.0
+	bar_wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(bar_wrap)
+	bar_row = HBoxContainer.new()
+	bar_row.add_theme_constant_override("separation", 10)
+	bar_wrap.add_child(bar_row)
 	body = VBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	v.add_child(body)
@@ -116,13 +126,38 @@ func refresh() -> void:
 		_build_options()
 	else:
 		_build_stats()
+	_build_bar()
 
-func _has(id: String) -> bool:  # equipo conseguido o material/consumible con existencias
-	return main.prog.owned.has(id) or (not main.prog.equipment.has(id) and main.crafting.count(id) > 0)
+func _has(id: String) -> bool:  # equipo conseguido, arma base o material/consumible con existencias
+	return main.prog.owned.has(id) or main.WEAPONS.has(id) or (not main.prog.equipment.has(id) and main.crafting.count(id) > 0)
+
+func _build_bar() -> void:  # barra de objetos: arrastra aquí desde la mochila; entre casillas se intercambian
+	for c in bar_row.get_children():
+		c.queue_free()
+	for i in main.HOTBAR_MAX:
+		var id: String = main.hotbar[i]
+		var cnt: int = main.crafting.count(id) if id != "" and main.crafting.is_consumable(id) else 0
+		var b := _slot_button(id, 84, false, cnt)
+		b.index = i
+		if i == main.selected:
+			for st in ["normal", "hover", "pressed", "focus"]:
+				b.add_theme_stylebox_override(st, _box(Color(0.1, 0.12, 0.2), Color("#f2c14e"), 3, 8, 4))
+		var num := Label.new()
+		num.text = str(i + 1)
+		num.add_theme_font_size_override("font_size", 14)
+		num.add_theme_color_override("font_outline_color", Color.BLACK)
+		num.add_theme_constant_override("outline_size", 5)
+		num.position = Vector2(6, 2)
+		num.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(num)
+		bar_row.add_child(b)
 
 func _backpack() -> Array:  # todo lo que llevas: equipo, consumibles y materiales (los planos ya se aprenden al recibirlos)
 	var p = main.prog
 	var out: Array = p.owned.duplicate()
+	for w: String in main.WEAPONS:  # las armas base aparecen aquí cuando no están en la barra, para poder volver a ponerlas
+		if not main.hotbar.has(w):
+			out.append(w)
 	if p.potions > 0:
 		out.append("pocion_vida")
 	for id: String in p.materials:
@@ -151,7 +186,9 @@ func _mods_lines(mods: Dictionary, vs: Dictionary = {}, compare := false) -> Arr
 # casilla cuadrada con el icono del objeto y marco del color de su rareza; id vacío = casilla vacía
 func _slot_button(id: String, size: float, equipped := false, count := 0) -> Button:
 	var p = main.prog
-	var b := Button.new()
+	var b := _Slot.new()
+	b.menu = self
+	b.id = id
 	b.custom_minimum_size = Vector2(size, size)
 	b.focus_mode = Control.FOCUS_NONE
 	var is_eq: bool = id != "" and p.equipment.has(id)
@@ -165,7 +202,7 @@ func _slot_button(id: String, size: float, equipped := false, count := 0) -> But
 		b.add_theme_stylebox_override(st, _box(bg, Color.WHITE if chosen else col, 3 if chosen else 2, 8, 4))
 	if id != "":
 		var icon := TextureRect.new()
-		icon.texture = load(main.crafting.icon(id))
+		icon.texture = load(main.icon_of(id))
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -174,7 +211,7 @@ func _slot_button(id: String, size: float, equipped := false, count := 0) -> But
 		if is_eq:
 			b.tooltip_text = "%s\n%s" % [p.equipment[id]["name"], "\n".join(_mods_lines(p.equipment[id]["mods"]))]
 		else:
-			b.tooltip_text = "%s\n%s" % [main.crafting.item_name(id), main.crafting.item_desc(id)]
+			b.tooltip_text = "%s\n%s" % [main.name_of(id), main.crafting.item_desc(id)]
 			if count > 0:
 				var n := Label.new()
 				n.text = "×%d" % count
@@ -203,12 +240,14 @@ func _slot_button(id: String, size: float, equipped := false, count := 0) -> But
 			b.add_child(tag)
 	return b
 
-func _card(parent: Node, min_size: Vector2) -> VBoxContainer:  # panel con fondo para una columna
+func _card(parent: Node, min_size: Vector2, drop_zone := false) -> VBoxContainer:  # panel con fondo para una columna
 	var pc := PanelContainer.new()
 	pc.custom_minimum_size = min_size
 	pc.add_theme_stylebox_override("panel", _box(Color(0.065, 0.08, 0.14), Color(0.2, 0.24, 0.36), 1, 10, 14))
 	parent.add_child(pc)
-	var v := VBoxContainer.new()
+	var v: VBoxContainer = _Zone.new() if drop_zone else VBoxContainer.new()
+	if drop_zone:
+		v.menu = self
 	v.add_theme_constant_override("separation", 8)
 	pc.add_child(v)
 	return v
@@ -243,7 +282,7 @@ func _build_inv() -> void:
 	left.add_child(HSeparator.new())
 	_label("Monedas: %d" % p.coins, left, 18, GOLD)
 	# --- mochila: cuadrícula de objetos (clic = ver, doble clic = equipar)
-	var mid := _card(cols, Vector2(430, 0))
+	var mid := _card(cols, Vector2(430, 0), true)
 	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var all := _backpack()
 	var pages := maxi(1, ceili(all.size() / float(BACKPACK_SLOTS)))
@@ -263,7 +302,7 @@ func _build_inv() -> void:
 		cell.add_theme_constant_override("separation", 2)
 		grid.add_child(cell)
 		cell.add_child(_slot_button(id, 76, equipped_ids.has(id), 0 if p.equipment.has(id) or id == "" else main.crafting.count(id)))
-		var nm := _label(main.crafting.item_name(id) if id != "" else " ", cell, 12, MUTED)
+		var nm := _label(main.name_of(id) if id != "" else " ", cell, 12, MUTED)
 		nm.custom_minimum_size = Vector2(76, 38)
 		nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		nm.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -341,6 +380,13 @@ func _build_inv() -> void:
 func _build_stack_detail(right: VBoxContainer) -> void:  # material o consumible: nombre, cantidad, descripción y, si se usa, botón de la barra
 	var cr = main.crafting
 	var p = main.prog
+	if main.WEAPONS.has(selected):
+		var wb := _slot_button(selected, 128, false)
+		wb.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		right.add_child(wb)
+		_label(main.name_of(selected), right, 22).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_label("Arma base: arrástrala a una casilla de la barra de objetos para llevarla.", right, 15, MUTED).autowrap_mode = TextServer.AUTOWRAP_WORD
+		return
 	var big := _slot_button(selected, 128, false, cr.count(selected))
 	big.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	right.add_child(big)
@@ -358,18 +404,15 @@ func _build_stack_detail(right: VBoxContainer) -> void:  # material o consumible
 	sp.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right.add_child(sp)
 	var act := Button.new()
-	act.text = "Quitar de la barra" if p.hand.has(selected) else "Poner en la barra"
+	act.text = "Quitar de la barra" if main.hotbar.has(selected) else "Poner en la barra"
 	act.focus_mode = Control.FOCUS_NONE
 	act.custom_minimum_size = Vector2(0, 44)
 	act.add_theme_font_size_override("font_size", 18)
 	act.pressed.connect(func() -> void:
-		if p.hand.has(selected):
-			p.hand.erase(selected)
-		elif main._hand_ids().size() >= main.HOTBAR_MAX - main.BASE_HOTBAR.size():
-			main.say("La barra está llena: quita algo antes.", 2.0)
-		else:
-			p.hand.append(selected)
-		main._refresh_hotbar()
+		if main.hotbar.has(selected):
+			main.hotbar_remove(selected)
+		elif not main.hotbar_add(selected):
+			main.say("La barra está llena: quita algo antes o arrástralo a una casilla.", 2.5)
 		refresh())
 	right.add_child(act)
 
@@ -398,6 +441,24 @@ func _build_fishing() -> void:
 	_label(main.clock.text(), right, 18, GOLD)
 	_label("Plato favorito de hoy: %s (efectos mayores)" % cr.item_name(cr.favorite_dish(main.clock.day)), right, 15, MUTED)
 	_label("Cebo elegido: %s   ([B] con la caña en la barra)" % (cr.item_name(main.bait) if main.bait != "" else "ninguno"), right, 15, MUTED)
+	right.add_child(HSeparator.new())
+	_label("Mejoras de la caña (valen para cualquier caña)", right, 18, GOLD)
+	for part: Array in [["reel", "carrete_pesca", "Carrete: barra más larga y más rápida"], ["line", "sedal_trenzado", "Sedal trenzado: +1 casilla y más tiempo para clavar"]]:
+		var key: String = part[0]
+		var pid: String = part[1]
+		if main.prog.rod_parts.has(key):
+			_label("✔ " + str(part[2]), right, 15, MUTED)
+		else:
+			var ib := Button.new()
+			ib.text = "Instalar: %s  (tienes %d)" % [cr.item_name(pid), cr.count(pid)]
+			ib.focus_mode = Control.FOCUS_NONE
+			ib.disabled = cr.count(pid) <= 0
+			ib.pressed.connect(func() -> void:
+				cr.take(pid, 1)
+				main.prog.rod_parts[key] = true
+				main.say("Caña mejorada: " + str(part[2]), 2.5)
+				refresh())
+			right.add_child(ib)
 	right.add_child(HSeparator.new())
 	_label("Acuario  %d / %d   (cada día producen)" % [an.tank.size(), an.slots()], right, 20, GOLD)
 	for i: int in an.tank.size():
@@ -488,17 +549,14 @@ func _build_side() -> void:  # materiales con su cantidad y consumibles que se u
 			_build_side())
 		row.add_child(use)
 		var q := Button.new()
-		q.text = "★ Barra" if p.hand.has(id) else "A la barra"
+		q.text = "★ Barra" if main.hotbar.has(id) else "A la barra"
 		q.tooltip_text = "Poner o quitar de la barra de objetos (máx. 6 espacios); se usa con el clic izquierdo"
 		q.focus_mode = Control.FOCUS_NONE
 		q.pressed.connect(func() -> void:
-			if p.hand.has(id):
-				p.hand.erase(id)
-			elif main._hand_ids().size() >= main.HOTBAR_MAX - main.BASE_HOTBAR.size():
+			if main.hotbar.has(id):
+				main.hotbar_remove(id)
+			elif not main.hotbar_add(id):
 				main.say("La barra está llena: quita algo antes.", 2.0)
-			else:
-				p.hand.append(id)
-			main._refresh_hotbar()
 			_build_side())
 		row.add_child(q)
 	side_card.add_child(HSeparator.new())
@@ -634,3 +692,41 @@ func _build_stats() -> void:
 	_label("Vida máx. %d   ·   Maná máx. %d   ·   Estamina máx. %d" % [main.hero_max_hp, main.hero_data["mana"], main.hero_data["stamina"]], rows, 17)
 	_label("Daño de espada ×%.2f   ·   Daño de magia ×%.2f   ·   Daño recibido ×%.2f" % [p.melee_mult(), p.magic_mult(), p.defense_mult()], rows, 17)
 	_label("Velocidad de movimiento ×%.2f   ·   Velocidad de ataque ×%.2f" % [p.move_mult(), p.attack_speed()], rows, 17)
+
+class _Slot extends Button:  # casilla de objeto: se puede arrastrar y, si es de la barra (index >= 0), recibe objetos
+	var menu: Node
+	var index := -1
+	var id := ""
+
+	func _get_drag_data(_at: Vector2) -> Variant:
+		if id == "" or not menu.main.can_hotbar(id):
+			return null
+		var prev := TextureRect.new()
+		prev.texture = load(menu.main.icon_of(id))
+		prev.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		prev.size = Vector2(64, 64)
+		prev.position = Vector2(-32, -32)
+		var c := Control.new()
+		c.add_child(prev)
+		set_drag_preview(c)
+		return {"id": id, "from": index}
+
+	func _can_drop_data(_at: Vector2, data: Variant) -> bool:
+		return data is Dictionary and data.has("id") and (index >= 0 or int(data.get("from", -1)) >= 0)
+
+	func _drop_data(_at: Vector2, data: Variant) -> void:
+		if index >= 0:
+			menu.main.hotbar_drop(str(data["id"]), index)
+		else:
+			menu.main.hotbar_clear(int(data["from"]))
+		menu.refresh()
+
+class _Zone extends VBoxContainer:  # la mochila: soltar aquí un objeto de la barra lo quita de ella
+	var menu: Node
+
+	func _can_drop_data(_at: Vector2, data: Variant) -> bool:
+		return data is Dictionary and int(data.get("from", -1)) >= 0
+
+	func _drop_data(_at: Vector2, data: Variant) -> void:
+		menu.main.hotbar_clear(int(data["from"]))
+		menu.refresh()

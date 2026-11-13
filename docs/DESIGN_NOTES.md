@@ -122,3 +122,14 @@ Lee este archivo y sigue desde "Pendiente". Lo que está escrito aquí es la fue
 - Tests: `tests/test_angling.gd`. Capturas: `tests/capture_angling.gd` → `production/qa/evidence/pesca_plus/`.
 - Ideas medianas y grandes pendientes: `docs/IDEAS_FUTURAS.md`.
 - **No hecho / por probar:** nada de esto se jugó a mano; el equilibrio (tiempos, precios, probabilidades) es inicial. La nasa y la trampa se dibujan con formas simples (sin sprite propio) y los iconos de cebos son sencillos. Las trampas de caza no cazan otra cosa que conejo.
+
+## Mundo vivo y barra editable (tercera tanda)
+- **Barra de objetos editable** (`prog.slots`, 6 casillas, `main.hotbar_drop/hotbar_clear/hotbar_add`): al abrir el inventario (**I**) la barra aparece bajo el panel. Se arrastra cualquier objeto utilizable (armas base, herramientas que tengas, consumibles) desde la mochila a una casilla; si estaba ocupada se intercambian (o el desplazado vuelve a la mochila). Arrastrar de una casilla a la mochila la vacía. Una herramienta soltada en la barra pasa a ser la equipada; las herramientas nuevas entran solas en el sitio de la anterior o en la primera libre. Casilla vacía = «Manos libres». Las armas base quitadas de la barra aparecen en la mochila. Guardado en `slots`; las partidas antiguas (`hand`) se migran. Botones «A la barra» del menú y del crafteo siguen funcionando.
+- **Sombras y farolas:** `clock.dark()` y `clock.shadow()`; la sombra del héroe se alarga e inclina con el sol y se aclara con la luna (solo la del héroe). Farolas (`scripts/lamps.gd`) en las puertas de las casas y junto a los comerciantes: se encienden al anochecer o con lluvia.
+- **Dormir y acuario en la casa de Teo:** cama (E: salta hasta las 7:00, cura todo y guarda; solo de noche) y pecera con los peces del acuario nadando (E abre la pestaña Pesca).
+- **Tienda de Tomás:** cebos (paquetes de 5), nasa, trampa y los planos de los elixires nuevos (`qty` en `data/shop.json`).
+- **Mejoras de caña:** carrete (forja: barra más larga y medidor ×1.25) y sedal trenzado (a mano con alga: +1 casilla de lanzamiento y +0.3 s para clavar); se instalan desde la pestaña Pesca y valen para cualquier caña.
+- **Cocina y alquimia con pescado:** estofado marino, parrillada dorada, pastel de cristal y caldo abisal; elixir de visión nocturna (la noche se ve clara) y elixir de sirena (peces raros y pique más rápido).
+- **Sonidos de pesca** sintetizados (`combat.CUES`: lanzar, chapuzón, pique, clavar, captura, cofre, dormir).
+- Tests: `tests/test_hotbar.gd`, `tests/test_world_life.gd`. Capturas: `production/qa/evidence/mundo_vivo/` (`tests/capture_world_life.gd`).
+- **No hecho / por probar:** el arrastre real con el ratón no se probó a mano (el test llama a las funciones de arrastre). Las sombras solo afectan al héroe. Los iconos de nasa/trampa se usan también como sprites del mundo. Los sonidos son sintéticos y simples.

@@ -23,6 +23,7 @@ var spent := {}              # estadística -> puntos gastados
 var coins := 0
 var potions := 1
 var materials := {}          # id -> cantidad
+var rod_parts := {}           # piezas instaladas en la caña: reel, line
 var stars := {}              # id -> [unidades de plata, unidades de oro] (subconjunto de materials)
 var owned: Array = []        # ids de equipo obtenido
 var equipped := {}           # ranura -> id
@@ -30,7 +31,7 @@ var equipment := {}
 var material_names := {}
 var blueprints: Array = []   # planos de alquimia aprendidos (data/crafting.json)
 var buffs: Array = []        # bonus temporales de comida y elixires: {stat, amount, t}
-var hand: Array = ["pocion_vida"]  # consumibles en la barra de objetos (las herramientas equipadas entran solas)
+var slots: Array = ["katana_ceniza", "grimorio_ignis", "pocion_vida", "", "", ""]  # barra de objetos (6 casillas; "" = vacía)
 
 func _init(data: Dictionary) -> void:
 	equipment = data["items"]

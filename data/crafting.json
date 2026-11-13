@@ -210,6 +210,22 @@
 				"pesca",
 				"cebo"
 			]
+		},
+		"carrete_pesca": {
+			"name": "Carrete de pesca",
+			"desc": "Pieza de caña: la barra del minijuego se llena más rápido y es más larga. Se instala en la pestaña Pesca.",
+			"tags": [
+				"pesca",
+				"pieza"
+			]
+		},
+		"sedal_trenzado": {
+			"name": "Sedal trenzado",
+			"desc": "Pieza de caña: lanza una casilla más lejos y da más tiempo para clavar. Se instala en la pestaña Pesca.",
+			"tags": [
+				"pesca",
+				"pieza"
+			]
 		}
 	},
 	"consumables": {
@@ -389,6 +405,73 @@
 			"name": "Trampa de caza",
 			"desc": "Colócala en tierra: caza sola con el tiempo. Pasa cerca para recogerla.",
 			"place": "land"
+		},
+		"estofado_marino": {
+			"name": "Estofado marino",
+			"desc": "Cura 60, +4 Resistencia 3 min y regenera 40 de vida.",
+			"heal": 60,
+			"buff": {
+				"stat": "endurance",
+				"amount": 4,
+				"time": 180
+			},
+			"regen": {
+				"amount": 40,
+				"time": 20
+			}
+		},
+		"parrillada_dorada": {
+			"name": "Parrillada dorada",
+			"desc": "Cura 85, +4 Fuerza 3 min y regenera 30 de vida.",
+			"heal": 85,
+			"buff": {
+				"stat": "strength",
+				"amount": 4,
+				"time": 180
+			},
+			"regen": {
+				"amount": 30,
+				"time": 15
+			}
+		},
+		"pastel_cristal": {
+			"name": "Pastel de cristal",
+			"desc": "Restaura 60 de maná y da +5 Daño de magia 3 min.",
+			"mana": 60,
+			"buff": {
+				"stat": "magic",
+				"amount": 5,
+				"time": 180
+			}
+		},
+		"caldo_abisal": {
+			"name": "Caldo abisal",
+			"desc": "Cura 100, +5 Fuerza y +5 Magia 4 min y regenera 60 de vida.",
+			"heal": 100,
+			"buff": {
+				"stat": "strength",
+				"amount": 5,
+				"time": 240
+			},
+			"buff2": {
+				"stat": "magic",
+				"amount": 5,
+				"time": 240
+			},
+			"regen": {
+				"amount": 60,
+				"time": 20
+			}
+		},
+		"elixir_vision": {
+			"name": "Elixir de visión nocturna",
+			"desc": "Por la noche ves como de día durante 3 minutos.",
+			"night_vision": 180
+		},
+		"elixir_sirena": {
+			"name": "Elixir de sirena",
+			"desc": "Durante 4 minutos los peces pican antes y los raros aparecen más.",
+			"fish_luck": 240
 		}
 	},
 	"blueprints": {
@@ -510,6 +593,32 @@
 				"carbon": 1
 			},
 			"hint": "Un pez de ascuas aún caliente."
+		},
+		"plano_elixir_vision": {
+			"name": "Plano: Elixir de visión nocturna",
+			"output": "elixir_vision",
+			"qty": 1,
+			"glyph": "star",
+			"color": "#9ad8ff",
+			"inputs": {
+				"frasco_vacio": 1,
+				"anguila_luminosa": 1,
+				"hongo_luminoso": 1
+			},
+			"hint": "La luz de una anguila de las profundidades."
+		},
+		"plano_elixir_sirena": {
+			"name": "Plano: Elixir de sirena",
+			"output": "elixir_sirena",
+			"qty": 1,
+			"glyph": "leaf",
+			"color": "#3fe0a0",
+			"inputs": {
+				"frasco_vacio": 1,
+				"pez_globo": 1,
+				"alga_marina": 2
+			},
+			"hint": "Un pez globo y algas: el canto del mar."
 		}
 	},
 	"alchemy_catalyst": {
@@ -810,6 +919,62 @@
 			"inputs": {
 				"madera": 2,
 				"mena_hierro": 1
+			},
+			"qty": 1
+		},
+		"carrete_pesca": {
+			"station": "forge",
+			"group": "Pesca",
+			"inputs": {
+				"lingote_hierro": 2,
+				"cristal_arcano": 1
+			}
+		},
+		"sedal_trenzado": {
+			"station": "hand",
+			"group": "Pesca",
+			"inputs": {
+				"cuero": 1,
+				"alga_marina": 3
+			}
+		},
+		"estofado_marino": {
+			"station": "cook",
+			"group": "Comida",
+			"inputs": {
+				"sardina": 2,
+				"hongo_luminoso": 1,
+				"hierba_vital": 1
+			},
+			"qty": 1
+		},
+		"parrillada_dorada": {
+			"station": "cook",
+			"group": "Comida",
+			"inputs": {
+				"carpa_dorada": 1,
+				"trucha_plateada": 1,
+				"carbon": 1
+			},
+			"qty": 1
+		},
+		"pastel_cristal": {
+			"station": "cook",
+			"group": "Comida",
+			"inputs": {
+				"pez_cristal": 1,
+				"baya_roja": 2,
+				"cristal_arcano": 1
+			},
+			"qty": 1
+		},
+		"caldo_abisal": {
+			"station": "cook",
+			"group": "Comida",
+			"inputs": {
+				"pez_abisal": 1,
+				"hongo_luminoso": 2,
+				"hierba_vital": 1
 			},
 			"qty": 1
 		}

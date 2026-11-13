@@ -211,6 +211,12 @@ func use(main: Node, id: String) -> String:
 			var amount := float(c[key]["amount"]) * (1.5 if fav else 1.0)
 			prog.add_buff(c[key]["stat"], amount, float(c[key]["time"]) * (2.0 if fav else 1.0))
 			parts.append("+%d %s" % [roundi(amount), prog.STAT_NAMES[c[key]["stat"]]])
+	if c.has("night_vision"):
+		main.night_vision_t = float(c["night_vision"])
+		parts.append("visión nocturna")
+	if c.has("fish_luck"):
+		main.fish_luck_t = float(c["fish_luck"])
+		parts.append("suerte de pescador")
 	if c.has("bomb"):
 		main.combat.detonate_at(main.pos, float(c["bomb"]["radius"]), int(c["bomb"]["damage"]))
 		parts.append("¡explosión!")

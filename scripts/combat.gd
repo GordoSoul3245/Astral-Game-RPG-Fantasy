@@ -105,6 +105,8 @@ func hit(e: Node, dmg: int, kind: String, from: Vector2, charge := true) -> void
 # señales de intención (gruñido, chillido, grito, alerta): suenan más bajo cuanto más lejos del héroe
 const CUES := {  # nombre -> (Hz, s, ruido)
 	"growl": [95.0, 0.55, 0.65], "squeak": [1700.0, 0.09, 0.1], "shout": [320.0, 0.28, 0.25], "alert": [760.0, 0.12, 0.2],
+	"cast": [260.0, 0.28, 0.9], "splash": [150.0, 0.32, 0.85], "bite": [1250.0, 0.16, 0.08], "hook": [520.0, 0.12, 0.45],
+	"catch": [980.0, 0.3, 0.1], "chest": [1500.0, 0.4, 0.04], "sleep": [200.0, 0.6, 0.3],
 }
 
 func play_at(cue: String, ground: Vector2) -> void:
@@ -214,7 +216,7 @@ func detonate_at(ground: Vector2, radius: float, damage: int) -> void:  # tambi�
 
 func _process(delta: float) -> void:
 	if main.clock.outdoors:  # el exterior sigue la hora del día; el resto de zonas tiene su ambiente fijo
-		ambient.color = main.clock.tint()
+		ambient.color = main.clock.tint().lerp(Color.WHITE, main.clock.dark() * 0.75 if main.night_vision_t > 0.0 else 0.0)  # el elixir de visión nocturna aclara la noche
 	for e in marks.keys():
 		marks[e] -= delta
 		if marks[e] <= 0.0 or not is_instance_valid(e) or not e.alive:

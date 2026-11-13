@@ -54,6 +54,37 @@
 			{
 				"id": "plano_elixir_ceniza",
 				"price": 110
+			},
+			{
+				"id": "cebo_gusano",
+				"price": 8,
+				"qty": 5
+			},
+			{
+				"id": "cebo_baya",
+				"price": 14,
+				"qty": 5
+			},
+			{
+				"id": "cebo_carne",
+				"price": 20,
+				"qty": 5
+			},
+			{
+				"id": "nasa",
+				"price": 35
+			},
+			{
+				"id": "trampa",
+				"price": 40
+			},
+			{
+				"id": "plano_elixir_vision",
+				"price": 90
+			},
+			{
+				"id": "plano_elixir_sirena",
+				"price": 90
 			}
 		]
 	},

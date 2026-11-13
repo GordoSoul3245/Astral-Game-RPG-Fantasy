@@ -81,11 +81,18 @@ func box(canvas: CanvasItem, rc: Rect2, h_m: float, top: Color, left: Color, rig
 	canvas.draw_colored_polygon(PackedVector2Array([_corner(i0, j1), _corner(i1, j1), _up(_corner(i1, j1), h), _up(_corner(i0, j1), h)]), right)
 	canvas.draw_colored_polygon(PackedVector2Array([_up(_corner(i0, j0), h), _up(_corner(i1, j0), h), _up(_corner(i1, j1), h), _up(_corner(i0, j1), h)]), top)
 
+const FISH_COL := {"sardina": Color(0.45, 0.65, 0.88), "carpa_dorada": Color(0.97, 0.72, 0.15), "trucha_plateada": Color(0.6, 0.78, 0.65), "pez_globo": Color(0.92, 0.82, 0.38),
+	"anguila_luminosa": Color(0.2, 0.55, 0.95), "pez_cristal": Color(0.7, 0.5, 1.0), "pez_lanza": Color(0.3, 0.5, 0.85), "pez_ceniza": Color(1.0, 0.4, 0.12), "pez_abisal": Color(0.2, 0.4, 0.5)}
+
 class Furn extends Node2D:
 	var room: Node2D
 	var kind := ""
 	var rect := Rect2()
 	var h := 1.0
+
+	func _process(_delta: float) -> void:
+		if kind == "aquarium":
+			queue_redraw()
 
 	func _draw() -> void:
 		match kind:
@@ -104,6 +111,26 @@ class Furn extends Node2D:
 				room.box(self, rect, h, Color("#9a6b3b"), Color("#6a4524"), Color("#7b5129"))
 			"chest":
 				room.box(self, rect, h, Color("#a97a42"), Color("#6b4524"), Color("#80532b"))
+			"aquarium":  # pecera sobre un mueble de madera: los peces del acuario nadan dentro
+				var base := Rect2(rect.position, rect.size)
+				room.box(self, base, h * 0.45, Color("#8a5f35"), Color("#5e3d20"), Color("#6e4727"))
+				var glass := Rect2(rect.position + Vector2(0.08, 0.08), rect.size - Vector2(0.16, 0.16))
+				var lift: float = h * 0.45 * room.PXM
+				room.box(self, glass, h * 0.5, Color(0.55, 0.85, 0.95, 0.55), Color(0.2, 0.5, 0.75, 0.6), Color(0.25, 0.58, 0.82, 0.6))
+				var sc: float = room.main.SCALE
+				var c: Vector2 = room._corner(rect.get_center().x, rect.get_center().y) - Vector2(0, (lift + h * 0.22 * room.PXM) * sc)
+				var t := Time.get_ticks_msec() * 0.001
+				for k in room.main.angler.tank.size():
+					var fc: Color = FISH_COL.get(room.main.angler.tank[k], Color(0.8, 0.8, 0.8))
+					var ph: float = t * 0.7 + k * 2.1
+					var dir := 1.0 if cos(ph) >= 0.0 else -1.0  # mira hacia donde nada
+					var fp := c + Vector2(sin(ph) * 16.0, cos(t * 0.9 + k * 1.3) * 5.0) * sc
+					var body := PackedVector2Array()
+					for a in 14:
+						body.append(fp + Vector2(cos(TAU * a / 14.0) * 9.0 * dir, sin(TAU * a / 14.0) * 5.0) * sc)
+					draw_colored_polygon(body, fc)
+					draw_colored_polygon(PackedVector2Array([fp + Vector2(-8 * dir, 0) * sc, fp + Vector2(-15 * dir, -5) * sc, fp + Vector2(-15 * dir, 5) * sc]), fc.darkened(0.2))
+					draw_circle(fp + Vector2(5 * dir, -1.5) * sc, 1.3 * sc, Color.BLACK)
 			"bed":
 				room.box(self, rect, h * 0.55, Color("#d8d2c0"), Color("#8a6038"), Color("#9a6c3f"))
 				room.box(self, Rect2(rect.position + Vector2(0.05, 0.7), Vector2(rect.size.x - 0.1, rect.size.y - 0.75)), h * 0.62, Color("#a8342e"), Color("#7a2420"), Color("#8e2b26"))

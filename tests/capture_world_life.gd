@@ -1,0 +1,77 @@
+extends SceneTree
+# Capturas de la segunda tanda: pueblo de noche con farolas, la casa de Teo con la pecera, y el inventario con la barra abierta.
+# Ejecutar sin --headless: guarda en production/qa/evidence/mundo_vivo/.
+
+const DIR := "res://production/qa/evidence/mundo_vivo/"
+var main: Node
+
+func _initialize() -> void:
+	call_deferred("capture")
+
+func _shot(name: String) -> void:
+	await RenderingServer.frame_post_draw
+	root.get_texture().get_image().save_png(DIR + name + ".png")
+
+func _wait(s: float) -> void:
+	await create_timer(s, true, false, true).timeout
+
+func capture() -> void:
+	DirAccess.make_dir_recursive_absolute(DIR)
+	main = load("res://scenes/main.tscn").instantiate()
+	root.add_child(main)
+	main.dragon.set_physics_process(false)
+	main.save_path = "user://capture_world_life_save.json"
+	main.testing = true
+	await _wait(0.8)
+	main.crafting.add("carne_asada", 2)
+	main.crafting.add("pocion_mana", 1)
+	main.give_item("pico_piedra")
+	main.give_item("cana_madera")
+	main.angler.tank = ["pez_cristal", "sardina", "carpa_dorada"]
+	# pueblo de noche, junto al mercader
+	main.clock.hour = 21.5
+	main.clock.rain = false
+	var m: Node2D = main.merchants[0]
+	main.pos = m.pos + Vector2(-60, 40)
+	main._place()
+	main.cam.position = (main.pos - Vector2(0, 40)) * main.SCALE
+	await _wait(1.0)
+	await _shot("1_pueblo_noche_farolas")
+	# casa de Teo con la pecera
+	main.clock.hour = 20.0
+	main.pos = main.tile_to_ground(Vector2(0, 0))
+	main._enter_interior("den")
+	main.pos = main.tile_to_ground(Vector2(5.2, 4.6))
+	main._place()
+	main.cam.position = (main.pos - Vector2(0, 40)) * main.SCALE
+	await _wait(1.0)
+	await _shot("2_casa_pecera")
+	main._exit_interior()
+	# nasa y trampa colocadas en el mundo
+	main.clock.hour = 12.0
+	main.crafting.add("nasa", 1)
+	main.crafting.add("trampa", 1)
+	main.pos = main.tile_to_ground(Vector2(1.5, 27.5))
+	main._place()
+	main.forced_aim = (main.tile_to_ground(Vector2(0.5, 27.5)) - main.tile_to_ground(Vector2(1.5, 27.5))).normalized()
+	main.traps.place("nasa", "water")
+	main.pos = main.tile_to_ground(Vector2(3.5, 27.5))
+	main._place()
+	main.forced_aim = Vector2(0, 1).normalized()
+	main.traps.place("trampa", "land")
+	for t: Dictionary in main.angler.traps:
+		t["ready"] = main.clock.total + 100.0
+	main.angler.traps[0]["ready"] = 0.0
+	main.pos = main.tile_to_ground(Vector2(8.5, 27.5))
+	main._place()
+	main.cam.position = (main.pos - Vector2(0, 40)) * main.SCALE
+	main.forced_aim = Vector2(1, 0)
+	await _wait(0.8)
+	await _shot("4_nasa_y_trampa")
+	# inventario con la barra abierta
+	main.menu.visible = true
+	main.menu._set_tab("inv")
+	main.menu.refresh()
+	await _wait(0.5)
+	await _shot("3_inventario_barra")
+	quit()

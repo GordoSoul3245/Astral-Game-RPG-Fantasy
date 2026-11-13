@@ -16,6 +16,7 @@ var bar_v := 0.0
 var fish := 0.5
 var target := 0.5
 var retarget := 0.0
+var gain_mult := 1.0      # el carrete de la caña llena el medidor más rápido
 var boost := 1.0          # los dardos del pez multiplican su velocidad un rato
 var progress := START
 var perfect := true       # nunca perdió al pez
@@ -75,7 +76,7 @@ func step(dt: float, hold: bool) -> void:
 		_pick_target()
 	fish = move_toward(fish, target, (0.18 + diff / 100.0 * 0.7) * boost * dt)
 	if inside():
-		progress += GAIN * dt
+		progress += GAIN * gain_mult * dt
 	else:
 		progress -= (0.12 + diff / 100.0 * 0.1) * dt
 		perfect = false

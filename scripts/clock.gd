@@ -56,6 +56,24 @@ func advance(seconds: float) -> void:
 		rain = rng.randf() < RAIN_CHANCE
 		new_day.emit()
 
+func sleep_until(h: float) -> void:  # dormir: salta hasta la hora h (del mismo día o del siguiente)
+	advance(fposmod(h - hour, 24.0) / 24.0 * DAY_SECONDS)
+
+func dark() -> float:  # 0 de día, 1 de noche cerrada; con rampas al atardecer y al amanecer. La lluvia oscurece un poco
+	var d := 0.0
+	if hour >= 20.5 or hour < 5.0:
+		d = 1.0
+	elif hour >= 18.0:
+		d = (hour - 18.0) / 2.5
+	elif hour < 7.0:
+		d = 1.0 - (hour - 5.0) / 2.0
+	return maxf(d, 0.4 if rain else 0.0)
+
+func shadow() -> Dictionary:  # sombra del héroe: el sol la alarga y la inclina al amanecer y al atardecer; la luna la deja corta y tenue
+	var a := (clampf(hour, 6.0, 18.0) - 6.0) / 12.0 * PI
+	var d := dark()
+	return {"dx": lerpf(-cos(a) * 0.9, 0.35, d), "len": lerpf(1.0 + absf(cos(a)) * 1.3, 1.1, d), "alpha": lerpf(1.0, 0.4, d)}
+
 func is_night() -> bool:
 	return hour < 6.0 or hour >= 20.0
 

@@ -23,9 +23,18 @@ func is_open() -> bool:
 func stock() -> Array:  # lo que vende el mercader y aún no tienes (el equipo no se repite)
 	var out: Array = []
 	for s: Dictionary in cfg["merchant"]["stock"]:
-		if s["id"] == "pocion_vida" or (not main.prog.owned.has(s["id"]) and not main.crafting.knows(s["id"])):
+		if _stackable(s["id"]) or (not main.prog.owned.has(s["id"]) and not main.crafting.knows(s["id"])):
 			out.append(s)
 	return out
+
+func _stackable(id: String) -> bool:  # lo que se compra una y otra vez: pociones, cebos, nasas...
+	return id == "pocion_vida" or main.crafting.cfg["materials"].has(id) or main.crafting.is_consumable(id)
+
+func qty_of(id: String) -> int:
+	for s: Dictionary in cfg["merchant"]["stock"]:
+		if s["id"] == id:
+			return int(s.get("qty", 1))
+	return 1
 
 func price_of(id: String) -> int:
 	for s: Dictionary in cfg["merchant"]["stock"]:
@@ -46,13 +55,16 @@ func buy(id: String) -> String:  # devuelve el aviso para el jugador
 		main.crafting.learn(id)
 		main.save_game()
 		return "Plano aprendido: %s" % main.crafting.item_name(main.crafting.cfg["blueprints"][id]["output"])
-	if id != "pocion_vida" and main.prog.owned.has(id):
+	if not _stackable(id) and main.prog.owned.has(id):
 		return "Ya tienes eso."
 	main.prog.coins -= price
 	var msg: String
 	if id == "pocion_vida":
 		main.prog.potions += 1
 		msg = "+1 poción de vida"
+	elif _stackable(id):
+		main.crafting.add(id, qty_of(id))
+		msg = "+%d %s" % [qty_of(id), main.crafting.item_name(id)]
 	else:
 		msg = main.give_item(id)
 	main.save_game()
@@ -141,8 +153,11 @@ func _refresh(msg: String) -> void:
 		for s: Dictionary in stock():
 			var id: String = s["id"]
 			var is_bp: bool = main.crafting.is_blueprint(id)
-			var label: String = "Poción de vida" if id == "pocion_vida" else (main.crafting.item_name(id) if is_bp else main.prog.equipment[id]["name"])
-			var desc: String = "Cura 40 de vida" if id == "pocion_vida" else ("para la mesa de alquimia" if is_bp else _mods_text(main.prog.equipment[id]))
+			var stack: bool = _stackable(id) and id != "pocion_vida"
+			var label: String = "Poción de vida" if id == "pocion_vida" else (main.crafting.item_name(id) if is_bp or stack else main.prog.equipment[id]["name"])
+			if stack and qty_of(id) > 1:
+				label += " ×%d" % qty_of(id)
+			var desc: String = "Cura 40 de vida" if id == "pocion_vida" else ("para la mesa de alquimia" if is_bp else (main.crafting.item_desc(id) if stack else _mods_text(main.prog.equipment[id])))
 			var b := _button("%s  —  %d monedas   (%s)" % [label, s["price"], desc], func() -> void: _refresh(buy(id)))
 			b.disabled = main.prog.coins < int(s["price"])
 			first = first if first else b

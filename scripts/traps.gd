@@ -42,6 +42,7 @@ func place(id: String, kind: String) -> String:  # devuelve el aviso para el jug
 	tr.append({"kind": kind, "pos": [spot.x, spot.y], "ready": main.clock.total + hours})
 	main.crafting.take(id, 1)
 	queue_redraw()
+	main.combat.play_at("splash", spot)
 	return "Colocada. Vuelve en unas horas de juego."
 
 func _process(_delta: float) -> void:
@@ -73,27 +74,22 @@ func _collect(i: int) -> void:
 		main.crafting.add(id, int(got[id]))
 		parts.append("%s ×%d" % [main.crafting.item_name(id), int(got[id])])
 		main.quest_event("loot", id)
+	main.combat.play_at("catch", main.pos)
 	main.show_loot(got.keys())
 	main.popup(main.pos, "Recoges la trampa: " + ", ".join(parts), Color(0.8, 0.95, 0.7))
 	main.save_game()
+
+var tex := {"water": preload("res://art/items/nasa.png"), "land": preload("res://art/items/trampa.png")}
 
 func _draw() -> void:
 	if main == null or not _outside():
 		return
 	var sc: float = main.SCALE
+	var t_ms := Time.get_ticks_msec()
 	for t: Dictionary in main.angler.traps:
 		var g := Vector2(t["pos"][0], t["pos"][1]) * sc
-		var ready: bool = main.clock.total >= float(t["ready"])
-		if t["kind"] == "water":
-			var bob := sin(Time.get_ticks_msec() * 0.004 + g.x) * 2.0
-			draw_rect(Rect2(g + Vector2(-9, -14 + bob) * sc * 0.5, Vector2(18, 14) * sc * 0.5), Color(0.5, 0.33, 0.15))
-			for k in range(-1, 2):
-				draw_line(g + Vector2(k * 5, -14 + bob) * sc * 0.5, g + Vector2(k * 5, bob) * sc * 0.5, Color(0.25, 0.15, 0.06), 2.0)
-			draw_circle(g + Vector2(0, -18 + bob) * sc * 0.5, 3.0 * sc * 0.5, Color(0.9, 0.15, 0.12))
-		else:
-			draw_rect(Rect2(g + Vector2(-10, -6) * sc * 0.5, Vector2(20, 7) * sc * 0.5), Color(0.45, 0.45, 0.5))
-			draw_colored_polygon(PackedVector2Array([g + Vector2(-10, -6) * sc * 0.5, g + Vector2(-5, -14) * sc * 0.5, g + Vector2(0, -6) * sc * 0.5,
-				g + Vector2(5, -14) * sc * 0.5, g + Vector2(10, -6) * sc * 0.5]), Color(0.62, 0.62, 0.68))
-			draw_rect(Rect2(g + Vector2(-2, -4) * sc * 0.5, Vector2(4, 4) * sc * 0.5), Color(0.8, 0.2, 0.2))
-		if ready:
-			draw_circle(g + Vector2(0, -26 + sin(Time.get_ticks_msec() * 0.006) * 3.0) * sc * 0.5, 4.0 * sc * 0.5, Color(1.0, 0.9, 0.3))
+		var bob := sin(t_ms * 0.004 + g.x) * 2.0 * sc * 0.5 if t["kind"] == "water" else 0.0
+		var size := Vector2(44, 44) * sc
+		draw_texture_rect(tex[t["kind"]], Rect2(g - Vector2(size.x * 0.5, size.y * 0.8 - bob), size), false)
+		if main.clock.total >= float(t["ready"]):  # lista: destello que sube y baja
+			draw_circle(g + Vector2(0, -44 * sc + sin(t_ms * 0.006) * 4.0), 5.0 * sc * 0.5, Color(1.0, 0.9, 0.3))

@@ -140,8 +140,7 @@ func run_checks() -> void:
 	# consumibles: la comida cura y da bonus; la tecla G usa la elegida
 	main.hero_hp = 10
 	cr.add("estofado_zorro", 1)
-	main.prog.hand.append("estofado_zorro")
-	main._refresh_hotbar()
+	main.hotbar_add("estofado_zorro")
 	assert(main.hotbar.has("estofado_zorro"), "la comida elegida aparece en la barra")
 	main._select(main.hotbar.find("estofado_zorro"))
 	var str0: float = main.prog.stat("strength")

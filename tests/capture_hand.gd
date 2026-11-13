@@ -26,7 +26,7 @@ func capture() -> void:
 	main.give_item("hacha_piedra")
 	main.give_item("pico_piedra")
 	main.crafting.add("carne_asada", 2)
-	main.prog.hand.append("carne_asada")
+	main.hotbar_add("carne_asada")
 	main.hero_hp = 40
 	main._refresh_hotbar()
 	var tree: Dictionary = main.world.res_nodes.filter(func(n: Dictionary) -> bool: return n["kind"] == "tree")[0]
