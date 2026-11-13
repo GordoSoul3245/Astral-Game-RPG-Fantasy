@@ -71,6 +71,37 @@ func run_checks() -> void:
 	await _wait(0.2)
 	assert(main.fauna.all(func(f: Node) -> bool: return f.visible), "sin lluvia vuelven")
 
+	# --- mascotas
+	main.clock.rain = false
+	main.clock.hour = 12.0
+	await _wait(0.3)
+	var bunny: Node2D = main.fauna[0]
+	bunny.alive = true
+	bunny.visible = true
+	main.pos = bunny.pos + Vector2(20, 10)
+	assert(not main.try_tame(), "sin comida no se doma")
+	cr.add("hierba_vital", 3)
+	assert(main.try_tame() and main.pets.is_empty() and cr.count("hierba_vital") == 2, "la primera comida acerca al conejo")
+	assert(main.try_tame() and main.pets == ["rabbit"] and main.pet_nodes.size() == 1 and not bunny.alive, "la segunda lo doma")
+	assert(main.pet_nodes[0].spr != null, "la mascota tiene su arte")
+	main.pos = main.tile_to_ground(Vector2(30, 30))
+	await _wait(0.5)
+	assert(main.pet_nodes[0].pos.distance_to(main.pos) < 200.0, "la mascota sigue al héroe")
+	main.save_game()
+	main.pets.clear()
+	for pn: Node in main.pet_nodes:
+		pn.queue_free()
+	main.pet_nodes.clear()
+	assert(main.load_game() and main.pets == ["rabbit"] and main.pet_nodes.size() == 1, "las mascotas se guardan")
+	main.pets.append("fox")
+	main.pets.append("rabbit")
+	var bunny2: Node2D = main.fauna[1]
+	bunny2.alive = true
+	bunny2.visible = true
+	main.pos = bunny2.pos + Vector2(20, 10)
+	assert(main.try_tame() and main.pets.size() == 3 and cr.count("hierba_vital") == 1, "con el límite lleno no gasta comida")
+	main.pets.resize(2)
+
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(main.save_path))
-	print("PASS medium: mejora de herramientas, horario y clima")
+	print("PASS medium: mejora de herramientas, horario y clima, mascotas")
 	quit()

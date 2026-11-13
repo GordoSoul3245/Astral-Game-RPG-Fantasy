@@ -325,7 +325,7 @@ func save_game() -> void:
 		return
 	var d := {"version": 1, "level": prog.level, "xp": prog.xp, "points": prog.points, "spent": prog.spent,
 		"coins": prog.coins, "potions": prog.potions, "materials": prog.materials, "owned": prog.owned,
-		"equipped": prog.equipped, "blueprints": prog.blueprints, "slots": prog.slots, "dungeon_floor": dungeon_floor, "quests": quests.to_dict(), "clock": clock.to_dict(), "stars": prog.stars, "angler": angler.to_dict(), "bait": bait, "rod_parts": prog.rod_parts, "farm": farm.to_dict() if farm else pending_farm, "skills": prog.skills, "skill_points": prog.skill_points, "social": social.to_dict(), "zones_done": zones_done, "tool_up": prog.tool_up}
+		"equipped": prog.equipped, "blueprints": prog.blueprints, "slots": prog.slots, "dungeon_floor": dungeon_floor, "quests": quests.to_dict(), "clock": clock.to_dict(), "stars": prog.stars, "angler": angler.to_dict(), "bait": bait, "rod_parts": prog.rod_parts, "farm": farm.to_dict() if farm else pending_farm, "skills": prog.skills, "skill_points": prog.skill_points, "social": social.to_dict(), "zones_done": zones_done, "tool_up": prog.tool_up, "pets": pets}
 	var f := FileAccess.open(save_path, FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(d, "\t"))
@@ -405,6 +405,15 @@ func load_game() -> bool:  # valida cada campo: el archivo puede estar editado o
 		for k: String in ["reel", "line"]:
 			if d["rod_parts"].get(k) == true:
 				prog.rod_parts[k] = true
+	for pn: Node in pet_nodes:
+		pn.queue_free()
+	pet_nodes.clear()
+	pets.clear()
+	if d.get("pets") is Array:
+		for k: Variant in d["pets"]:
+			if str(k) in ["rabbit", "fox"] and pets.size() < 2:
+				pets.append(str(k))
+				_spawn_pet(str(k))
 	prog.tool_up.clear()
 	if d.get("tool_up") is Dictionary:
 		for tid: String in d["tool_up"]:
@@ -570,6 +579,8 @@ func _interact() -> void:
 		shop.open(m.role)
 		return
 	if farm and farm.try_harvest():
+		return
+	if try_tame():
 		return
 	var fu := _near_furniture()
 	if not fu.is_empty():
@@ -1594,7 +1605,7 @@ func _strike() -> void:
 				say(m, 2.0)
 			_refresh_hotbar()
 		"melee":
-			var dmg: float = current["damage"] * (burn_mult if burn_t > 0.0 else 1.0) * prog.melee_mult()
+			var dmg: float = current["damage"] * (burn_mult if burn_t > 0.0 else 1.0) * prog.melee_mult() * (1.08 if pets.has("fox") else 1.0)
 			if dash_bonus_t > 0.0:  # tajo tras dash: más daño, se consume
 				dmg *= DASH_BONUS_MULT
 				dash_bonus_t = 0.0
@@ -2091,6 +2102,9 @@ func _gather_hit() -> void:
 		return
 	var lines: Array[String] = []
 	var drops: Dictionary = crafting.roll_drops(n["kind"])
+	if pets.has("rabbit") and not drops.is_empty() and crafting.rng.randf() < 0.2:  # el conejo encuentra algo más
+		var first: String = drops.keys()[0]
+		drops[first] = int(drops[first]) + 1
 	for id: String in drops:
 		crafting.add(id, int(drops[id]))
 		lines.append("+%d %s" % [int(drops[id]), crafting.item_name(id)])
@@ -2420,6 +2434,66 @@ func _arrival(id: String, side: String, rows: Array) -> Vector2:  # casilla just
 	return Vector2(mid, n - 1.7)
 
 # --- el valle cambia con la hora y el clima: de noche salen limos nocturnos (y con lluvia, algunos de día) y los conejos se esconden de la lluvia
+# --- mascotas: dale de comer a un conejo (hierba o bayas) o a un zorro (carne) varias veces con E y se queda contigo
+const TAME := {"rabbit": {"items": ["hierba_vital", "baya_roja"], "feeds": 2, "name": "conejo"}, "fox": {"items": ["carne_conejo", "carne_zorro", "pescado_asado", "carne_asada"], "feeds": 3, "name": "zorro"}}
+var pets: Array = []         # máx. 2: "rabbit" da un 20 % de recurso extra al recolectar; "fox" +8 % de daño cuerpo a cuerpo
+var pet_nodes: Array = []
+var tame_feeds := {}         # id de instancia del animal -> veces que lo has alimentado
+
+func _spawn_pet(kind: String) -> void:
+	var pn := Node2D.new()
+	pn.set_script(load("res://scripts/pet.gd"))
+	pn.main = self
+	pn.kind = kind
+	pn.slot = pet_nodes.size()
+	add_child(pn)
+	pet_nodes.append(pn)
+
+func try_tame() -> bool:  # E junto a un conejo o un zorro salvaje con comida en la mochila
+	if in_dungeon or dying:
+		return false
+	var best: Node2D = null
+	var kind := ""
+	var best_d := 90.0
+	for f in fauna:
+		if f.alive and f.visible and f.pos.distance_to(pos) < best_d:
+			best = f
+			kind = "rabbit"
+			best_d = f.pos.distance_to(pos)
+	for f in predators:
+		if f.alive and f.pos.distance_to(pos) < best_d:
+			best = f
+			kind = "fox"
+			best_d = f.pos.distance_to(pos)
+	if best == null:
+		return false
+	var food := ""
+	for it: String in TAME[kind]["items"]:
+		if crafting.count(it) > 0:
+			food = it
+			break
+	if food == "":
+		return false
+	if pets.size() >= 2:
+		say("Ya tienes dos mascotas.", 2.0)
+		return true
+	crafting.take(food, 1)
+	var key: int = best.get_instance_id()
+	tame_feeds[key] = int(tame_feeds.get(key, 0)) + 1
+	var need: int = TAME[kind]["feeds"]
+	if int(tame_feeds[key]) < need:
+		popup(best.pos, "♥ %d/%d" % [tame_feeds[key], need], Color(1.0, 0.5, 0.6))
+		say("Se acerca un poco a ti… (%d/%d)" % [tame_feeds[key], need], 2.0)
+		return true
+	best.alive = false  # el salvaje desaparece (vuelve otro con el tiempo) y su sitio lo ocupa tu mascota
+	best.dead_t = float(best.data.get("respawn", 60.0))
+	pets.append(kind)
+	_spawn_pet(kind)
+	popup(pos, "¡%s domado!" % TAME[kind]["name"].capitalize(), Color(1.0, 0.8, 0.5))
+	combat.play_at("catch", pos)
+	save_game()
+	return true
+
 var night_mobs: Array = []
 var night_t := 0.0
 
