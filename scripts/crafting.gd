@@ -182,6 +182,8 @@ func use(main: Node, id: String) -> String:
 	if not is_consumable(id) or count(id) <= 0:
 		return ""
 	var c: Dictionary = cfg["consumables"][id]
+	if c.has("place") or c.has("plant") or c.has("water"):  # se usan con el clic desde la barra, no desde el menú
+		return "Se usa desde la barra de objetos: elígelo y haz clic."
 	if c.has("heal") and not c.has("buff") and main.hero_hp >= main.hero_max_hp:
 		return "Ya tienes la vida completa."
 	var q := take(id, 1, true)

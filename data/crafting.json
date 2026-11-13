@@ -472,6 +472,26 @@
 			"name": "Elixir de sirena",
 			"desc": "Durante 4 minutos los peces pican antes y los raros aparecen más.",
 			"fish_luck": 240
+		},
+		"semilla_baya": {
+			"name": "Semillas de baya",
+			"desc": "Plántalas en una parcela del huerto (clic con la semilla elegida en la barra). Dan bayas rojas en 10 h de juego con riego.",
+			"plant": true
+		},
+		"semilla_hierba": {
+			"name": "Semillas de hierba vital",
+			"desc": "Plántalas en una parcela del huerto. Dan hierba vital en 8 h de juego con riego.",
+			"plant": true
+		},
+		"semilla_hongo": {
+			"name": "Esporas de hongo luminoso",
+			"desc": "Plántalas en el huerto: el hongo solo crece de noche (14 h de juego con riego).",
+			"plant": true
+		},
+		"regadera": {
+			"name": "Regadera",
+			"desc": "Riega las parcelas del huerto cercanas (clic izquierdo). No se gasta; la lluvia también riega.",
+			"water": true
 		}
 	},
 	"blueprints": {

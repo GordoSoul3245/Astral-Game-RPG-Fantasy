@@ -142,3 +142,11 @@ Lee este archivo y sigue desde "Pendiente". Lo que está escrito aquí es la fue
 - **El exterior se adapta** (`main.world_level`, `refresh_world_levels`): los monstruos del mundo (zorro) van a nivel del héroe − 2 y el dragón (jefe) a su nivel; se reajustan al subir de nivel y al volver de la dungeon conservando su fracción de vida.
 - **Misiones:** «El mago de la tormenta» es el jefe del piso 4 y «El gigante de piedra» (antes la cámara oculta) pide superar el piso 8.
 - **Por probar jugando:** la curva de dificultad (los multiplicadores son un primer ajuste medido con el bot, que apunta perfecto y no esquiva), cómo se ven los muros y las arenas, y el ritmo de XP en pisos profundos.
+
+## Agricultura (huerto)
+- **Huerto** (`scripts/farm.gd`, datos en `data/farming.json`): 12 parcelas (4×3) en un hueco libre junto al inicio, dibujadas con tierra labrada y cuatro fases de planta. Se guardan (`farm`).
+- **Semillas** (consumibles que se plantan con el clic estando elegidas en la barra, junto a una parcela libre): baya (10 h de juego), hierba vital (8 h) y espora de hongo luminoso (14 h, **solo crece de noche**). Las vende Tomás junto a la **regadera** (no se gasta). Las cosechas son materiales normales, así que alimentan cocina y alquimia.
+- **Riego:** la regadera riega las parcelas cercanas durante 8 h de juego; sin agua no crece; **la lluvia riega sola**. Crece con `clock.total`, así que dormir también hace crecer el huerto.
+- **Cosecha:** E junto a una parcela madura (2-4 unidades; 40 % de devolver una semilla). El aviso sobre la parcela muestra el progreso y si está seca.
+- Tests: `tests/test_farm.gd`; captura `production/qa/evidence/mundo_vivo/5_huerto.png`.
+- **Por probar jugando:** ritmo de crecimiento y precios; el huerto está en un único sitio y los iconos de semillas/regadera son dibujados por código.

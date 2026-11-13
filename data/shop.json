@@ -85,6 +85,25 @@
 			{
 				"id": "plano_elixir_sirena",
 				"price": 90
+			},
+			{
+				"id": "semilla_baya",
+				"price": 10,
+				"qty": 3
+			},
+			{
+				"id": "semilla_hierba",
+				"price": 8,
+				"qty": 3
+			},
+			{
+				"id": "semilla_hongo",
+				"price": 16,
+				"qty": 2
+			},
+			{
+				"id": "regadera",
+				"price": 30
 			}
 		]
 	},

@@ -213,6 +213,7 @@ func _ready() -> void:
 	clock = load("res://scripts/clock.gd").new()
 	add_child(clock)
 	call_deferred("_build_lamps")
+	call_deferred("_build_farm")
 	angler = load("res://scripts/angler.gd").new(self, _read_json("res://data/fishing.json"))
 	traps = load("res://scripts/traps.gd").new()
 	traps.main = self
@@ -319,7 +320,7 @@ func save_game() -> void:
 		return
 	var d := {"version": 1, "level": prog.level, "xp": prog.xp, "points": prog.points, "spent": prog.spent,
 		"coins": prog.coins, "potions": prog.potions, "materials": prog.materials, "owned": prog.owned,
-		"equipped": prog.equipped, "blueprints": prog.blueprints, "slots": prog.slots, "dungeon_floor": dungeon_floor, "quests": quests.to_dict(), "clock": clock.to_dict(), "stars": prog.stars, "angler": angler.to_dict(), "bait": bait, "rod_parts": prog.rod_parts}
+		"equipped": prog.equipped, "blueprints": prog.blueprints, "slots": prog.slots, "dungeon_floor": dungeon_floor, "quests": quests.to_dict(), "clock": clock.to_dict(), "stars": prog.stars, "angler": angler.to_dict(), "bait": bait, "rod_parts": prog.rod_parts, "farm": farm.to_dict() if farm else pending_farm}
 	var f := FileAccess.open(save_path, FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(d, "\t"))
@@ -399,6 +400,11 @@ func load_game() -> bool:  # valida cada campo: el archivo puede estar editado o
 		for k: String in ["reel", "line"]:
 			if d["rod_parts"].get(k) == true:
 				prog.rod_parts[k] = true
+	if d.get("farm") is Dictionary:
+		if farm:
+			farm.from_dict(d["farm"])
+		else:
+			pending_farm = d["farm"]
 	bait = str(d.get("bait", "")) if angler.cfg["baits"].has(str(d.get("bait", ""))) else ""
 	return true
 
@@ -519,6 +525,8 @@ func _interact() -> void:
 	if m != null:
 		shop.open(m.role)
 		return
+	if farm and farm.try_harvest():
+		return
 	var fu := _near_furniture()
 	if not fu.is_empty():
 		if fu["kind"] == "bed":
@@ -617,6 +625,8 @@ func _update_prompt(delta: float) -> void:
 		prompt.text = "[E] Comprar a Tomás  (tienes %d monedas)" % prog.coins if _near_merchant().role == "merchant" else "[E] Vender materiales a Bram"
 	elif not _near_furniture().is_empty():
 		prompt.text = "[E] " + _near_furniture()["label"]
+	elif farm and farm.near_text() != "":
+		prompt.text = farm.near_text()
 	elif not _near_station().is_empty():
 		prompt.text = "[E] " + _near_station()["label"]
 	elif not _near_node().is_empty():
@@ -2032,6 +2042,8 @@ const WEAPONS := ["katana_ceniza", "grimorio_ignis"]
 var hotbar_row: HBoxContainer
 var clock: Node        # clock.gd: hora, día y lluvia
 var angler: RefCounted # angler.gd: libro de capturas, acuario, encargos y nasas
+var farm: Node2D       # farm.gd: huerto
+var pending_farm := {}
 var lamps: Node2D      # lamps.gd: farolas del pueblo
 var traps: Node2D      # traps.gd: nasas y trampas colocadas en el mundo
 var bait := ""         # cebo elegido para la caña (tecla B)
@@ -2178,6 +2190,14 @@ func cycle_bait() -> void:  # B: sin cebo -> cada cebo con existencias -> sin ce
 	say("Cebo: %s" % (crafting.item_name(bait) + " ×%d" % crafting.count(bait) if bait != "" else "ninguno"), 1.5)
 	_select(selected)
 
+func _build_farm() -> void:  # el huerto, junto al inicio
+	farm = Node2D.new()
+	farm.set_script(load("res://scripts/farm.gd"))
+	add_child(farm)
+	farm.setup(self)
+	if not pending_farm.is_empty():
+		farm.from_dict(pending_farm)
+
 func _build_lamps() -> void:  # farolas en las puertas de las casas y junto a los comerciantes; solo se encienden de noche
 	var pts: Array = []
 	for d: Node2D in doors:
@@ -2221,6 +2241,10 @@ func _use_hand(id: String, it: Dictionary) -> bool:  # clic izquierdo con una he
 			say("Se acabó: %s." % it["name"], 1.5)
 		elif c.has("place"):
 			say(traps.place(id, str(c["place"])), 2.0)
+		elif c.has("plant"):
+			say(farm.plant(id) if farm else "Aquí no hay huerto.", 2.0)
+		elif c.has("water"):
+			say(farm.water() if farm else "Aquí no hay huerto.", 1.5)
 		elif c.has("heal") and not c.has("buff") and hero_hp >= hero_max_hp:
 			say("Ya tienes la vida completa.", 1.5)
 		else:

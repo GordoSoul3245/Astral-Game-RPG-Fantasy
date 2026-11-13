@@ -1,0 +1,40 @@
+{
+	"plots": {
+		"cols": 4,
+		"rows": 3,
+		"spacing": 1.25
+	},
+	"reach": 2.0,
+	"water_hours": 8.0,
+	"seed_back": 0.4,
+	"seeds": {
+		"semilla_baya": {
+			"crop": "baya_roja",
+			"hours": 10.0,
+			"yield": [
+				2,
+				4
+			],
+			"color": "#d83a3a"
+		},
+		"semilla_hierba": {
+			"crop": "hierba_vital",
+			"hours": 8.0,
+			"yield": [
+				2,
+				3
+			],
+			"color": "#3fbf4a"
+		},
+		"semilla_hongo": {
+			"crop": "hongo_luminoso",
+			"hours": 14.0,
+			"yield": [
+				1,
+				2
+			],
+			"color": "#4fc8ff",
+			"night": true
+		}
+	}
+}

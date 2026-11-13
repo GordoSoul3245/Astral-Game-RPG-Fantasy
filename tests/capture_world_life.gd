@@ -68,6 +68,19 @@ func capture() -> void:
 	main.forced_aim = Vector2(1, 0)
 	await _wait(0.8)
 	await _shot("4_nasa_y_trampa")
+	# huerto con cultivos en distintas fases
+	var farm: Node2D = main.farm
+	var seeds := ["semilla_baya", "semilla_hierba", "semilla_hongo"]
+	for i in farm.plots.size():
+		farm.plots[i]["seed"] = seeds[i % 3]
+		farm.plots[i]["growth"] = float(farm.cfg["seeds"][seeds[i % 3]]["hours"]) * [0.05, 0.4, 0.7, 1.0][i % 4]
+		farm.plots[i]["wet"] = 4.0 if i % 2 == 0 else 0.0
+	main.pos = main.tile_to_ground(farm.plots[5]["tile"] + Vector2(1.5, 1.5))
+	main._place()
+	main.cam.position = (main.pos - Vector2(0, 40)) * main.SCALE
+	main.clock.hour = 12.0
+	await _wait(0.8)
+	await _shot("5_huerto")
 	# inventario con la barra abierta
 	main.menu.visible = true
 	main.menu._set_tab("inv")
