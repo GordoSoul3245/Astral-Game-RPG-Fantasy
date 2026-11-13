@@ -29,8 +29,8 @@ func run_checks() -> void:
 	main.save_path = "user://test_zones_save.json"
 	main.testing = true
 	await _wait(0.5)
-	assert(main.zones_cfg.size() == 2 and main.zones_cfg.has("pantano") and main.zones_cfg.has("desierto"), "hay dos zonas")
-	assert(main.links.size() == 2 and main.world.get_children().any(func(c: Node) -> bool: return c.get_script() != null and c.get_script().resource_path.ends_with("bridges.gd")), "el valle tiene puentes hacia las zonas")
+	assert(main.zones_cfg.size() == 3 and main.zones_cfg.has("nieve"), "hay tres zonas")
+	assert(main.links.size() == 3 and main.world.get_children().any(func(c: Node) -> bool: return c.get_script() != null and c.get_script().resource_path.ends_with("bridges.gd")), "el valle tiene puentes hacia las zonas")
 
 	for id: String in main.zones_cfg:
 		var cfg: Dictionary = main.zones_cfg[id]
@@ -45,7 +45,7 @@ func run_checks() -> void:
 		for side: String in main.gates_of(id):
 			var rows: Array = main.gates_of(id)[side]
 			var n: int = int(cfg["tiles"])
-			var gate_cell := Vector2i(n - 1, int(rows[0])) if side == "e" else Vector2i(0, int(rows[0]))
+			var gate_cell: Vector2i = {"e": Vector2i(n - 1, int(rows[0])), "w": Vector2i(0, int(rows[0])), "s": Vector2i(int(rows[0]), n - 1), "n": Vector2i(int(rows[0]), 0)}[side]
 			assert(seen.has(gate_cell), "%s: el claro del lado %s es alcanzable desde la entrada" % [id, side])
 		assert(seen.size() > 300, "%s: hay mucho suelo transitable (%d casillas)" % [id, seen.size()])
 		for e: Dictionary in cfg["enemies"]:
@@ -107,6 +107,19 @@ func run_checks() -> void:
 	main._exit_mine()
 	await _wait(0.3)
 
+	# el puente norte lleva a las Cumbres Heladas por su lado sur
+	main.prog.level = 6
+	main.pos = main.tile_to_ground(Vector2(29.5, 0.5))
+	main.travel_cd = 0.0
+	main._check_edges(0.0)
+	await _wait(1.0)
+	assert(main.region() == "nieve" and main.ground_to_tile(main.pos).y > 24.0, "el puente norte lleva a las Cumbres Heladas por el sur")
+	main.pos = main.tile_to_ground(Vector2(14.0, 27.3))
+	main.travel_cd = 0.0
+	main._check_edges(0.0)
+	await _wait(1.0)
+	assert(main.region() == "valle" and main.ground_to_tile(main.pos).y < 4.0, "y de vuelta al valle por el norte")
+
 	# el desierto es más duro que la marisma
 	var weights: Dictionary = {}
 	for id: String in main.zones_cfg:
@@ -114,7 +127,7 @@ func run_checks() -> void:
 		for e: Dictionary in main.zones_cfg[id]["enemies"]:
 			t += int(main.creatures[e["id"]]["hp"]) + int(e["off"]) * 100
 		weights[id] = t
-	assert(weights["desierto"] > weights["pantano"], "el desierto tiene un reparto más duro")
+	assert(weights["desierto"] > weights["pantano"] and weights["nieve"] > weights["desierto"], "cada zona es más dura: marisma, desierto, cumbres")
 
 	# guardado de zonas abiertas
 	main.save_game()

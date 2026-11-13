@@ -29,7 +29,7 @@ func _burn(e: Node) -> void:  # golpe del héroe: daña y, según el hechizo, ma
 		"slow":
 			if "slow_t" in e:
 				e.slow_t = 3.0
-				main.popup(e.pos, "❄", Color(0.6, 0.9, 1.0))
+				main.fx_ice(e.pos)
 		"chain":
 			var n := 0
 			for o in main.targets():  # el rayo salta a los 2 enemigos más cercanos con un 60 % del daño
@@ -37,7 +37,7 @@ func _burn(e: Node) -> void:  # golpe del héroe: daña y, según el hechizo, ma
 					break
 				if o != e and o.alive and o.pos.distance_to(e.pos) < 130.0:
 					main.combat.hit(o, roundi(float(damage) * 0.6), "magic", e.pos, false)
-					main.popup(o.pos, "⚡", Color(0.85, 0.75, 1.0))
+					main.fx_bolt(e.pos, o.pos, Color(0.85, 0.75, 1.0))
 					n += 1
 		_:
 			main.combat.mark(e)

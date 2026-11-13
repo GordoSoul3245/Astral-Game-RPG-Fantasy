@@ -587,5 +587,203 @@
 		"boss": true,
 		"tint": "#ffd08a",
 		"counts_as": "cyclops"
+	},
+	"limo_escarcha": {
+		"kind": "slime",
+		"blood": "#7acfee",
+		"hp": 52,
+		"speed": 50.0,
+		"detect_range": 265.0,
+		"radius": 10.0,
+		"r_t": 0.32,
+		"staggerable": true,
+		"sprites": {
+			"prefix": "res://art/slime/slime_",
+			"feet": [
+				68.0,
+				113.7
+			],
+			"kinds": [
+				"idle",
+				"walk"
+			]
+		},
+		"hop_time": 0.8,
+		"hop_rest": 0.5,
+		"contact_damage": 12,
+		"contact_cooldown": 0.9,
+		"xp": 18,
+		"coins": [
+			4,
+			9
+		],
+		"drops": [
+			{
+				"item": "cristal_arcano",
+				"chance": 0.25
+			},
+			{
+				"item": "gel_slime",
+				"chance": 0.4
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 0.15
+			}
+		],
+		"name": "Limo de escarcha",
+		"tint": "#a0e8ff",
+		"counts_as": "slime"
+	},
+	"arquero_hielo": {
+		"kind": "archer",
+		"blood": "#e8dcc0",
+		"hp": 48,
+		"speed": 46.0,
+		"detect_range": 320.0,
+		"keep_distance": 150.0,
+		"sprites": {
+			"prefix": "res://art/skeleton/skeleton_",
+			"feet": [
+				68.0,
+				113.7
+			]
+		},
+		"flee_distance": 90.0,
+		"attack_cooldown": 2.2,
+		"windup": 0.5,
+		"recover": 0.45,
+		"staggerable": true,
+		"radius": 10.0,
+		"r_t": 0.32,
+		"projectile": {
+			"speed": 200.0,
+			"radius": 4.0,
+			"damage": 10,
+			"muzzle_height": 38.0,
+			"scale": 0.45,
+			"tint": "#e8e2c8"
+		},
+		"xp": 28,
+		"coins": [
+			8,
+			14
+		],
+		"drops": [
+			{
+				"item": "hueso_antiguo",
+				"chance": 0.4
+			},
+			{
+				"item": "cristal_arcano",
+				"chance": 0.3
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 0.2
+			}
+		],
+		"name": "Arquero helado",
+		"tint": "#cfeeff",
+		"counts_as": "skeleton_archer"
+	},
+	"ciclope_helado": {
+		"kind": "brute",
+		"blood": "#8e1f2a",
+		"hp": 250,
+		"speed": 38.0,
+		"detect_range": 370.0,
+		"attack_range": 48.0,
+		"windup": 0.8,
+		"attack_cooldown": 2.4,
+		"slam_radius": 55.0,
+		"slam_damage": 38,
+		"poise": 70,
+		"size": 2.5,
+		"sprites": {
+			"prefix": "res://art/cyclops/cyclops_",
+			"feet": [
+				228.0,
+				273.7
+			]
+		},
+		"radius": 22.0,
+		"r_t": 0.7,
+		"recover": 0.9,
+		"knock_resist": 0.75,
+		"xp": 150,
+		"coins": [
+			45,
+			70
+		],
+		"drops": [
+			{
+				"item": "ojo_ciclope",
+				"chance": 1.0
+			},
+			{
+				"item": "cristal_arcano",
+				"chance": 0.6
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 0.6
+			}
+		],
+		"name": "Cíclope helado",
+		"tint": "#cfe8ff",
+		"counts_as": "cyclops"
+	},
+	"gigante_escarcha": {
+		"kind": "brute",
+		"blood": "#8e1f2a",
+		"hp": 700,
+		"speed": 38.0,
+		"detect_range": 370.0,
+		"attack_range": 48.0,
+		"windup": 0.8,
+		"attack_cooldown": 2.4,
+		"slam_radius": 55.0,
+		"slam_damage": 46,
+		"poise": 70,
+		"size": 3.88,
+		"sprites": {
+			"prefix": "res://art/cyclops/cyclops_",
+			"feet": [
+				228.0,
+				273.7
+			]
+		},
+		"radius": 22.0,
+		"r_t": 0.7,
+		"recover": 0.9,
+		"knock_resist": 0.75,
+		"xp": 420,
+		"coins": [
+			220,
+			300
+		],
+		"drops": [
+			{
+				"item": "ojo_ciclope",
+				"chance": 1.0
+			},
+			{
+				"item": "cristal_arcano",
+				"chance": 1.0
+			},
+			{
+				"item": "lingote_acero",
+				"chance": 1.0
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 1.0
+			}
+		],
+		"name": "Gigante de escarcha",
+		"boss": true,
+		"tint": "#e6f6ff",
+		"counts_as": "cyclops"
 	}
 }

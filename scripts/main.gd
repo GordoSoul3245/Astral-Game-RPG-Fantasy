@@ -427,7 +427,7 @@ func load_game() -> bool:  # valida cada campo: el archivo puede estar editado o
 	zones_done.clear()
 	if d.get("zones_done") is Array:
 		for z: Variant in d["zones_done"]:
-			if str(z) in ["pantano", "desierto"] and not zones_done.has(str(z)):
+			if str(z) in ["pantano", "desierto", "nieve"] and not zones_done.has(str(z)):
 				zones_done.append(str(z))
 	if d.get("social") is Dictionary:
 		social.from_dict(d["social"])
@@ -2503,6 +2503,43 @@ func try_tame() -> bool:  # E junto a un conejo o un zorro salvaje con comida en
 var night_mobs: Array = []
 var night_t := 0.0
 
+# --- efectos de los hechizos: esquirlas de hielo y rayos zigzagueantes
+func fx_ice(ground: Vector2) -> void:
+	for k in 9:
+		var p := Polygon2D.new()
+		var a := float(k) / 9.0 * TAU
+		p.polygon = PackedVector2Array([Vector2(0, -9), Vector2(4, 4), Vector2(-4, 4)])
+		p.color = Color(0.7, 0.93, 1.0, 0.95)
+		p.rotation = a + PI / 2.0
+		p.position = (ground - Vector2(0, 30)) * SCALE
+		p.scale = Vector2.ONE * SCALE * 0.7
+		p.z_index = 3500
+		add_child(p)
+		var tw := p.create_tween().set_parallel(true)
+		tw.tween_property(p, "position", p.position + Vector2.from_angle(a) * 46.0 * SCALE * 0.6, 0.4)
+		tw.tween_property(p, "modulate:a", 0.0, 0.4)
+		tw.chain().tween_callback(p.queue_free)
+	combat.play_at("ice", ground)
+
+func fx_bolt(from_g: Vector2, to_g: Vector2, col: Color) -> void:
+	var l := Line2D.new()
+	var a := (from_g - Vector2(0, 40)) * SCALE
+	var b := (to_g - Vector2(0, 40)) * SCALE
+	var pts := PackedVector2Array([a])
+	for k in range(1, 6):
+		var t := float(k) / 6.0
+		pts.append(a.lerp(b, t) + Vector2(randf_range(-9.0, 9.0), randf_range(-9.0, 9.0)) * SCALE * 0.6)
+	pts.append(b)
+	l.points = pts
+	l.width = 4.0
+	l.default_color = col
+	l.z_index = 3500
+	add_child(l)
+	var tw := l.create_tween()
+	tw.tween_property(l, "modulate:a", 0.0, 0.28)
+	tw.tween_callback(l.queue_free)
+	combat.play_at("zap", to_g)
+
 func _tick_schedule(delta: float) -> void:
 	if in_mine and zone_id != "" and zone_chest == null and not zones_done.has(zone_id) and zone_boss != null and not zone_boss.alive:
 		_make_zone_chest()
@@ -2613,6 +2650,8 @@ func _enter_zone(id: String) -> void:
 	for e in enemies:
 		if e != dragon and e.data.get("boss", false):
 			zone_boss = e
+	if zone_boss != null and not zones_done.has(id):
+		combat.play_at("roar", pos)
 	say("%s: %s%s" % [cfg["name"], cfg["level_note"], ("  Jefe: %s." % zone_boss.data["name"]) if zone_boss != null and not zones_done.has(id) else ""], 4.0)
 
 var zone_boss: Node2D

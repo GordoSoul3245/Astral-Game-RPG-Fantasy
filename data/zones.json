@@ -739,5 +739,347 @@
 		},
 		"detail": "desert",
 		"theme_pitch": 1.12
+	},
+	"nieve": {
+		"name": "Cumbres Heladas",
+		"tiles": 28,
+		"clear": "#0a121c",
+		"ground": [
+			"#dfe8f0",
+			"#d3e0ec"
+		],
+		"path": "#b4c6d6",
+		"water": "#7fb4d6",
+		"water2": "#9fcbe8",
+		"start": [
+			14.5,
+			24.0
+		],
+		"level_note": "La más dura: hielo, arqueros y cíclopes helados; cristal y hierro.",
+		"detail": "snow",
+		"theme_pitch": 1.25,
+		"water_rects": [
+			[
+				11,
+				12,
+				17,
+				16
+			],
+			[
+				4,
+				6,
+				9,
+				10
+			],
+			[
+				20,
+				8,
+				24,
+				11
+			]
+		],
+		"path_rects": [
+			[
+				13,
+				3,
+				16,
+				26
+			],
+			[
+				4,
+				20,
+				24,
+				22
+			]
+		],
+		"tree_lines": [
+			{
+				"sprite": "rock_b",
+				"line": [
+					1.2,
+					1.2,
+					26.5,
+					1.2
+				],
+				"step": 1.7
+			},
+			{
+				"sprite": "rock_a",
+				"line": [
+					1.2,
+					1.2,
+					1.2,
+					26.5
+				],
+				"step": 1.7
+			},
+			{
+				"sprite": "rock_b",
+				"line": [
+					26.5,
+					1.2,
+					26.5,
+					26.5
+				],
+				"step": 1.7
+			},
+			{
+				"sprite": "rock_a",
+				"line": [
+					1.2,
+					26.5,
+					11.5,
+					26.5
+				],
+				"step": 1.7
+			},
+			{
+				"sprite": "rock_b",
+				"line": [
+					17.5,
+					26.5,
+					26.5,
+					26.5
+				],
+				"step": 1.7
+			}
+		],
+		"trees": [
+			[
+				8,
+				3,
+				"tree_a"
+			],
+			[
+				20,
+				3.5,
+				"tree_b"
+			],
+			[
+				3.5,
+				15,
+				"tree_a"
+			],
+			[
+				25,
+				14,
+				"tree_b"
+			],
+			[
+				10.5,
+				18,
+				"tree_c"
+			],
+			[
+				18,
+				19,
+				"tree_c"
+			],
+			[
+				6,
+				12.5,
+				"rock_a"
+			],
+			[
+				22,
+				16,
+				"rock_b"
+			],
+			[
+				9,
+				5,
+				"rock_b"
+			],
+			[
+				19,
+				12,
+				"rock_a"
+			]
+		],
+		"nodes": [
+			{
+				"kind": "crystal",
+				"t": [
+					5.5,
+					13.0
+				]
+			},
+			{
+				"kind": "crystal",
+				"t": [
+					23.5,
+					13.0
+				]
+			},
+			{
+				"kind": "crystal",
+				"t": [
+					14.5,
+					19.5
+				]
+			},
+			{
+				"kind": "crystal",
+				"t": [
+					6.5,
+					3.0
+				]
+			},
+			{
+				"kind": "iron",
+				"t": [
+					22.0,
+					4.0
+				]
+			},
+			{
+				"kind": "iron",
+				"t": [
+					4.0,
+					20.0
+				]
+			},
+			{
+				"kind": "iron",
+				"t": [
+					23.0,
+					22.0
+				]
+			},
+			{
+				"kind": "coal",
+				"t": [
+					10.0,
+					8.0
+				]
+			},
+			{
+				"kind": "coal",
+				"t": [
+					19.0,
+					6.0
+				]
+			},
+			{
+				"kind": "coal",
+				"t": [
+					24.0,
+					17.0
+				]
+			},
+			{
+				"kind": "mushroom",
+				"t": [
+					8.0,
+					12.0
+				]
+			},
+			{
+				"kind": "mushroom",
+				"t": [
+					20.0,
+					20.0
+				]
+			}
+		],
+		"enemies": [
+			{
+				"id": "limo_escarcha",
+				"t": [
+					7.0,
+					13.0
+				],
+				"off": 1
+			},
+			{
+				"id": "limo_escarcha",
+				"t": [
+					22.0,
+					12.5
+				],
+				"off": 1
+			},
+			{
+				"id": "limo_escarcha",
+				"t": [
+					8.0,
+					19.0
+				],
+				"off": 1
+			},
+			{
+				"id": "limo_escarcha",
+				"t": [
+					21.0,
+					18.0
+				],
+				"off": 1
+			},
+			{
+				"id": "arquero_hielo",
+				"t": [
+					5.5,
+					4.5
+				],
+				"off": 1
+			},
+			{
+				"id": "arquero_hielo",
+				"t": [
+					22.5,
+					5.5
+				],
+				"off": 1
+			},
+			{
+				"id": "arquero_hielo",
+				"t": [
+					10.0,
+					22.5
+				],
+				"off": 1
+			},
+			{
+				"id": "ciclope_helado",
+				"t": [
+					8.0,
+					15.0
+				],
+				"off": 2
+			},
+			{
+				"id": "ciclope_helado",
+				"t": [
+					19.0,
+					15.0
+				],
+				"off": 2
+			},
+			{
+				"id": "gigante_escarcha",
+				"t": [
+					14.5,
+					6.0
+				],
+				"off": 3
+			}
+		],
+		"chest": {
+			"t": [
+				14.5,
+				3.6
+			],
+			"coins": [
+				260,
+				380
+			],
+			"xp": 420,
+			"skill_points": 3,
+			"items": {
+				"cristal_arcano": 4,
+				"lingote_acero": 3,
+				"elixir_furia": 2
+			}
+		}
 	}
 }

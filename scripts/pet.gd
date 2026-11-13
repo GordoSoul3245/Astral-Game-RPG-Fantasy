@@ -28,5 +28,16 @@ func _physics_process(delta: float) -> void:
 		moving = true
 	position = pos * main.SCALE
 	z_index = int(pos.y)
+	idle_t = 0.0 if moving else idle_t + delta
+	queue_redraw()
 	if spr:
 		preload("res://scripts/life_sprite.gd").show(spr, main, "walk" if moving else "idle", look, 1.6 if moving else 1.0)
+
+var idle_t := 0.0
+
+func _draw() -> void:  # pañuelo de su color y un corazón de vez en cuando: se nota que es tu mascota
+	var sc: float = main.SCALE
+	var col := Color(0.9, 0.2, 0.25) if kind == "rabbit" else Color(0.25, 0.5, 0.95)
+	draw_colored_polygon(PackedVector2Array([Vector2(-8, -20) * sc, Vector2(8, -20) * sc, Vector2(6, -15) * sc, Vector2(0, -12) * sc, Vector2(-6, -15) * sc]), col)
+	if idle_t > 3.0 and fmod(idle_t, 6.0) < 1.5:
+		draw_string(ThemeDB.fallback_font, Vector2(-8, -34) * sc, "♥", HORIZONTAL_ALIGNMENT_CENTER, -1, int(14 * sc), Color(1.0, 0.4, 0.55))

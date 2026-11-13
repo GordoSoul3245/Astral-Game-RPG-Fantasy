@@ -192,3 +192,11 @@ Lee este archivo y sigue desde "Pendiente". Lo que está escrito aquí es la fue
 - **Sprites del huerto:** 12 sprites de Blender (3 cultivos × 4 fases) sustituyen a las formas dibujadas.
 - Tests: `tests/test_medium.gd`, `tests/test_zones.gd`.
 - **Por probar jugando:** equilibrio de los jefes, de las mejoras y de los bonus de mascota; el adelanto de región es solo suelo plano con siluetas.
+
+## Cumbres Heladas, efectos y pulido de las zonas
+- **Tercera zona conectada:** *Cumbres Heladas* (nieve, charcas heladas, cristal, hierro y carbón) enlazada por un **puente norte** del valle (`data/world.json`: lado `n` ↔ lado `s` de la zona). `bridges.gd` y `region.gd` ya funcionan en los cuatro lados. Es la más dura (monstruos +1..+3 niveles): limo de escarcha, arquero helado, cíclope helado y el jefe **Gigante de escarcha** (700 de vida); su cofre da 3 puntos de habilidad, cristal, acero y elixires.
+- **Efectos de los hechizos:** esquirlas de hielo al ralentizar (`main.fx_ice`) y rayos zigzagueantes entre enemigos (`main.fx_bolt`), con sonido propio (`ice`, `zap`) y un rugido (`roar`) al entrar en una zona con jefe.
+- **Suelo de las zonas con textura:** motas claras y oscuras por casilla y detalle propio de la nieve (ventisqueros, cristales de hielo, grietas).
+- **Mascotas** con pañuelo de color (rojo el conejo, azul el zorro) y un corazón cuando están quietas.
+- Test: `tests/test_zones.gd` cubre las tres zonas y los cuatro lados de enlace.
+- **Por probar jugando:** equilibrio del Gigante de escarcha y de los niveles de la zona; el arte de la nieve reutiliza los árboles y rocas del valle (sin versión nevada).

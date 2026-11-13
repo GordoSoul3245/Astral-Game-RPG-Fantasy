@@ -117,14 +117,17 @@ func _preview(ci: CanvasItem) -> void:  # adelanto de la región vecina al otro 
 		var r: Array = g[side]
 		for k in range(1, 8):
 			for j in range(int(r[0]) - 3, int(r[1]) + 4):
-				var i: int = -k if side == "w" else n - 1 + k
-				if side in ["n", "s"]:
-					continue
-				var h := (i * 73 + j * 31) % 100
-				var q := PackedVector2Array([_corner(i, j), _corner(i + 1, j), _corner(i + 1, j + 1), _corner(i, j + 1)])
-				ci.draw_colored_polygon(q, col.lightened(float(h % 5) * 0.02) if (i + j) % 2 == 0 else col.darkened(0.06))
+				var i: int = j
+				var j2: int = j
+				if side in ["w", "e"]:
+					i = -k if side == "w" else n - 1 + k
+				else:
+					j2 = -k if side == "n" else n - 1 + k
+				var h := (absi(i) * 73 + absi(j2) * 31) % 100
+				var q := PackedVector2Array([_corner(i, j2), _corner(i + 1, j2), _corner(i + 1, j2 + 1), _corner(i, j2 + 1)])
+				ci.draw_colored_polygon(q, col.lightened(float(h % 5) * 0.02) if (i + j2) % 2 == 0 else col.darkened(0.06))
 				if h < 11 and k > 1:
-					var b := _corner(i + 0.5, j + 0.5)
+					var b := _corner(i + 0.5, j2 + 0.5)
 					ci.draw_colored_polygon(PackedVector2Array([b + Vector2(-9, 0) * sc, b + Vector2(9, 0) * sc, b + Vector2(0, -34) * sc]), col.darkened(0.45))
 
 func _gate_zone(i: int, j: int) -> bool:  # camino que sale del claro hacia dentro
@@ -143,6 +146,20 @@ func _detail(ci: CanvasItem, i: int, j: int, t: float) -> void:  # detalles de s
 	var c: Vector2 = _corner(i + 0.5, j + 0.5)
 	var sc: float = main.SCALE
 	var kind: String = str(cfg.get("detail", ""))
+	if not water.has(Vector2i(i, j)):  # textura: motas claras y oscuras repartidas por la casilla
+		var base := Color(str(cfg["ground"][0]))
+		for k in 3:
+			var hh := (i * 131 + j * 17 + k * 53) % 100
+			var off := Vector2(float(hh % 21) - 10.0, float((hh * 7) % 9) - 4.0) * sc
+			ci.draw_circle(c + off, (1.4 + float(hh % 3) * 0.5) * sc, base.darkened(0.1) if hh % 2 == 0 else base.lightened(0.12))
+	if kind == "snow":
+		if water.has(Vector2i(i, j)):
+			if h < 18:  # grietas del hielo
+				ci.draw_line(c + Vector2(-12, -3) * sc, c + Vector2(10, 4) * sc, Color(1, 1, 1, 0.6), 1.5)
+		elif h < 12:  # ventisqueros
+			ci.draw_circle(c + Vector2(float(h % 5) - 2.0, 3.0) * sc, 7.0 * sc, Color(1, 1, 1, 0.55))
+		elif h > 92:  # cristales de hielo
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-3, 0) * sc, c + Vector2(0, -12) * sc, c + Vector2(3, 0) * sc]), Color(0.65, 0.9, 1.0))
 	if kind == "swamp":
 		if water.has(Vector2i(i, j)):
 			if h < 22:  # nenúfar

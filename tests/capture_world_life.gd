@@ -150,4 +150,23 @@ func capture() -> void:
 	main.social.play_scene("tomas", ["Tomás: Eres mi mejor cliente y, ahora, mi mejor amigo. Llévate estos cebos.", "(Tomás te da: 100 monedas, Cebo de carne ×10)"])
 	await _wait(2.2)
 	await _shot("10_escena_amistad")
+	
+	# cumbres heladas, puente norte y efectos de hielo y rayo
+	main.pos = main.tile_to_ground(Vector2(29.5, 7.0))
+	main._place()
+	main.cam.position = (main.pos - Vector2(0, 40)) * main.SCALE
+	await _wait(0.8)
+	await _shot("11_puente_norte")
+	main._enter_zone("nieve")
+	await _wait(1.0)
+	main.pos = main.tile_to_ground(Vector2(14.5, 18.0))
+	main._place()
+	main.cam.position = (main.pos - Vector2(0, 40)) * main.SCALE
+	await _wait(0.6)
+	var foes: Array = main.enemies.filter(func(e: Node) -> bool: return e != main.dragon)
+	main.fx_ice(foes[0].pos)
+	main.fx_bolt(foes[0].pos, foes[1].pos, Color(0.85, 0.75, 1.0))
+	await _wait(0.12)
+	await _shot("11_cumbres_efectos")
+	main._exit_mine()
 	quit()
