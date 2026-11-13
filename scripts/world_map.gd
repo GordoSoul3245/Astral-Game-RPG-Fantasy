@@ -13,13 +13,14 @@ var grid := {}               # Vector2i (celda de 2x2 casillas) -> círculos cer
 func setup(data: Dictionary) -> void:
 	tiles = int(data["tiles"])
 	walk = data["walk"]
-	var ground := Sprite2D.new()
-	ground.texture = load(data["image"])
-	ground.centered = false
-	ground.position = -main.map_origin * main.SCALE
-	ground.scale = Vector2.ONE * main.SCALE
-	ground.z_index = -4000  # siempre por debajo de héroe, objetos y proyectiles
-	add_child(ground)
+	if data.has("image"):  # las zonas dibujan su propio suelo
+		var ground := Sprite2D.new()
+		ground.texture = load(data["image"])
+		ground.centered = false
+		ground.position = -main.map_origin * main.SCALE
+		ground.scale = Vector2.ONE * main.SCALE
+		ground.z_index = -4000  # siempre por debajo de héroe, objetos y proyectiles
+		add_child(ground)
 	for o: Dictionary in data["objects"]:
 		var sp: Dictionary = data["sprites"][o["sprite"]]
 		var tile := Vector2(o["tile"][0], o["tile"][1])

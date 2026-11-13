@@ -1,0 +1,264 @@
+{
+	"talk_points": 20,
+	"gift_points": {
+		"love": 80,
+		"like": 45,
+		"neutral": 20,
+		"dislike": -25
+	},
+	"per_heart": 100,
+	"reactions": {
+		"love": [
+			"¡Justo lo que quería! Gracias de corazón.",
+			"¿Para mí? ¡Es perfecto!",
+			"No me lo puedo creer... ¡me encanta!"
+		],
+		"like": [
+			"Qué detalle, muchas gracias.",
+			"Me viene muy bien, gracias.",
+			"Oh, qué amable por tu parte."
+		],
+		"neutral": [
+			"Gracias... supongo que algo hará con esto.",
+			"Ah, gracias por acordarte de mí.",
+			"Muy amable."
+		],
+		"dislike": [
+			"Eh... gracias, supongo. No es lo mío.",
+			"Mejor guárdalo para otro...",
+			"Hmm. No sé qué decirte."
+		]
+	},
+	"npcs": {
+		"elda": {
+			"name": "Elda",
+			"loves": [
+				"pastel_baya",
+				"hierba_vital",
+				"sopa_pescado"
+			],
+			"likes": [
+				"baya_roja",
+				"tostada_hongo",
+				"pescado_asado",
+				"cristal_arcano"
+			],
+			"dislikes": [
+				"carbon",
+				"carne_zorro",
+				"alga_marina",
+				"gel_slime"
+			],
+			"events": [
+				{
+					"hearts": 2,
+					"lines": [
+						"Elda: Sabes, ya no me siento tan sola en el pueblo desde que apareciste.",
+						"Elda: Toma, guárdalo. Una anciana no necesita tantas pociones."
+					],
+					"reward": {
+						"coins": 60,
+						"items": {
+							"pocion_vida": 2
+						}
+					}
+				},
+				{
+					"hearts": 4,
+					"lines": [
+						"Elda: Mi marido era mago de la corte. Antes de irse me dejó estas notas sobre el grimorio.",
+						"Elda: Creo que a ti te servirán más que a mí."
+					],
+					"reward": {
+						"skill_points": 1,
+						"xp": 150
+					}
+				}
+			]
+		},
+		"tomas": {
+			"name": "Tomás",
+			"perk": "discount",
+			"loves": [
+				"lingote_acero",
+				"cristal_arcano",
+				"pez_cristal",
+				"pez_abisal"
+			],
+			"likes": [
+				"lingote_hierro",
+				"cuero",
+				"pocion_vida",
+				"elixir_marea"
+			],
+			"dislikes": [
+				"gel_slime",
+				"carne_conejo"
+			],
+			"events": [
+				{
+					"hearts": 2,
+					"lines": [
+						"Tomás: Entre nosotros: guardo planos que no tengo a la vista. Este es para ti, amigo.",
+						"Tomás: Y desde hoy, un descuento de amigo en mi puesto."
+					],
+					"reward": {
+						"blueprint": "plano_elixir_vision",
+						"coins": 80
+					}
+				},
+				{
+					"hearts": 4,
+					"lines": [
+						"Tomás: Eres mi mejor cliente y, ahora, mi mejor amigo. Llévate estos cebos.",
+						"Tomás: Mi descuento sube. ¡No se lo digas a Bram!"
+					],
+					"reward": {
+						"coins": 100,
+						"items": {
+							"cebo_carne": 10
+						}
+					}
+				}
+			]
+		},
+		"bram": {
+			"name": "Bram",
+			"perk": "sell_bonus",
+			"loves": [
+				"lingote_acero",
+				"mena_hierro",
+				"carbon"
+			],
+			"likes": [
+				"lingote_hierro",
+				"pescado_asado",
+				"carne_asada",
+				"sopa_hueso"
+			],
+			"dislikes": [
+				"hierba_vital",
+				"baya_roja",
+				"alga_marina"
+			],
+			"events": [
+				{
+					"hearts": 2,
+					"lines": [
+						"Bram: Mara dice que tienes buena mano. Toma, es hierro del bueno.",
+						"Bram: Y te pagaré un poco mejor por tus materiales."
+					],
+					"reward": {
+						"items": {
+							"lingote_hierro": 3
+						}
+					}
+				},
+				{
+					"hearts": 4,
+					"lines": [
+						"Bram: Hay una pieza de caña que forjé hace años y nunca usé. Para ti.",
+						"Bram: Y acero de mis reservas. Cuida tus armas."
+					],
+					"reward": {
+						"items": {
+							"lingote_acero": 2,
+							"carrete_pesca": 1
+						}
+					}
+				}
+			]
+		},
+		"mara": {
+			"name": "Mara",
+			"loves": [
+				"sopa_pescado",
+				"estofado_zorro",
+				"hongo_luminoso",
+				"brocheta_anguila"
+			],
+			"likes": [
+				"carne_conejo",
+				"hierba_vital",
+				"baya_roja",
+				"pescado_asado"
+			],
+			"dislikes": [
+				"carbon",
+				"gel_slime"
+			],
+			"events": [
+				{
+					"hearts": 2,
+					"lines": [
+						"Mara: Prepare demasiado guiso. Llévate un par de raciones, no me gusta tirar comida.",
+						"Mara: Y no te vayas sin comer."
+					],
+					"reward": {
+						"items": {
+							"pastel_baya": 2,
+							"estofado_zorro": 2
+						}
+					}
+				},
+				{
+					"hearts": 4,
+					"lines": [
+						"Mara: Esta receta me la enseñó mi abuela. Ahora es tuya.",
+						"Mara: Cuando la prepares, piensa en mí."
+					],
+					"reward": {
+						"blueprint": "plano_elixir_sirena",
+						"coins": 100
+					}
+				}
+			]
+		},
+		"teo": {
+			"name": "Teo",
+			"loves": [
+				"pez_lanza",
+				"pez_ceniza",
+				"elixir_furia"
+			],
+			"likes": [
+				"carpa_dorada",
+				"trucha_plateada",
+				"pocion_mana",
+				"carne_asada"
+			],
+			"dislikes": [
+				"hierba_vital",
+				"semilla_baya"
+			],
+			"events": [
+				{
+					"hearts": 2,
+					"lines": [
+						"Teo: Cuando era aventurero siempre llevaba semillas. Cultivar es más seguro que pelear.",
+						"Teo: Toma, y no pierdas la regadera."
+					],
+					"reward": {
+						"xp": 100,
+						"items": {
+							"semilla_hierba": 3
+						}
+					}
+				},
+				{
+					"hearts": 4,
+					"lines": [
+						"Teo: Te enseñaré un truco de mi época: concentra el maná antes del hechizo.",
+						"Teo: Y estos elixires. Los guardaba para una ocasión que no llegó."
+					],
+					"reward": {
+						"skill_points": 1,
+						"items": {
+							"elixir_furia": 2
+						}
+					}
+				}
+			]
+		}
+	}
+}

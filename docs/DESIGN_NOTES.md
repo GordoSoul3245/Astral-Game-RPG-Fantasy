@@ -159,3 +159,19 @@ Lee este archivo y sigue desde "Pendiente". Lo que está escrito aquí es la fue
 - Los efectos son numéricos y viven en un solo sitio por propiedad (`prog.skill_sum`): `magic_mult`, `max_mana`, `main.mana_cost`, cadencia en `_begin`, `spawn_projectile`, `combat.mark/detonate`, `meteor._explode`, `gain_ultimate`. Se guardan (`skills`, `skill_points`).
 - Tests: `tests/test_skills.gd`; captura `production/qa/evidence/mundo_vivo/6_arbol_magia.png`.
 - **Por probar jugando:** equilibrio de los porcentajes y que 1 punto por nivel dé una progresión satisfactoria; el árbol solo mejora números, no añade hechizos nuevos.
+
+## Relaciones con NPCs (amistad, regalos y eventos)
+- **`scripts/social.gd`** + `data/npcs.json`: Elda (misiones), Tomás, Bram, Mara y Teo. Amistad en **corazones (0-5)**, 100 puntos por corazón.
+- **Hablar (E)** suma 20 puntos una vez al día con cada vecino. **Regalar (G)** abre el panel con tus objetos: uno al día por vecino; cada uno tiene gustos propios (adora +80, le gusta +45, neutro +20, no le gusta −25; un regalo de calidad ★ vale +25 %/+50 %). El aviso sobre el vecino muestra sus corazones.
+- **Eventos** a 2 y 4 corazones: la siguiente vez que hables con él sale una escena con premio (monedas, objetos, planos, XP y puntos de habilidad).
+- **Ventajas:** Tomás da un 4 % de descuento por corazón (hasta 20 %); Bram paga un 4 % más por corazón por los materiales.
+- Se guarda (`social`). Test: `tests/test_social.gd`; captura `production/qa/evidence/mundo_vivo/7_amistad_regalos.png`.
+- **Por probar jugando:** textos de las escenas, ritmo de amistad y que el premio de 4 corazones merezca la pena. Los eventos son diálogos, sin escenas animadas, y no hay romance ni cumpleaños.
+
+## Zonas escritas a mano (sin procedural)
+- **`scripts/zone.gd`** + `data/zones.json`: mapas finitos de 28×28 casillas colocados a mano (charcas, caminos, árboles o rocas, recursos y monstruos en sitios fijos), con los mismos sprites del valle. Comparte el mecanismo de la mina (`in_mine`, `_exit_mine`, `_scene_id` = `zone:<id>`) y es exterior: sigue el reloj, la luz y la lluvia.
+- **Marisma Sombría** (arcos al oeste del valle): charcas y caminos de barro; hierbas, hongos luminosos y bayas; limos, arqueros y un cíclope.
+- **Desierto de Ceniza** (arco al este): arena y rocas con un oasis; hierro, carbón y cristal; arqueros, limos y 2 cíclopes (reparto más duro).
+- **Niveles:** los monstruos salen al nivel del héroe − 2 (el cíclope +1), con recompensa escalada como en el exterior. Cada entrada vuelve a poblar la zona. Cada zona tiene un cofre de una sola vez (se guarda en `zones_done`).
+- Las puertas del valle se colocan cerca de un punto indicado (`hint`) buscando el primer suelo libre. Tests: `tests/test_zones.gd` (todo lo colocado es alcanzable desde la entrada); capturas `production/qa/evidence/mundo_vivo/8_zona_*.png` y `9_puerta_zona.png`.
+- **Por probar jugando:** el aspecto del suelo de colores planos, la distancia y el entorno de las puertas, y el equilibrio. Faltan arte propio de zona, enemigos exclusivos, música y rutas entre zonas.

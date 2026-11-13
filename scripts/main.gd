@@ -213,7 +213,11 @@ func _ready() -> void:
 	_build_burn_fx()
 	clock = load("res://scripts/clock.gd").new()
 	add_child(clock)
+	social = load("res://scripts/social.gd").new()
+	social.main = self
+	add_child(social)
 	call_deferred("_build_lamps")
+	call_deferred("_build_zone_doors")
 	call_deferred("_build_farm")
 	angler = load("res://scripts/angler.gd").new(self, _read_json("res://data/fishing.json"))
 	traps = load("res://scripts/traps.gd").new()
@@ -321,7 +325,7 @@ func save_game() -> void:
 		return
 	var d := {"version": 1, "level": prog.level, "xp": prog.xp, "points": prog.points, "spent": prog.spent,
 		"coins": prog.coins, "potions": prog.potions, "materials": prog.materials, "owned": prog.owned,
-		"equipped": prog.equipped, "blueprints": prog.blueprints, "slots": prog.slots, "dungeon_floor": dungeon_floor, "quests": quests.to_dict(), "clock": clock.to_dict(), "stars": prog.stars, "angler": angler.to_dict(), "bait": bait, "rod_parts": prog.rod_parts, "farm": farm.to_dict() if farm else pending_farm, "skills": prog.skills, "skill_points": prog.skill_points}
+		"equipped": prog.equipped, "blueprints": prog.blueprints, "slots": prog.slots, "dungeon_floor": dungeon_floor, "quests": quests.to_dict(), "clock": clock.to_dict(), "stars": prog.stars, "angler": angler.to_dict(), "bait": bait, "rod_parts": prog.rod_parts, "farm": farm.to_dict() if farm else pending_farm, "skills": prog.skills, "skill_points": prog.skill_points, "social": social.to_dict(), "zones_done": zones_done}
 	var f := FileAccess.open(save_path, FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(d, "\t"))
@@ -401,6 +405,13 @@ func load_game() -> bool:  # valida cada campo: el archivo puede estar editado o
 		for k: String in ["reel", "line"]:
 			if d["rod_parts"].get(k) == true:
 				prog.rod_parts[k] = true
+	zones_done.clear()
+	if d.get("zones_done") is Array:
+		for z: Variant in d["zones_done"]:
+			if str(z) in ["pantano", "desierto"] and not zones_done.has(str(z)):
+				zones_done.append(str(z))
+	if d.get("social") is Dictionary:
+		social.from_dict(d["social"])
 	prog.skills.clear()
 	if d.get("skills") is Dictionary:
 		for sid: String in d["skills"]:
@@ -510,11 +521,32 @@ func _near_door() -> Node2D:
 			return d
 	return null
 
+func social_target() -> String:  # con quién se puede hablar y a quién regalar: id de data/npcs.json
+	if in_dungeon and not in_interior:
+		return ""
+	var n := _near_npc()
+	if n != null and social.is_friend(n.id):
+		return n.id
+	var m := _near_merchant()
+	if m != null:
+		return "tomas" if m.role == "merchant" else "bram"
+	var v := _near_villager()
+	if v != null and v == villagers[0]:
+		return "elda"
+	return ""
+
 func _interact() -> void:
 	var d := _near_door()
 	if d != null and not transitioning:
 		d.use()
 		return
+	var sid := social_target()
+	if sid != "":
+		social.on_talk(sid)  # hablar suma amistad una vez al día
+		var ev: Array = social.take_event(sid)
+		if not ev.is_empty():
+			dialogue.open(social.name_of(sid), ev)
+			return
 	var v := _near_villager()
 	if v != null:
 		var line: String = v.talk()
@@ -642,6 +674,10 @@ func _update_prompt(delta: float) -> void:
 		prompt.text = "%s — %s" % [crafting.cfg["gather"][nn["kind"]]["name"], why] if why != "" else "[E] Recoger: %s" % crafting.cfg["gather"][nn["kind"]]["name"]
 	else:
 		prompt.text = ""
+	if say_t <= 0.0 and prompt.text != "":  # con un vecino cerca: recordatorio de regalar y sus corazones
+		var sid := social_target()
+		if sid != "":
+			prompt.text += "  ·  [G] Regalar  %s" % social.hearts_text(sid)
 
 func _transition(change: Callable) -> void:  # fundido a negro, cambio de mapa y fundido de vuelta
 	transitioning = true
@@ -814,7 +850,7 @@ func _talk_cond(c: String) -> bool:
 		"dragon_alive": return _dragon_alive()
 		"dragon_dead": return not _dragon_alive()
 		"fox_alive": return predators.any(func(p: Node) -> bool: return p.alive)
-		"deep": return dungeon_floor >= 3
+		"deep": return dungeon_floor >= 5
 	return c == ""
 
 func npc_lines(npc: Node2D) -> Array:  # conversaciones que se cumplen ahora; rota entre ellas
@@ -1728,6 +1764,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			_cancel_aim()
 		elif event.physical_keycode == KEY_B:
 			cycle_bait()
+		elif event.physical_keycode == KEY_G:
+			social.open_near()
 		elif not attacking:
 			var i: int = event.physical_keycode - KEY_1
 			if event.physical_keycode == KEY_Q:
@@ -1939,6 +1977,11 @@ func _place() -> void:
 var stations: Array = []     # {station, scene, tile, reach, label}: dónde se usa cada oficio
 var station_ui: CanvasLayer
 var in_mine := false
+var zone_id := ""                # zona escrita a mano en la que estás ("" = ninguna); comparte el mecanismo de la mina
+var zones_cfg := {}
+var zones_done: Array = []       # zonas cuyo cofre ya abriste
+var zone_chest: Node2D
+var zone_chest_door: Node2D
 var gathering := false       # balanceando el pico, el hacha o las manos sobre un recurso
 var gather_t := 0.0
 var gather_node: Dictionary = {}
@@ -1949,7 +1992,7 @@ func _scene_id() -> String:
 	if in_interior:
 		return "interior:" + current_interior
 	if in_mine:
-		return "mine"
+		return "zone:" + zone_id if zone_id != "" else "mine"
 	return "dungeon" if in_dungeon else "overworld"
 
 func _build_world_props() -> void:  # mesa de alquimia y fogata junto al mercader, plantas del valle, entrada de la mina y yunque de Bram
@@ -2055,6 +2098,7 @@ const WEAPONS := ["katana_ceniza", "grimorio_ignis"]
 var hotbar_row: HBoxContainer
 var clock: Node        # clock.gd: hora, día y lluvia
 var angler: RefCounted # angler.gd: libro de capturas, acuario, encargos y nasas
+var social: CanvasLayer    # social.gd: amistad, regalos y eventos
 var farm: Node2D       # farm.gd: huerto
 var pending_farm := {}
 var lamps: Node2D      # lamps.gd: farolas del pueblo
@@ -2321,12 +2365,105 @@ func _enter_mine() -> void:
 			spawn_enemy(id, tile_to_ground(t))
 	say("La mina: vetas de hierro, carbón y cristal. Cuidado con lo que vive aquí.", 3.0)
 
+func enter_zone(id: String) -> void:
+	_transition(func() -> void: _enter_zone(id))
+
+func _build_zone_doors() -> void:  # entradas a las zonas: arcos en el campo, cerca del sitio indicado en data/zones.json
+	zones_cfg = _read_json("res://data/zones.json")
+	for id: String in zones_cfg:
+		var cfg: Dictionary = zones_cfg[id]
+		var hint := Vector2(cfg["hint"][0], cfg["hint"][1])
+		var spot := hint
+		var found := false
+		for r in range(0, 16):
+			for dx in range(-r, r + 1):
+				for dy in range(-r, r + 1):
+					if found or maxi(absi(dx), absi(dy)) != r:
+						continue
+					var t := hint + Vector2(dx, dy)
+					if not world.is_water(t) and not world.blocked(t, 1.4):
+						spot = t
+						found = true
+		var d := _add_door(spot, str(cfg["door_label"]), enter_zone.bind(id))
+		d.reach = 2.0
+
+func _enter_zone(id: String) -> void:
+	var cfg: Dictionary = zones_cfg[id]
+	in_dungeon = true  # fauna, civiles y el dragón se pausan; es exterior, así que sigue el reloj y la luz del día
+	in_mine = true
+	zone_id = id
+	overworld = {"pos": pos, "C1": C1, "E1": E1, "E2": E2, "tiles": TILES, "world": world, "doors": doors, "dragon_alive": dragon.alive}
+	world.visible = false
+	for d: Node2D in doors:
+		d.visible = false
+	doors = []
+	dragon.visible = false
+	dragon.alive = false
+	var n: int = cfg["tiles"]
+	var s := n / TILES
+	E1 *= s
+	E2 *= s
+	TILES = n
+	C1 = -(E1 + E2) / 2.0
+	RenderingServer.set_default_clear_color(Color(cfg["clear"]))
+	combat.set_zone(false)
+	dungeon_node = Node2D.new()
+	dungeon_node.set_script(load("res://scripts/zone.gd"))
+	dungeon_node.main = self
+	add_child(dungeon_node)
+	dungeon_node.setup(cfg)
+	world = dungeon_node
+	var exit_door := _add_door(Vector2(cfg["exit"][0], cfg["exit"][1]), "Volver al valle", exit_mine)
+	exit_door.reach = 2.2
+	pos = tile_to_ground(dungeon_node.spawn_tile())
+	cam.position = (pos - Vector2(0, 40)) * SCALE
+	for e: Dictionary in cfg["enemies"]:  # monstruos fijos al nivel del héroe -2 (+ el desvío de la zona)
+		set_enemy_level(world_level(false) + int(e["off"]))
+		spawn_enemy(str(e["id"]), tile_to_ground(Vector2(e["t"][0], e["t"][1])))
+	set_enemy_level(0)
+	if not zones_done.has(id):
+		var ch: Dictionary = cfg["chest"]
+		var spot := Vector2(ch["t"][0], ch["t"][1])
+		zone_chest = Node2D.new()
+		zone_chest.set_script(load("res://scripts/chest.gd"))
+		zone_chest.main = self
+		zone_chest.tile = spot
+		add_child(zone_chest)
+		zone_chest_door = _add_door(spot, "Abrir el cofre de la zona", _open_zone_chest, false)
+		zone_chest_door.reach = 1.6
+	say("%s: %s" % [cfg["name"], cfg["level_note"]], 3.5)
+
+func _open_zone_chest() -> void:
+	var ch: Dictionary = zones_cfg[zone_id]["chest"]
+	zone_chest.open()
+	doors.erase(zone_chest_door)
+	zone_chest_door.queue_free()
+	zone_chest_door = null
+	var coins := randi_range(int(ch["coins"][0]), int(ch["coins"][1]))
+	prog.coins += coins
+	var lines: Array[String] = ["+%d monedas" % coins]
+	for item: String in ch["items"]:
+		crafting.add(item, int(ch["items"][item]))
+		lines.append("%s ×%d" % [crafting.item_name(item), int(ch["items"][item])])
+	zones_done.append(zone_id)
+	show_loot(ch["items"].keys())
+	say("\n".join(lines), 5.0)
+	gain_xp(int(ch["xp"]))
+	save_game()
+
 func exit_mine() -> void:
 	_transition(_exit_mine)
 
 func _exit_mine() -> void:
 	in_dungeon = false
 	in_mine = false
+	zone_id = ""
+	for c: Node in [zone_chest, zone_chest_door]:
+		if is_instance_valid(c):
+			doors.erase(c)
+			c.queue_free()
+	zone_chest = null
+	zone_chest_door = null
 	for e in enemies.duplicate():
 		if e != dragon:
 			enemies.erase(e)

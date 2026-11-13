@@ -36,10 +36,10 @@ func qty_of(id: String) -> int:
 			return int(s.get("qty", 1))
 	return 1
 
-func price_of(id: String) -> int:
+func price_of(id: String) -> int:  # con el descuento que da la amistad de Tomás
 	for s: Dictionary in cfg["merchant"]["stock"]:
 		if s["id"] == id:
-			return int(s["price"])
+			return roundi(float(s["price"]) * (1.0 - main.social.discount("tomas")))
 	return 0
 
 func buy(id: String) -> String:  # devuelve el aviso para el jugador
@@ -73,7 +73,7 @@ func buy(id: String) -> String:  # devuelve el aviso para el jugador
 func sell_value(id: String) -> int:  # la calidad paga más: plata +25 %, oro +50 %
 	var st: Array = main.crafting.stars_of(id)
 	var n := int(main.prog.materials.get(id, 0))
-	return roundi(float(cfg["smith"]["buys"].get(id, 0)) * (float(n) + 0.25 * float(st[0]) + 0.5 * float(st[1])))
+	return roundi(float(cfg["smith"]["buys"].get(id, 0)) * (float(n) + 0.25 * float(st[0]) + 0.5 * float(st[1])) * (1.0 + main.social.sell_bonus("bram")))
 
 func sell(id: String) -> String:  # vende todas las unidades de un material
 	var n := int(main.prog.materials.get(id, 0))

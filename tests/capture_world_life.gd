@@ -97,4 +97,38 @@ func capture() -> void:
 	main.menu._set_tab("magic")
 	await _wait(0.4)
 	await _shot("6_arbol_magia")
+	
+	# panel de amistad y regalos
+	main.menu.visible = false
+	main.crafting.add("sopa_pescado", 2)
+	main.crafting.add("carbon", 3)
+	main.crafting.add("hongo_luminoso", 2)
+	main.social.friend["mara"] = 240
+	main.social.open_for("mara")
+	main.social.reply.text = "¡Justo lo que quería! Gracias de corazón."
+	await _wait(0.4)
+	await _shot("7_amistad_regalos")
+	
+	# zonas escritas a mano
+	main.social.close()
+	main.prog.level = 5
+	main.pos = main.tile_to_ground(Vector2(10, 30))
+	for id in ["pantano", "desierto"]:
+		main._enter_zone(id)
+		await _wait(1.2)
+		main.pos = main.tile_to_ground(Vector2(14.5, 18.0))
+		main._place()
+		main.cam.position = (main.pos - Vector2(0, 40)) * main.SCALE
+		await _wait(0.6)
+		await _shot("8_zona_" + id)
+		main._exit_mine()
+		await _wait(0.6)
+	# puerta de entrada en el valle
+	var door: Node2D = main.doors.filter(func(d: Node2D) -> bool: return d.label.begins_with("Camino"))[0]
+	main.pos = main.tile_to_ground(door.tile) + Vector2(0, 50)
+	main._place()
+	main.cam.position = (main.pos - Vector2(0, 40)) * main.SCALE
+	main.clock.hour = 12.0
+	await _wait(0.8)
+	await _shot("9_puerta_zona")
 	quit()
