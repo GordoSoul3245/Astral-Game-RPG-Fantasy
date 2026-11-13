@@ -14,6 +14,7 @@ var state := ""            # charge, throw, flight, wait, bite, fight, end
 var t := 0.0
 var power := 0.0
 var rod_tier := 1
+var rod_up := 0             # mejoras de la forja: +0.5 casillas de lanzamiento y barra algo más larga por nivel
 var aim := Vector2.DOWN
 var bob_from := Vector2.ZERO
 var bob_g := Vector2.ZERO  # donde cae el flotador (suelo)
@@ -78,6 +79,7 @@ func start(rod_id: String) -> void:
 	t = 0.0
 	power = 0.0
 	rod_tier = int(main.prog.equipment[rod_id]["tool"]["tier"])
+	rod_up = main.crafting.up_level(rod_id)
 	main.move_vel = Vector2.ZERO
 	aim = main._chest_aim()
 	main.facing = main.DIRS[posmod(roundi(aim.angle() / (PI / 4.0)), 8)]
@@ -178,7 +180,7 @@ func tip() -> Vector2:  # punta de la caña, en suelo: el píxel medido del foto
 
 func _launch() -> void:
 	var c: Dictionary = cfg["cast"]
-	var tiles := lerpf(float(c["min_tiles"]), float(c["max_tiles"]), power) + float(c["rod_bonus"]) * rod_tier + (1.0 if main.prog.rod_parts.has("line") else 0.0)
+	var tiles := lerpf(float(c["min_tiles"]), float(c["max_tiles"]), power) + float(c["rod_bonus"]) * rod_tier + (1.0 if main.prog.rod_parts.has("line") else 0.0) + 0.5 * float(rod_up)
 	bob_from = tip()
 	used_bait = ""
 	if main.bait != "" and main.crafting.count(main.bait) > 0:
@@ -223,7 +225,7 @@ func _hook() -> void:
 		return
 	var f: Dictionary = cfg["fish"][hooked["id"]]
 	game = FishGame.new()
-	game.setup(str(f["move"]), float(f["diff"]), float(cfg["bar_size"]["base"]) + float(cfg["bar_size"]["per_rod"]) * rod_tier + (0.04 if main.prog.rod_parts.has("reel") else 0.0))
+	game.setup(str(f["move"]), float(f["diff"]), float(cfg["bar_size"]["base"]) + float(cfg["bar_size"]["per_rod"]) * rod_tier + (0.04 if main.prog.rod_parts.has("reel") else 0.0) + 0.02 * float(rod_up))
 	game.gain_mult = 1.25 if main.prog.rod_parts.has("reel") else 1.0
 	fish_icon = load(main.crafting.icon(hooked["id"]))
 	var tc: Dictionary = cfg["treasure"]

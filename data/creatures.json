@@ -429,5 +429,52 @@
 		"name": "Cíclope de ceniza",
 		"tint": "#ff9a80",
 		"counts_as": "cyclops"
+	},
+	"limo_nocturno": {
+		"kind": "slime",
+		"blood": "#5a3ccc",
+		"hp": 36,
+		"speed": 58.0,
+		"detect_range": 265.0,
+		"radius": 10.0,
+		"r_t": 0.32,
+		"staggerable": true,
+		"sprites": {
+			"prefix": "res://art/slime/slime_",
+			"feet": [
+				68.0,
+				113.7
+			],
+			"kinds": [
+				"idle",
+				"walk"
+			]
+		},
+		"hop_time": 0.8,
+		"hop_rest": 0.5,
+		"contact_damage": 10,
+		"contact_cooldown": 0.9,
+		"xp": 16,
+		"coins": [
+			3,
+			7
+		],
+		"drops": [
+			{
+				"item": "gel_slime",
+				"chance": 0.4
+			},
+			{
+				"item": "cristal_arcano",
+				"chance": 0.15
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 0.15
+			}
+		],
+		"name": "Limo nocturno",
+		"tint": "#7a5cff",
+		"counts_as": "slime"
 	}
 }

@@ -63,9 +63,28 @@ func take(id: String, n: int, best_first := false) -> int:  # devuelve la mejor 
 		prog.stars.erase(id)
 	return best
 
+func up_level(id: String) -> int:
+	return int(prog.tool_up.get(id, 0))
+
+func up_cost(id: String) -> Dictionary:  # lo que cuesta el siguiente nivel; {} si ya está al máximo o no es herramienta
+	if not prog.equipment.has(id) or not prog.equipment[id].has("tool") or up_level(id) >= int(cfg["upgrades"]["max"]):
+		return {}
+	return cfg["upgrades"]["costs"][up_level(id)]
+
+func upgrade(id: String) -> String:  # mejora una herramienta un nivel; devuelve el aviso
+	var cost := up_cost(id)
+	if cost.is_empty():
+		return "Ya está al máximo."
+	if not missing(cost).is_empty():
+		return "Faltan materiales."
+	for m: String in cost:
+		take(m, int(cost[m]))
+	prog.tool_up[id] = up_level(id) + 1
+	return "%s mejorada a +%d." % [prog.equipment[id]["name"], up_level(id)]
+
 func item_name(id: String) -> String:
 	if prog.equipment.has(id):
-		return prog.equipment[id]["name"]
+		return prog.equipment[id]["name"] + (" +%d" % up_level(id) if up_level(id) > 0 else "")
 	if cfg["consumables"].has(id):
 		return cfg["consumables"][id]["name"]
 	if cfg["blueprints"].has(id):
@@ -239,7 +258,7 @@ func tool_tier(kind: String) -> int:  # 0 = manos
 func swing_power(kind: String) -> int:  # daño por golpe al recurso; las manos valen 1
 	if kind == "":
 		return 1
-	return int(cfg["tool_power"][str(tool_tier(kind))])
+	return int(cfg["tool_power"][str(tool_tier(kind))]) + up_level(prog.equipped.get(kind, ""))  # cada mejora de la forja suma 1 de daño al recurso
 
 func can_gather(node_kind: String) -> String:  # "" = puedes; si no, qué te falta
 	var g: Dictionary = cfg["gather"][node_kind]

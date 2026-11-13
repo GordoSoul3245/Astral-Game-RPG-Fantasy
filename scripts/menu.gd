@@ -378,6 +378,26 @@ func _build_inv() -> void:
 		main._apply_stats()
 		refresh())
 	right.add_child(act)
+	if it.has("tool"):  # mejora en la forja: +1 de daño al recurso por nivel (+0.5 casillas de lanzamiento en la caña)
+		var cost: Dictionary = main.crafting.up_cost(selected)
+		var up := Button.new()
+		up.focus_mode = Control.FOCUS_NONE
+		up.custom_minimum_size = Vector2(0, 40)
+		if cost.is_empty():
+			up.text = "Mejora al máximo (+%d)" % main.crafting.up_level(selected)
+			up.disabled = true
+		else:
+			var parts: Array[String] = []
+			for m: String in cost:
+				parts.append("%s %d/%d" % [main.crafting.item_name(m), main.crafting.count(m), int(cost[m])])
+			up.text = "Mejorar a +%d  (%s)" % [main.crafting.up_level(selected) + 1, ", ".join(parts)]
+			var at_forge: bool = main._near_station().get("station", "") == "forge"
+			up.disabled = not at_forge or not main.crafting.missing(cost).is_empty()
+			up.tooltip_text = "Se hace junto al yunque de Bram" if not at_forge else ""
+		up.pressed.connect(func() -> void:
+			main.say(main.crafting.upgrade(selected), 2.0)
+			refresh())
+		right.add_child(up)
 
 func _build_stack_detail(right: VBoxContainer) -> void:  # material o consumible: nombre, cantidad, descripción y, si se usa, botón de la barra
 	var cr = main.crafting

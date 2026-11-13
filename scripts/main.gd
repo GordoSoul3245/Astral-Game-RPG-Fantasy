@@ -325,7 +325,7 @@ func save_game() -> void:
 		return
 	var d := {"version": 1, "level": prog.level, "xp": prog.xp, "points": prog.points, "spent": prog.spent,
 		"coins": prog.coins, "potions": prog.potions, "materials": prog.materials, "owned": prog.owned,
-		"equipped": prog.equipped, "blueprints": prog.blueprints, "slots": prog.slots, "dungeon_floor": dungeon_floor, "quests": quests.to_dict(), "clock": clock.to_dict(), "stars": prog.stars, "angler": angler.to_dict(), "bait": bait, "rod_parts": prog.rod_parts, "farm": farm.to_dict() if farm else pending_farm, "skills": prog.skills, "skill_points": prog.skill_points, "social": social.to_dict(), "zones_done": zones_done}
+		"equipped": prog.equipped, "blueprints": prog.blueprints, "slots": prog.slots, "dungeon_floor": dungeon_floor, "quests": quests.to_dict(), "clock": clock.to_dict(), "stars": prog.stars, "angler": angler.to_dict(), "bait": bait, "rod_parts": prog.rod_parts, "farm": farm.to_dict() if farm else pending_farm, "skills": prog.skills, "skill_points": prog.skill_points, "social": social.to_dict(), "zones_done": zones_done, "tool_up": prog.tool_up}
 	var f := FileAccess.open(save_path, FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(d, "\t"))
@@ -405,6 +405,11 @@ func load_game() -> bool:  # valida cada campo: el archivo puede estar editado o
 		for k: String in ["reel", "line"]:
 			if d["rod_parts"].get(k) == true:
 				prog.rod_parts[k] = true
+	prog.tool_up.clear()
+	if d.get("tool_up") is Dictionary:
+		for tid: String in d["tool_up"]:
+			if prog.equipment.has(tid) and prog.equipment[tid].has("tool"):
+				prog.tool_up[tid] = clampi(int(d["tool_up"][tid]), 0, int(crafting.cfg["upgrades"]["max"]))
 	zones_done.clear()
 	if d.get("zones_done") is Array:
 		for z: Variant in d["zones_done"]:
@@ -1219,7 +1224,7 @@ func targets() -> Array:  # todo lo que el héroe puede golpear: enemigos y, en 
 	var t: Array = enemies.duplicate()
 	if not in_dungeon:
 		for f in fauna + predators:
-			if f.alive:
+			if f.alive and f.visible:
 				t.append(f)
 	return t
 
@@ -2414,7 +2419,31 @@ func _arrival(id: String, side: String, rows: Array) -> Vector2:  # casilla just
 		"n": return Vector2(mid, 1.7)
 	return Vector2(mid, n - 1.7)
 
+# --- el valle cambia con la hora y el clima: de noche salen limos nocturnos (y con lluvia, algunos de día) y los conejos se esconden de la lluvia
+var night_mobs: Array = []
+var night_t := 0.0
+
+func _tick_schedule(delta: float) -> void:
+	var out := region() == "valle"
+	night_mobs = night_mobs.filter(func(m: Node) -> bool: return is_instance_valid(m) and m.alive)
+	var want := 0
+	if out and not dying:
+		want = 4 if clock.dark() >= 0.9 else (2 if clock.rain and clock.dark() >= 0.3 else 0)
+	if want == 0 or not out:
+		for m: Node in night_mobs:  # amanece o te vas: se disuelven
+			enemies.erase(m)
+			m.queue_free()
+		night_mobs.clear()
+		return
+	night_t -= delta
+	if night_t <= 0.0 and night_mobs.size() < want:
+		night_t = 6.0
+		var spot := _free_spot(rng_hearts, pos, 9.0, 16.0)
+		if spot.distance_to(pos) > 100.0:
+			night_mobs.append(spawn_enemy("limo_nocturno", spot))
+
 func _check_edges(delta: float) -> void:
+	_tick_schedule(delta)
 	travel_cd = maxf(0.0, travel_cd - delta)
 	if travel_cd > 0.0 or transitioning or dying or links.is_empty():
 		return

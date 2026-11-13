@@ -19,6 +19,7 @@ const POINTS_PER_LEVEL := 5
 var level := 1
 var xp := 0
 var points := 0
+var tool_up := {}            # mejoras de herramientas en la forja: id -> nivel (+1..+3)
 var skills := {}             # arbol de habilidades del grimorio: id -> rango
 var skill_points := 0        # 1 por nivel y 1 por jefe de dungeon
 var skill_data := {}         # data/skills.json

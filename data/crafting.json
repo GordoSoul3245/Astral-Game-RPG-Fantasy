@@ -1415,5 +1415,23 @@
 	],
 	"favorite": {
 		"mult": 1.5
+	},
+	"upgrades": {
+		"max": 3,
+		"costs": [
+			{
+				"lingote_hierro": 2,
+				"carbon": 2
+			},
+			{
+				"lingote_hierro": 3,
+				"lingote_acero": 1,
+				"carbon": 2
+			},
+			{
+				"lingote_acero": 3,
+				"cristal_arcano": 2
+			}
+		]
 	}
 }

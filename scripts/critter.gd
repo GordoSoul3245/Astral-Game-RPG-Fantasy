@@ -86,7 +86,7 @@ func _physics_process(delta: float) -> void:
 		hp = data["hp"]
 		pos = home
 		_to("hidden")
-	visible = not main.in_dungeon
+	visible = not main.in_dungeon and not main.clock.rain  # con lluvia los conejos se refugian
 	if main.in_dungeon:
 		return
 	anim_t += delta
