@@ -17,3 +17,10 @@ export_credentials.cfg
 *.p12
 *.pfx
 *.keystore
+
+# Metadatos de importación de las capturas de revisión (se regeneran al abrir Godot)
+production/qa/evidence/**/*.import
+docs/previews/*.import
+
+# Exportaciones de compilación
+export/

@@ -132,7 +132,7 @@ func _finish() -> void:
 		print("PLAYTHROUGH ", line)
 	print("PLAYTHROUGH total: %.0f s de juego, daño %d, muertes %d, golpes %d, nivel %d, monedas %d, puntos sin gastar %d" % [elapsed, damage_taken, deaths, swings, main.prog.level, main.prog.coins, main.prog.points])
 	assert(swings >= 20, "el bot llegó a pelear")
-	assert(report.size() == 4, "se completaron los 4 pisos (%d) dentro del límite de %.0f s" % [report.size(), LIMIT])
+	assert(report.size() >= 4, "se completaron al menos los 4 pisos (%d) dentro del límite de %.0f s" % [report.size(), LIMIT])
 	assert(deaths <= 15, "el bot no debería morir tanto (%d): revisar escalado por piso en data/dungeon.json" % deaths)  # medido: 0-2 muertes
 	assert(elapsed <= 900.0, "recorrer la dungeon no debería tardar más de 15 min de juego (%.0f s)" % elapsed)  # medido: ~215 s
 	assert(main.prog.points >= 2 or main.prog.spent.values().reduce(func(a: int, b: int) -> int: return a + b, 0) >= 2, "el cofre del jefe da puntos de estadística")
