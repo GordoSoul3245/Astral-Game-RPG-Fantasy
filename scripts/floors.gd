@@ -100,7 +100,7 @@ func start(n: int) -> void:
 	chest_door = null
 	chest = null
 	is_boss = is_boss_floor(n)
-	layout = Gen.generate(n, rng, is_boss)
+	layout = Gen.generate(n, rng, is_boss, str(cfg.get("layout", "open")) == "rooms")
 	main.dungeon_node.setup({"tiles": Gen.N, "walk": layout["walk"]})
 	title = "Piso %d" % n if not is_boss else "Piso %d · JEFE · %s" % [n, boss_def(n)["title"]]
 	var spawn: Vector2 = main.ground_to_tile(main._dungeon_spawn())

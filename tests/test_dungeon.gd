@@ -32,6 +32,10 @@ func run_checks() -> void:
 	var b2: Dictionary = Gen.generate(2, rng, false)
 	assert(a["walk"] != b2["walk"], "dos pisos seguidos no son iguales")
 
+	var open_lay: Dictionary = Gen.generate(3, rng, false, false)
+	assert(open_lay["walk"].all(func(r: String) -> bool: return not r.contains("0")), "el modo abierto es un salón sin muros")
+	assert(Gen.reachable(open_lay["walk"], Vector2i(12, 2)).size() == 625 and open_lay["spots"].size() >= 12, "y todo es alcanzable")
+
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	main.dragon.set_physics_process(false)

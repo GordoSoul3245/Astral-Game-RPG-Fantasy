@@ -1,4 +1,5 @@
 {
+	"layout": "open",
 	"boss_every": 4,
 	"level": {
 		"step": 0.75,

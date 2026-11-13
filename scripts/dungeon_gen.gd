@@ -11,7 +11,16 @@ const PILLARS := [Vector2i(6, 10), Vector2i(17, 10), Vector2i(6, 15), Vector2i(1
 
 # Devuelve {walk: Array[String], rooms: Array[Rect2i], spots: Array[Vector2] (casillas aptas para monstruos),
 # boss_spot: Vector2, chest_spot: Vector2, boss: bool}
-static func generate(n: int, rng: RandomNumberGenerator, boss: bool) -> Dictionary:
+static func generate(n: int, rng: RandomNumberGenerator, boss: bool, rooms_mode := true) -> Dictionary:
+	if not rooms_mode:  # salón abierto como el original: suelo libre de lado a lado, sin muros ni pasillos
+		var walk_open: Array = []
+		for i in N:
+			walk_open.append("1".repeat(N))
+		var open_spots: Array[Vector2] = []
+		for i in range(3, 22):
+			for j in range(7, 22):
+				open_spots.append(Vector2(i + 0.5, j + 0.5))
+		return {"walk": walk_open, "rooms": [Rect2i(1, 6, 23, 17)], "spots": open_spots, "boss_spot": Vector2(12.5, 11.5), "chest_spot": Vector2(12.5, 12.5), "boss": boss}
 	var g: Array = []
 	for i in N:
 		var col: Array = []
