@@ -112,14 +112,14 @@ func run_checks() -> void:
 	main.quest_event("loot", "gel_slime")
 	assert(qd.status == "ready", "recoger tres geles cumple la misión")
 	var dung: Dictionary = main._read_json("res://data/dungeon.json")
-	assert(dung["floors"].size() == 4 and dung["floors"][3]["chest"].get("final", false) and not dung["floors"][2]["chest"].get("final", false), "el piso 4 es opcional y cierra la dungeon")
+	assert(int(dung["boss_every"]) == 4 and dung["bosses"].size() >= 2, "cada 4 pisos hay un jefe")
 	qd.from_dict(qs)
 
 	# --- guardado y carga (con validación)
 	main.prog.level = 4
 	main.prog.points = 3
 	main.prog.spent["strength"] = 2
-	main.dungeon_floor = 2
+	main.dungeon_floor = 5
 	main.prog.add_item(main.prog.equipment.keys()[0])
 	main.save_game()
 	main.prog.level = 1
@@ -127,7 +127,7 @@ func run_checks() -> void:
 	main.dungeon_floor = 1
 	main.quests.idx = 0
 	assert(main.load_game())
-	assert(main.prog.level == 4 and main.prog.points == 3 and main.prog.spent["strength"] == 2 and main.dungeon_floor == 2)
+	assert(main.prog.level == 4 and main.prog.points == 3 and main.prog.spent["strength"] == 2 and main.dungeon_floor == 5)
 	assert(main.quests.idx == 1 and main.quests.status == "ready", "la misión se conserva")
 	assert(not main.prog.owned.is_empty() and main.prog.equipped.size() >= 1, "el equipo se conserva")
 	var f := FileAccess.open(main.save_path, FileAccess.WRITE)  # archivo corrupto: se ignora sin romper
@@ -139,7 +139,7 @@ func run_checks() -> void:
 	f.store_string('{"level": -5, "coins": -9, "spent": {"strength": -3}, "equipped": {"sword": "no_existe"}, "dungeon_floor": 99, "quests": {"idx": 99, "status": "raro"}}')
 	f.close()
 	assert(main.load_game())
-	assert(main.prog.level == 1 and main.prog.coins == 0 and main.prog.spent["strength"] == 0 and main.prog.equipped.is_empty() and main.dungeon_floor == 4)
+	assert(main.prog.level == 1 and main.prog.coins == 0 and main.prog.spent["strength"] == 0 and main.prog.equipped.is_empty() and main.dungeon_floor == 97)
 	assert(main.quests.idx == main.quests.list.size() and main.quests.status == "none")
 
 	# --- al morir en la dungeon, despierta en el pueblo

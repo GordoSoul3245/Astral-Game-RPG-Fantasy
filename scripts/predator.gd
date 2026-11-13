@@ -69,7 +69,7 @@ func take_damage(n: int, charge := true) -> void:  # mismo contrato que enemy.gd
 		main.combat.play_at("growl", pos)
 
 func _ready() -> void:
-	data = main.creatures["fox"]
+	data = main.level_data("fox", main.world_level(false))
 	hp = data["hp"]
 	radius = data["radius"]
 	pos = den

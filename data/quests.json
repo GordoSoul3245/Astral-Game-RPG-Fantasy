@@ -1,15 +1,135 @@
 {
 	"giver": "Elda",
 	"quests": [
-		{"id": "dragon", "name": "La bestia del castillo", "goal": "Mata al dragón que ronda el castillo", "offer": "Un dragón ronda el castillo y nadie se atreve a salir. ¿Podrás con él?", "event": "kill", "target": "dragon", "count": 1, "reward": {"coins": 40, "xp": 60}},
-		{"id": "fox", "name": "Zorro ladrón", "goal": "Caza al zorro que acecha a los conejos", "offer": "Ese zorro se come los conejos del pueblo. Ahuyéntalo para siempre.", "event": "kill", "target": "fox", "count": 1, "reward": {"coins": 20, "potions": 1}},
-		{"id": "floor1", "name": "Bajo el castillo", "goal": "Completa el primer piso de la dungeon", "offer": "Bajo el castillo hay ruinas llenas de monstruos. Limpia el primer piso.", "event": "floor", "target": "1", "count": 1, "reward": {"coins": 50, "xp": 80}},
-		{"id": "slimes", "name": "Plaga de limo", "goal": "Elimina slimes en la dungeon", "offer": "Los slimes de las ruinas ensucian los pozos. Acaba con cinco.", "event": "kill", "target": "slime", "count": 5, "reward": {"coins": 40, "potions": 1}},
-		{"id": "gel", "name": "Gel para la herrería", "goal": "Reúne gel de slime para Bram (en el pueblo)", "offer": "Bram necesita gel de slime para sus fraguas. Tráeme tres porciones y él te lo pagará bien.", "event": "loot", "target": "gel_slime", "count": 3, "reward": {"coins": 30, "xp": 40}},
-		{"id": "archers", "name": "Lluvia de flechas", "goal": "Derrota esqueletos arqueros", "offer": "Los esqueletos arqueros no dejan pasar a nadie. Derrota a cuatro.", "event": "kill", "target": "skeleton_archer", "count": 4, "reward": {"coins": 60, "xp": 90}},
-		{"id": "floor2", "name": "Más hondo", "goal": "Completa el segundo piso de la dungeon", "offer": "Las ruinas siguen hacia abajo. Limpia el segundo piso.", "event": "floor", "target": "2", "count": 1, "reward": {"coins": 90, "xp": 140}},
-		{"id": "cyclops", "name": "Gigantes de piedra", "goal": "Derrota cíclopes", "offer": "Unos gigantes de un solo ojo custodian el fondo. Derrota a dos.", "event": "kill", "target": "cyclops", "count": 2, "reward": {"coins": 120, "xp": 180}},
-		{"id": "boss", "name": "El mago de la tormenta", "goal": "Derrota al mago de la tormenta del piso 3", "offer": "En lo más hondo vive el mago de la tormenta. Si cae, el pueblo será libre.", "event": "kill", "target": "storm_mage", "count": 1, "reward": {"coins": 150, "xp": 200}},
-		{"id": "trial", "name": "La cámara oculta", "goal": "Supera el desafío del piso 4", "offer": "Dicen que tras la tormenta hay una cámara oculta, con una reliquia que da fuerza. Solo los mejores vuelven.", "event": "floor", "target": "4", "count": 1, "reward": {"coins": 300, "xp": 400}}
+		{
+			"id": "dragon",
+			"name": "La bestia del castillo",
+			"goal": "Mata al dragón que ronda el castillo",
+			"offer": "Un dragón ronda el castillo y nadie se atreve a salir. ¿Podrás con él?",
+			"event": "kill",
+			"target": "dragon",
+			"count": 1,
+			"reward": {
+				"coins": 40,
+				"xp": 60
+			}
+		},
+		{
+			"id": "fox",
+			"name": "Zorro ladrón",
+			"goal": "Caza al zorro que acecha a los conejos",
+			"offer": "Ese zorro se come los conejos del pueblo. Ahuyéntalo para siempre.",
+			"event": "kill",
+			"target": "fox",
+			"count": 1,
+			"reward": {
+				"coins": 20,
+				"potions": 1
+			}
+		},
+		{
+			"id": "floor1",
+			"name": "Bajo el castillo",
+			"goal": "Completa el primer piso de la dungeon",
+			"offer": "Bajo el castillo hay ruinas llenas de monstruos. Limpia el primer piso.",
+			"event": "floor",
+			"target": "1",
+			"count": 1,
+			"reward": {
+				"coins": 50,
+				"xp": 80
+			}
+		},
+		{
+			"id": "slimes",
+			"name": "Plaga de limo",
+			"goal": "Elimina slimes en la dungeon",
+			"offer": "Los slimes de las ruinas ensucian los pozos. Acaba con cinco.",
+			"event": "kill",
+			"target": "slime",
+			"count": 5,
+			"reward": {
+				"coins": 40,
+				"potions": 1
+			}
+		},
+		{
+			"id": "gel",
+			"name": "Gel para la herrería",
+			"goal": "Reúne gel de slime para Bram (en el pueblo)",
+			"offer": "Bram necesita gel de slime para sus fraguas. Tráeme tres porciones y él te lo pagará bien.",
+			"event": "loot",
+			"target": "gel_slime",
+			"count": 3,
+			"reward": {
+				"coins": 30,
+				"xp": 40
+			}
+		},
+		{
+			"id": "archers",
+			"name": "Lluvia de flechas",
+			"goal": "Derrota esqueletos arqueros",
+			"offer": "Los esqueletos arqueros no dejan pasar a nadie. Derrota a cuatro.",
+			"event": "kill",
+			"target": "skeleton_archer",
+			"count": 4,
+			"reward": {
+				"coins": 60,
+				"xp": 90
+			}
+		},
+		{
+			"id": "floor2",
+			"name": "Más hondo",
+			"goal": "Completa el segundo piso de la dungeon",
+			"offer": "Las ruinas siguen hacia abajo. Limpia el segundo piso.",
+			"event": "floor",
+			"target": "2",
+			"count": 1,
+			"reward": {
+				"coins": 90,
+				"xp": 140
+			}
+		},
+		{
+			"id": "cyclops",
+			"name": "Gigantes de piedra",
+			"goal": "Derrota cíclopes",
+			"offer": "Unos gigantes de un solo ojo custodian el fondo. Derrota a dos.",
+			"event": "kill",
+			"target": "cyclops",
+			"count": 2,
+			"reward": {
+				"coins": 120,
+				"xp": 180
+			}
+		},
+		{
+			"id": "boss",
+			"name": "El mago de la tormenta",
+			"goal": "Derrota al mago de la tormenta, el jefe del piso 4",
+			"offer": "En lo más hondo vive el mago de la tormenta. Si cae, el pueblo será libre.",
+			"event": "kill",
+			"target": "storm_mage",
+			"count": 1,
+			"reward": {
+				"coins": 150,
+				"xp": 200
+			}
+		},
+		{
+			"id": "trial",
+			"name": "El gigante de piedra",
+			"goal": "Supera el piso 8 de la dungeon (jefe: el gigante)",
+			"offer": "Dicen que tras la tormenta aguarda un gigante de piedra aún peor. Solo los mejores bajan hasta el piso 8.",
+			"event": "floor",
+			"target": "8",
+			"count": 1,
+			"reward": {
+				"coins": 300,
+				"xp": 400
+			}
+		}
 	]
 }

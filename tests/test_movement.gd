@@ -17,6 +17,7 @@ func run_checks() -> void:
 	main.set_physics_process(false)
 	await process_frame
 	main._enter_dungeon()  # sala abierta: suelo libre en todas direcciones
+	main.dungeon_node.setup({"tiles": 25})  # el piso generado tiene muros: aquí se quiere el suelo libre
 	await create_timer(0.8).timeout
 	main.pos = main.tile_to_ground(Vector2(12.5, 12.5))
 	for e in main.enemies:

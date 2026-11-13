@@ -133,6 +133,7 @@ func run_checks() -> void:
 	# usos: cocina y alquimia con peces, venta
 	while cr.favorite_dish(main.clock.day) == "pescado_asado":  # el plato favorito del día multiplica los efectos
 		main.clock.day += 1
+	main.prog.stars.clear()  # la pesca de arriba pudo dar un pescado de calidad, que curaría más
 	cr.add("carpa_dorada", 1)
 	assert(cr.why_not("pescado_asado") == "", "la carpa se cocina")
 	cr.craft("pescado_asado")

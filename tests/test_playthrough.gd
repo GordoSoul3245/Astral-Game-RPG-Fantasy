@@ -1,5 +1,5 @@
 extends SceneTree
-# Test de humo con un bot: recorre la dungeon (pisos 1-4: pelea, abre el cofre y baja) con el motor real
+# Test de humo con un bot: recorre la dungeon (pisos 1-4 generados, el 4 con jefe: pelea, abre el cofre y baja) con el motor real
 # (física, IA, hitbox, botín). Ejecutar con --fixed-fps 60 (pasos exactos de 1/60 s lo más rápido posible;
 # Engine.time_scale agranda el paso y rompe la simulación). Mide por piso tiempo, daño recibido y muertes.
 # No sustituye a jugar: el bot apunta perfecto y no esquiva, así que sirve para detectar atascos y desbalances gruesos.
@@ -116,7 +116,8 @@ func _tick() -> void:
 	var chest: Vector2 = main.pos - Vector2(0, 40)
 	var reach: float = main.items[main.hotbar[main.selected]]["light"]["reach"]
 	if HB.dist(t, chest) > reach - 8.0 and not main.attacking and not main.dashing:  # acércate hasta tener su cuerpo al alcance
-		var dir: Vector2 = (HB.center(t) - chest).normalized()
+		var way: Vector2 = main.world.next_waypoint(main.pos, t.pos, main.HERO_R_T)  # rodea los muros del piso generado
+		var dir: Vector2 = (way - main.pos).normalized() if main.pos.distance_to(t.pos) > 60.0 else (HB.center(t) - chest).normalized()
 		main.pos = main.world.move_collide(main.pos, main.pos + dir * 95.0 * DT * Vector2(1, 0.6), main.HERO_R_T)
 		main._place()
 	elif not main.attacking:
@@ -134,7 +135,7 @@ func _finish() -> void:
 	assert(report.size() == 4, "se completaron los 4 pisos (%d) dentro del límite de %.0f s" % [report.size(), LIMIT])
 	assert(deaths <= 15, "el bot no debería morir tanto (%d): revisar escalado por piso en data/dungeon.json" % deaths)  # medido: 0-2 muertes
 	assert(elapsed <= 900.0, "recorrer la dungeon no debería tardar más de 15 min de juego (%.0f s)" % elapsed)  # medido: ~215 s
-	assert(main.prog.points >= 3 or main.prog.spent.values().reduce(func(a: int, b: int) -> int: return a + b, 0) >= 3, "el cofre final da los 3 puntos de estadística")
+	assert(main.prog.points >= 2 or main.prog.spent.values().reduce(func(a: int, b: int) -> int: return a + b, 0) >= 2, "el cofre del jefe da puntos de estadística")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(main.save_path))
 	print("PASS playthrough: los 4 pisos se completan con el motor real")
 	quit()

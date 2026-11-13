@@ -57,6 +57,7 @@ func run_checks() -> void:
 	# --- cíclope: embiste desde lejos con aviso, recto, daña una vez y queda abierto (sala abierta de la dungeon: sin obstáculos)
 	main._enter_dungeon()
 	await create_timer(0.8).timeout
+	main.dungeon_node.setup({"tiles": 25})  # el piso generado tiene muros: el test quiere una sala abierta
 	for e in main.enemies:
 		e.set_physics_process(false)
 		e.alive = false

@@ -381,7 +381,7 @@ func load_game() -> bool:  # valida cada campo: el archivo puede estar editado o
 	prog.slots = layout
 	tool_seen = prog.equipped.duplicate()
 	_refresh_hotbar()
-	dungeon_floor = clampi(int(d.get("dungeon_floor", 1)), 1, 4)
+	dungeon_floor = (clampi(int(d.get("dungeon_floor", 1)), 1, 999) - 1) / 4 * 4 + 1  # siempre un punto de reanudación (piso 1, 5, 9...)
 	if d.get("quests") is Dictionary:
 		quests.from_dict(d["quests"])
 	if d.get("clock") is Dictionary:
@@ -698,6 +698,7 @@ func _exit_dungeon() -> void:
 	pos = overworld["pos"]
 	dragon.visible = true
 	dragon.alive = overworld["dragon_alive"]
+	refresh_world_levels()
 	RenderingServer.set_default_clear_color(Color("#0f1a2a"))
 	combat.set_zone(false)
 	cam.position = (pos - Vector2(0, 40)) * SCALE
@@ -866,7 +867,7 @@ func spawn_enemy(id: String, ground: Vector2) -> Node2D:
 	var e := Node2D.new()
 	e.set_script(load("res://scripts/enemy.gd"))
 	e.main = self
-	e.data = _scaled(creatures[id]) if in_dungeon else creatures[id]
+	e.data = _scaled(creatures[id]) if in_dungeon else level_data(id, world_level(false))
 	e.id = id
 	e.pos = ground
 	add_child(e)
@@ -876,19 +877,64 @@ func spawn_enemy(id: String, ground: Vector2) -> Node2D:
 # Dificultad por piso (data/dungeon.json "scale"): vida y daño de los monstruos crecen con la profundidad.
 var floor_hp := 1.0
 var floor_dmg := 1.0
+var floor_reward := 1.0
+var floor_extra := {}       # variante de jefe: hp_mult, dmg_mult, size_mult, xp_mult
+const LEVEL_HP := 0.16      # vida de un monstruo por nivel sobre el 1
+const LEVEL_DMG := 0.10     # daño por nivel
+const LEVEL_REWARD := 0.12  # XP y monedas por nivel
+const FLOOR_REWARD := 0.18  # XP y monedas por piso de dungeon
+
+func set_enemy_level(level: int, extra := {}, floor_n := 1) -> void:  # los monstruos que se creen a continuación saldrán a ese nivel (0 = sin escalar)
+	var l := float(maxi(level, 1) - 1)
+	floor_hp = 1.0 + LEVEL_HP * l
+	floor_dmg = 1.0 + LEVEL_DMG * l
+	floor_reward = (1.0 + LEVEL_REWARD * l) * (1.0 + FLOOR_REWARD * float(floor_n - 1)) if level > 0 else 1.0
+	floor_extra = extra if level > 0 else {}
+
+func level_data(id: String, level: int, extra := {}) -> Dictionary:  # copia de creatures[id] a ese nivel
+	var keep := [floor_hp, floor_dmg, floor_reward, floor_extra]
+	set_enemy_level(level, extra)
+	var d := _scaled(creatures[id])
+	floor_hp = keep[0]
+	floor_dmg = keep[1]
+	floor_reward = keep[2]
+	floor_extra = keep[3]
+	return d
+
+func world_level(boss: bool) -> int:  # en el exterior los monstruos van un par de niveles por debajo del héroe y los jefes, a su nivel
+	return maxi(1, prog.level - (0 if boss else 2))
+
+func refresh_world_levels() -> void:  # al subir de nivel o volver al exterior: el dragón y el zorro se reajustan (conservan su fracción de vida)
+	if dragon != null:
+		var d := level_data("dragon", world_level(true))
+		var old: int = dragon.data["hp"]
+		dragon.data = d
+		dragon.hp = clampi(roundi(float(dragon.hp) * float(d["hp"]) / float(old)), 1, int(d["hp"])) if dragon.alive else dragon.hp
+	for p: Node in predators:
+		var d := level_data("fox", world_level(false))
+		var old: int = p.data["hp"]
+		p.data = d
+		p.hp = clampi(roundi(float(p.hp) * float(d["hp"]) / float(old)), 1, int(d["hp"])) if p.alive else p.hp
 const REWARD_XP := 0.8      # recompensas globales (ajustadas con tests/test_playthrough.gd)
 const REWARD_COINS := 0.7
 
 func _scaled(base: Dictionary) -> Dictionary:
 	var d: Dictionary = base.duplicate(true)
-	d["hp"] = roundi(d["hp"] * floor_hp)
+	d["hp"] = roundi(d["hp"] * floor_hp * float(floor_extra.get("hp_mult", 1.0)))
+	if d.has("xp"):
+		d["xp"] = roundi(float(d["xp"]) * floor_reward * float(floor_extra.get("xp_mult", 1.0)))
+	if d.has("coins"):
+		d["coins"] = [roundi(float(d["coins"][0]) * floor_reward), roundi(float(d["coins"][1]) * floor_reward)]
+	if floor_extra.has("size_mult"):
+		d["size"] = float(d.get("size", 1.0)) * float(floor_extra["size_mult"])
+		d["radius"] = float(d.get("radius", 10.0)) * float(floor_extra["size_mult"])
 	for path: Array in [["contact_damage"], ["slam_damage"], ["projectile", "damage"], ["orb", "damage"], ["lightning", "damage"]]:
 		var node: Dictionary = d
 		for i in path.size() - 1:
 			node = node.get(path[i], {})
 		var key: String = path[-1]
 		if node.has(key):
-			node[key] = roundi(node[key] * floor_dmg)
+			node[key] = roundi(node[key] * floor_dmg * float(floor_extra.get("dmg_mult", 1.0)))
 	return d
 
 func popup(ground: Vector2, text: String, color := Color(1.0, 0.9, 0.5)) -> void:  # texto flotante sobre un punto del suelo
@@ -908,6 +954,7 @@ func popup(ground: Vector2, text: String, color := Color(1.0, 0.9, 0.5)) -> void
 
 func gain_xp(n: int) -> void:
 	if prog.add_xp(n) > 0:
+		refresh_world_levels()
 		_apply_stats()
 		hero_hp = hero_max_hp
 		say("¡Nivel %d!  +%d puntos de mejora: abre el menú [I]" % [prog.level, prog.POINTS_PER_LEVEL], 3.5)
@@ -1108,7 +1155,7 @@ func _spawn_dragon() -> void:
 	dragon = AnimatedSprite2D.new()
 	dragon.set_script(load("res://scripts/dragon.gd"))
 	dragon.main = self
-	dragon.data = creatures["dragon"]
+	dragon.data = level_data("dragon", world_level(true))
 	dragon.pos = dragon_start
 	add_child(dragon)
 	enemies.append(dragon)
@@ -1164,7 +1211,7 @@ const MAX_WINDUPS := 2  # preparaciones peligrosas simultáneas (punto de partid
 func can_prepare(e: Node) -> bool:  # un enemigo solo empieza su aviso si hay hueco; los demás siguen posicionándose
 	var n := 0
 	for o in enemies:
-		if o != e and o.alive and o.get("state") == "windup":
+		if o != e and o.alive and o.get("state") is String and o.state == "windup":
 			n += 1
 	return n < MAX_WINDUPS
 
