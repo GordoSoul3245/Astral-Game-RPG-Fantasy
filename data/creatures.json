@@ -476,5 +476,116 @@
 		"name": "Limo nocturno",
 		"tint": "#7a5cff",
 		"counts_as": "slime"
+	},
+	"bruja_cienaga": {
+		"kind": "mage",
+		"blood": "#6a4fd8",
+		"hp": 380,
+		"speed": 34.0,
+		"detect_range": 480.0,
+		"keep_distance": 150.0,
+		"attack_cooldown": 2.0,
+		"size": 1.5,
+		"sprites": {
+			"prefix": "res://art/stormmage/stormmage_",
+			"feet": [
+				132.0,
+				177.7
+			]
+		},
+		"radius": 14.0,
+		"r_t": 0.45,
+		"windup": 0.7,
+		"recover": 0.6,
+		"knock_resist": 0.9,
+		"poise": 90,
+		"lightning": {
+			"radius": 26.0,
+			"damage": 38,
+			"delay": 0.9
+		},
+		"orb": {
+			"speed": 110.0,
+			"radius": 10.0,
+			"damage": 18,
+			"muzzle_height": 60.0,
+			"scale": 1.6,
+			"tint": "#8dff9a"
+		},
+		"xp": 260,
+		"coins": [
+			120,
+			160
+		],
+		"drops": [
+			{
+				"item": "hongo_luminoso",
+				"chance": 1.0
+			},
+			{
+				"item": "cristal_arcano",
+				"chance": 0.8
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 0.8
+			}
+		],
+		"name": "Bruja de la ciénaga",
+		"boss": true,
+		"tint": "#6fe08a",
+		"counts_as": "storm_mage"
+	},
+	"coloso_arena": {
+		"kind": "brute",
+		"blood": "#8e1f2a",
+		"hp": 520,
+		"speed": 38.0,
+		"detect_range": 370.0,
+		"attack_range": 48.0,
+		"windup": 0.8,
+		"attack_cooldown": 2.4,
+		"slam_radius": 55.0,
+		"slam_damage": 40,
+		"poise": 70,
+		"size": 3.5,
+		"sprites": {
+			"prefix": "res://art/cyclops/cyclops_",
+			"feet": [
+				228.0,
+				273.7
+			]
+		},
+		"radius": 22.0,
+		"r_t": 0.7,
+		"recover": 0.9,
+		"knock_resist": 0.75,
+		"xp": 320,
+		"coins": [
+			160,
+			220
+		],
+		"drops": [
+			{
+				"item": "ojo_ciclope",
+				"chance": 1.0
+			},
+			{
+				"item": "lingote_acero",
+				"chance": 0.8
+			},
+			{
+				"item": "cristal_arcano",
+				"chance": 1.0
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 0.8
+			}
+		],
+		"name": "Coloso de arena",
+		"boss": true,
+		"tint": "#ffd08a",
+		"counts_as": "cyclops"
 	}
 }

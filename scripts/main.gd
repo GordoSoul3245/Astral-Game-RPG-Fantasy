@@ -2504,6 +2504,8 @@ var night_mobs: Array = []
 var night_t := 0.0
 
 func _tick_schedule(delta: float) -> void:
+	if in_mine and zone_id != "" and zone_chest == null and not zones_done.has(zone_id) and zone_boss != null and not zone_boss.alive:
+		_make_zone_chest()
 	var out := region() == "valle"
 	night_mobs = night_mobs.filter(func(m: Node) -> bool: return is_instance_valid(m) and m.alive)
 	var want := 0
@@ -2600,17 +2602,25 @@ func _enter_zone(id: String) -> void:
 		set_enemy_level(world_level(false) + int(e["off"]))
 		spawn_enemy(str(e["id"]), tile_to_ground(Vector2(e["t"][0], e["t"][1])))
 	set_enemy_level(0)
-	if not zones_done.has(id):
-		var ch: Dictionary = cfg["chest"]
-		var spot := Vector2(ch["t"][0], ch["t"][1])
-		zone_chest = Node2D.new()
-		zone_chest.set_script(load("res://scripts/chest.gd"))
-		zone_chest.main = self
-		zone_chest.tile = spot
-		add_child(zone_chest)
-		zone_chest_door = _add_door(spot, "Abrir el cofre de la zona", _open_zone_chest, false)
-		zone_chest_door.reach = 1.6
-	say("%s: %s" % [cfg["name"], cfg["level_note"]], 3.5)
+	zone_boss = null
+	for e in enemies:
+		if e != dragon and e.data.get("boss", false):
+			zone_boss = e
+	say("%s: %s%s" % [cfg["name"], cfg["level_note"], ("  Jefe: %s." % zone_boss.data["name"]) if zone_boss != null and not zones_done.has(id) else ""], 4.0)
+
+var zone_boss: Node2D
+
+func _make_zone_chest() -> void:  # el cofre aparece al caer el jefe de la zona
+	var ch: Dictionary = zones_cfg[zone_id]["chest"]
+	var spot := Vector2(ch["t"][0], ch["t"][1])
+	zone_chest = Node2D.new()
+	zone_chest.set_script(load("res://scripts/chest.gd"))
+	zone_chest.main = self
+	zone_chest.tile = spot
+	add_child(zone_chest)
+	zone_chest_door = _add_door(spot, "Abrir el cofre del jefe", _open_zone_chest, false)
+	zone_chest_door.reach = 1.6
+	say("¡El jefe de la zona ha caído! Aparece un cofre.", 3.0)
 
 func _open_zone_chest() -> void:
 	var ch: Dictionary = zones_cfg[zone_id]["chest"]
@@ -2624,6 +2634,13 @@ func _open_zone_chest() -> void:
 	for item: String in ch["items"]:
 		crafting.add(item, int(ch["items"][item]))
 		lines.append("%s ×%d" % [crafting.item_name(item), int(ch["items"][item])])
+	if ch.has("book") and not prog.books.has(str(ch["book"])):
+		prog.books.append(str(ch["book"]))
+		hotbar_add(str(ch["book"]))
+		lines.append("¡%s!" % name_of(str(ch["book"])))
+	if ch.has("skill_points"):
+		prog.skill_points += int(ch["skill_points"])
+		lines.append("+%d punto%s de habilidad" % [int(ch["skill_points"]), "s" if int(ch["skill_points"]) > 1 else ""])
 	zones_done.append(zone_id)
 	show_loot(ch["items"].keys())
 	say("\n".join(lines), 5.0)

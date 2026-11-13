@@ -361,12 +361,12 @@
 				"off": 0
 			},
 			{
-				"id": "cyclops",
+				"id": "bruja_cienaga",
 				"t": [
 					14.5,
-					5.5
+					6.0
 				],
-				"off": 1
+				"off": 2
 			}
 		],
 		"chest": {
@@ -383,7 +383,9 @@
 				"hongo_luminoso": 3,
 				"hierba_vital": 3,
 				"semilla_hongo": 2
-			}
+			},
+			"book": "grimorio_tormenta",
+			"skill_points": 1
 		},
 		"detail": "swamp",
 		"theme_pitch": 0.84
@@ -708,6 +710,14 @@
 					5.5
 				],
 				"off": 1
+			},
+			{
+				"id": "coloso_arena",
+				"t": [
+					14.5,
+					7.0
+				],
+				"off": 2
 			}
 		],
 		"chest": {
@@ -724,7 +734,8 @@
 				"cristal_arcano": 3,
 				"lingote_acero": 2,
 				"carbon": 4
-			}
+			},
+			"skill_points": 2
 		},
 		"detail": "desert",
 		"theme_pitch": 1.12

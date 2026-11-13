@@ -60,14 +60,20 @@ func run_checks() -> void:
 		var slime: Node = mine_enemies.filter(func(e: Node) -> bool: return e.data.get("counts_as", e.id) == "slime")[0]
 		var base: Dictionary = main.creatures["slime"]
 		assert(slime.data["hp"] > base["hp"], "%s: los monstruos van al nivel del héroe (%d contra %d)" % [id, slime.data["hp"], base["hp"]])
-		var cyc: Node = mine_enemies.filter(func(e: Node) -> bool: return e.data.get("counts_as", e.id) == "cyclops")[0]
-		assert(cyc.data["hp"] > main.creatures["cyclops"]["hp"], "%s: el cíclope también está escalado" % id)
+		var cycs: Array = mine_enemies.filter(func(e: Node) -> bool: return e.data.get("counts_as", e.id) == "cyclops" and not e.data.get("boss", false))
+		assert(cycs.is_empty() or cycs[0].data["hp"] > main.creatures["cyclops"]["hp"], "%s: los cíclopes también están escalados" % id)
 		# recursos hay
 		assert(z.node_near(main.tile_to_ground(Vector2(cfg["nodes"][0]["t"][0], cfg["nodes"][0]["t"][1])), 2.0).size() > 0 or true)
 		# cofre: una sola vez
-		assert(not main.zones_done.has(id) and main.zone_chest != null, "%s: el cofre está cerrado" % id)
+		assert(not main.zones_done.has(id) and main.zone_chest == null and main.zone_boss != null, "%s: el cofre no aparece hasta matar al jefe de la zona (%s)" % [id, main.zone_boss.data["name"] if main.zone_boss else "?"])
+		assert(main.zone_boss.data["hp"] > slime.data["hp"] * 3, "%s: el jefe es mucho más fuerte que un monstruo normal" % id)
+		main.zone_boss.alive = false
+		main._tick_schedule(0.1)
+		assert(main.zone_chest != null, "%s: al caer el jefe aparece el cofre" % id)
 		var coins0: int = main.prog.coins
 		main._open_zone_chest()
+		if cfg["chest"].has("book"):
+			assert(main.prog.books.has(str(cfg["chest"]["book"])), "%s: el cofre del jefe da un grimorio nuevo" % id)
 		assert(main.zones_done.has(id) and main.prog.coins > coins0, "%s: el cofre da su botín" % id)
 		for item: String in cfg["chest"]["items"]:
 			assert(main.crafting.count(item) >= int(cfg["chest"]["items"][item]), "%s: recibes %s" % [id, item])
