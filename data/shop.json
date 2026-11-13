@@ -104,6 +104,10 @@
 			{
 				"id": "regadera",
 				"price": 30
+			},
+			{
+				"id": "grimorio_escarcha",
+				"price": 350
 			}
 		]
 	},

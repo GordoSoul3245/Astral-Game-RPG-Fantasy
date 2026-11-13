@@ -325,7 +325,7 @@ func save_game() -> void:
 		return
 	var d := {"version": 1, "level": prog.level, "xp": prog.xp, "points": prog.points, "spent": prog.spent,
 		"coins": prog.coins, "potions": prog.potions, "materials": prog.materials, "owned": prog.owned,
-		"equipped": prog.equipped, "blueprints": prog.blueprints, "slots": prog.slots, "dungeon_floor": dungeon_floor, "quests": quests.to_dict(), "clock": clock.to_dict(), "stars": prog.stars, "angler": angler.to_dict(), "bait": bait, "rod_parts": prog.rod_parts, "farm": farm.to_dict() if farm else pending_farm, "skills": prog.skills, "skill_points": prog.skill_points, "social": social.to_dict(), "zones_done": zones_done, "tool_up": prog.tool_up, "pets": pets}
+		"equipped": prog.equipped, "blueprints": prog.blueprints, "slots": prog.slots, "dungeon_floor": dungeon_floor, "quests": quests.to_dict(), "clock": clock.to_dict(), "stars": prog.stars, "angler": angler.to_dict(), "bait": bait, "rod_parts": prog.rod_parts, "farm": farm.to_dict() if farm else pending_farm, "skills": prog.skills, "skill_points": prog.skill_points, "social": social.to_dict(), "zones_done": zones_done, "tool_up": prog.tool_up, "pets": pets, "books": prog.books}
 	var f := FileAccess.open(save_path, FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(d, "\t"))
@@ -405,6 +405,11 @@ func load_game() -> bool:  # valida cada campo: el archivo puede estar editado o
 		for k: String in ["reel", "line"]:
 			if d["rod_parts"].get(k) == true:
 				prog.rod_parts[k] = true
+	prog.books = ["katana_ceniza", "grimorio_ignis"]
+	if d.get("books") is Array:
+		for b: Variant in d["books"]:
+			if WEAPONS.has(str(b)) and not prog.books.has(str(b)):
+				prog.books.append(str(b))
 	for pn: Node in pet_nodes:
 		pn.queue_free()
 	pet_nodes.clear()
@@ -1408,6 +1413,7 @@ func spawn_projectile(source: String, ground: Vector2, dir: Vector2, spec: Dicti
 	p.damage = roundi(spec["damage"] * (prog.magic_mult() if source == "hero" else 1.0))
 	p.height = spec["muzzle_height"]
 	p.scale_mult = spec.get("scale", 1.0)
+	p.effect = str(spec.get("effect", "fire")) if source == "hero" else "fire"
 	p.aoe = float(spec.get("aoe", 0.0)) * (1.0 + (prog.skill_sum("aoe_pct") if source == "hero" else 0.0))
 	p.ground = ground
 	p.tint = Color.html(spec["tint"]) if spec.has("tint") else tint
@@ -2114,7 +2120,7 @@ func _gather_hit() -> void:
 
 # --- barra de objetos: 6 casillas (prog.slots) que se colocan arrastrando desde el inventario; las herramientas nuevas entran solas
 const HOTBAR_MAX := 6
-const WEAPONS := ["katana_ceniza", "grimorio_ignis"]
+const WEAPONS := ["katana_ceniza", "grimorio_ignis", "grimorio_escarcha", "grimorio_tormenta"]
 var hotbar_row: HBoxContainer
 var clock: Node        # clock.gd: hora, día y lluvia
 var angler: RefCounted # angler.gd: libro de capturas, acuario, encargos y nasas
@@ -2146,7 +2152,7 @@ var tool_seen := {}    # ranura de herramienta -> última equipada que ya se col
 var hotbar_sig := ""
 
 func can_hotbar(id: String) -> bool:  # qué puede ir en la barra: armas base, consumibles y herramientas que tengas
-	return WEAPONS.has(id) or crafting.is_consumable(id) or (prog.equipment.has(id) and prog.equipment[id].has("tool") and prog.owned.has(id))
+	return (WEAPONS.has(id) and prog.books.has(id)) or crafting.is_consumable(id) or (prog.equipment.has(id) and prog.equipment[id].has("tool") and prog.owned.has(id))
 
 func icon_of(id: String) -> String:
 	return items[id]["icon"] if WEAPONS.has(id) else crafting.icon(id)

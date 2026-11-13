@@ -24,6 +24,7 @@ var spr: AnimatedSprite2D    # sprites de Blender (si data["sprites"]); si no, s
 var look := Vector2.DOWN
 var adir := "S"              # dirección fija durante el ataque
 var aim := Vector2.DOWN      # dirección del disparo, fijada al empezar el aviso (no persigue al héroe)
+var slow_t := 0.0           # ralentizado por hielo: se mueve a la mitad
 var kb := Vector2.ZERO       # empuje recibido, px de suelo/s
 var zones: Array = []        # avisos pendientes: se cancelan si muere antes del golpe
 var id := ""                 # clave en data/creatures.json (data puede ser una copia escalada por piso)
@@ -222,6 +223,9 @@ func _physics_process(delta: float) -> void:
 	queue_redraw()
 
 func _move(dir: Vector2, mult: float, delta: float) -> void:
+	slow_t = maxf(0.0, slow_t - delta)
+	if slow_t > 0.0:
+		mult *= 0.5
 	var p: Vector2 = main.world.move_collide(pos, pos + dir * data["speed"] * mult * delta * Vector2(1, 0.6), data["r_t"])
 	var off: Vector2 = p - main.pos
 	var min_d: float = radius + main.HERO_RADIUS

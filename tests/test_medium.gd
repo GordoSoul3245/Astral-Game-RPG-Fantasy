@@ -102,6 +102,43 @@ func run_checks() -> void:
 	assert(main.try_tame() and main.pets.size() == 3 and cr.count("hierba_vital") == 1, "con el límite lleno no gasta comida")
 	main.pets.resize(2)
 
+	# --- hechizos nuevos: hielo y rayo
+	assert(not main.can_hotbar("grimorio_escarcha") and not main.hotbar.has("grimorio_escarcha"), "no se tiene hasta comprarlo")
+	assert(main.shop.stock().any(func(x: Dictionary) -> bool: return x["id"] == "grimorio_escarcha"), "Tomás lo vende")
+	p.coins = 400
+	assert(main.shop.buy("grimorio_escarcha").begins_with("¡") and p.books.has("grimorio_escarcha") and main.hotbar.has("grimorio_escarcha") and p.coins < 100, "se compra y va a la barra")
+	assert(not main.shop.stock().any(func(x: Dictionary) -> bool: return x["id"] == "grimorio_escarcha"), "ya no se vende")
+	main.mana = main.hero_data["mana"]
+	main._select(main.hotbar.find("grimorio_escarcha"))
+	main.cooldown = 0.0
+	assert(main._attack("light") and main.current["effect"] == "slow", "el hechizo de hielo se lanza")
+	main.pos = main.tile_to_ground(Vector2(18.5, 30.5))
+	main._place()
+	var e1: Node2D = main.spawn_enemy("slime", main.pos + Vector2(40, 0))
+	var e2: Node2D = main.spawn_enemy("slime", main.pos + Vector2(80, 0))
+	var e3: Node2D = main.spawn_enemy("slime", main.pos + Vector2(110, 0))
+	for e in [e1, e2, e3]:
+		e.set_physics_process(false)
+	var Proj := load("res://scripts/projectile.gd")
+	var pr = Proj.new()
+	pr.main = main
+	pr.damage = 10
+	pr.effect = "slow"
+	pr._burn(e1)
+	assert(e1.slow_t > 2.0 and e2.slow_t == 0.0, "el hielo ralentiza al golpeado")
+	var hp2: int = e2.hp
+	var hp3: int = e3.hp
+	pr.effect = "chain"
+	pr._burn(e1)
+	assert(e2.hp < hp2 and e3.hp < hp3, "el rayo salta a los dos enemigos cercanos")
+	main.save_game()
+	p.books = ["katana_ceniza", "grimorio_ignis"]
+	assert(main.load_game() and p.books.has("grimorio_escarcha"), "los grimorios comprados se guardan")
+	for e in [e1, e2, e3]:
+		main.enemies.erase(e)
+		e.queue_free()
+	pr.free()
+
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(main.save_path))
-	print("PASS medium: mejora de herramientas, horario y clima, mascotas")
+	print("PASS medium: mejora de herramientas, horario y clima, mascotas, hechizos de hielo y rayo")
 	quit()

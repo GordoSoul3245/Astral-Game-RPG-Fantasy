@@ -158,7 +158,7 @@ func _backpack() -> Array:  # todo lo que llevas: equipo, consumibles y material
 	var p = main.prog
 	var out: Array = p.owned.duplicate()
 	for w: String in main.WEAPONS:  # las armas base aparecen aquí cuando no están en la barra, para poder volver a ponerlas
-		if not main.hotbar.has(w):
+		if not main.hotbar.has(w) and p.books.has(w):
 			out.append(w)
 	if p.potions > 0:
 		out.append("pocion_vida")

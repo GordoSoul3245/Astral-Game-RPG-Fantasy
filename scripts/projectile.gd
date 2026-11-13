@@ -13,6 +13,7 @@ var source := "hero"       # quién disparó: "hero" daña al dragón, "dragon" 
 var damage := 0
 var tint := Color.WHITE
 var scale_mult := 1.0       # tamaño del sprite (la esfera pesada es más grande)
+var effect := "fire"        # fire (marca de Ignis), slow (hielo: ralentiza) o chain (rayo: salta a otros enemigos)
 var aoe := 0.0              # radio de explosión en px de suelo; 0 = daño solo por impacto directo
 var sprite: AnimatedSprite2D
 var dead := false
@@ -22,9 +23,24 @@ var glow: PointLight2D
 var t := 0.0               # reloj de la animación de energía (órbitas y pulso del halo)
 const HB := preload("res://scripts/hitbox.gd")  # hitbox del cuerpo (silueta del sprite), no un círculo en el suelo
 
-func _burn(e: Node) -> void:  # golpe de fuego del héroe: daña y deja la marca de Ignis si sobrevive
+func _burn(e: Node) -> void:  # golpe del héroe: daña y, según el hechizo, marca (fuego), ralentiza (hielo) o encadena (rayo)
 	main.combat.hit(e, damage, "magic", ground)
-	main.combat.mark(e)
+	match effect:
+		"slow":
+			if "slow_t" in e:
+				e.slow_t = 3.0
+				main.popup(e.pos, "❄", Color(0.6, 0.9, 1.0))
+		"chain":
+			var n := 0
+			for o in main.targets():  # el rayo salta a los 2 enemigos más cercanos con un 60 % del daño
+				if n >= 2:
+					break
+				if o != e and o.alive and o.pos.distance_to(e.pos) < 130.0:
+					main.combat.hit(o, roundi(float(damage) * 0.6), "magic", e.pos, false)
+					main.popup(o.pos, "⚡", Color(0.85, 0.75, 1.0))
+					n += 1
+		_:
+			main.combat.mark(e)
 
 func _ready() -> void:
 	sprite = AnimatedSprite2D.new()

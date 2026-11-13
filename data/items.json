@@ -78,7 +78,11 @@
 			"aoe": 42.0,
 			"tint": "#ffb060"
 		},
-		"mark": {"duration": 4.0, "damage": 22, "radius": 40.0},
+		"mark": {
+			"duration": 4.0,
+			"damage": 22,
+			"radius": 40.0
+		},
 		"ultimate": {
 			"type": "meteor",
 			"name": "Meteoro",
@@ -91,5 +95,105 @@
 			"fall_time": 0.7,
 			"damage": 90
 		}
+	},
+	"grimorio_escarcha": {
+		"name": "Grimorio de escarcha",
+		"slot": "grimoire",
+		"icon": "res://art/grimorio/grimorio_escarcha.png",
+		"light": {
+			"type": "projectile",
+			"name": "Astilla de hielo",
+			"anim": "cast",
+			"fps": 26.0,
+			"strike_frame": 3,
+			"speed": 300.0,
+			"cooldown": 0.3,
+			"damage": 8,
+			"mana": 5.0,
+			"radius": 6.0,
+			"muzzle_height": 40.0,
+			"tint": "#9fe4ff",
+			"effect": "slow"
+		},
+		"heavy": {
+			"type": "projectile",
+			"name": "Ventisca",
+			"anim": "cast",
+			"fps": 12.0,
+			"strike_frame": 4,
+			"speed": 130.0,
+			"cooldown": 1.6,
+			"damage": 28,
+			"mana": 28.0,
+			"radius": 12.0,
+			"muzzle_height": 40.0,
+			"scale": 2.2,
+			"aoe": 50.0,
+			"tint": "#b8ecff",
+			"effect": "slow"
+		},
+		"ultimate": {
+			"type": "meteor",
+			"name": "Cometa helado",
+			"anim": "cast",
+			"fps": 12.0,
+			"strike_frame": 4,
+			"cooldown": 1.0,
+			"range_tiles": 10.0,
+			"aoe_tiles": 3.0,
+			"fall_time": 0.7,
+			"damage": 80
+		},
+		"desc": "Hielo que ralentiza a lo que toca."
+	},
+	"grimorio_tormenta": {
+		"name": "Grimorio de tormenta",
+		"slot": "grimoire",
+		"icon": "res://art/grimorio/grimorio_tormenta.png",
+		"light": {
+			"type": "projectile",
+			"name": "Chispa",
+			"anim": "cast",
+			"fps": 26.0,
+			"strike_frame": 3,
+			"speed": 380.0,
+			"cooldown": 0.4,
+			"damage": 11,
+			"mana": 7.0,
+			"radius": 6.0,
+			"muzzle_height": 40.0,
+			"tint": "#c9b0ff",
+			"effect": "chain"
+		},
+		"heavy": {
+			"type": "projectile",
+			"name": "Tormenta",
+			"anim": "cast",
+			"fps": 12.0,
+			"strike_frame": 4,
+			"speed": 130.0,
+			"cooldown": 1.6,
+			"damage": 30,
+			"mana": 30.0,
+			"radius": 12.0,
+			"muzzle_height": 40.0,
+			"scale": 2.2,
+			"aoe": 40.0,
+			"tint": "#d8c8ff",
+			"effect": "chain"
+		},
+		"ultimate": {
+			"type": "meteor",
+			"name": "Rayo celestial",
+			"anim": "cast",
+			"fps": 12.0,
+			"strike_frame": 4,
+			"cooldown": 1.0,
+			"range_tiles": 10.0,
+			"aoe_tiles": 3.0,
+			"fall_time": 0.7,
+			"damage": 100
+		},
+		"desc": "Rayos que saltan de enemigo en enemigo."
 	}
 }
