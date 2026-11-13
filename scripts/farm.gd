@@ -222,26 +222,16 @@ func _draw() -> void:
 		var s: Dictionary = cfg["seeds"][p["seed"]]
 		var g: Vector2 = main.tile_to_ground(p["tile"]) * sc
 		var stage := 3 if ripe(p) else mini(2, int(float(p["growth"]) / float(s["hours"]) * 3.0))
-		var col := Color(s["color"])
-		match stage:
-			0:
-				for k in 3:
-					draw_circle(g + Vector2(float(k - 1) * 9.0, 3.0) * sc * 0.5, 2.5 * sc * 0.5, Color(0.55, 0.4, 0.2))
-			1:
-				for k in 3:
-					var b: Vector2 = g + Vector2(float(k - 1) * 10.0, 4.0) * sc * 0.5
-					draw_line(b, b + Vector2(0, -9) * sc * 0.5, Color(0.3, 0.7, 0.25), 2.5)
-					draw_circle(b + Vector2(0, -10) * sc * 0.5, 3.0 * sc * 0.5, Color(0.4, 0.8, 0.3))
-			2:
-				for k in 3:
-					var b2: Vector2 = g + Vector2(float(k - 1) * 11.0, 4.0) * sc * 0.5
-					draw_line(b2, b2 + Vector2(0, -18) * sc * 0.5, Color(0.25, 0.6, 0.2), 3.0)
-					draw_circle(b2 + Vector2(-4, -14) * sc * 0.5, 4.5 * sc * 0.5, Color(0.35, 0.75, 0.28))
-					draw_circle(b2 + Vector2(4, -17) * sc * 0.5, 4.5 * sc * 0.5, Color(0.35, 0.75, 0.28))
-			_:
-				for k in 3:
-					var b3: Vector2 = g + Vector2(float(k - 1) * 11.0, 4.0) * sc * 0.5
-					draw_line(b3, b3 + Vector2(0, -18) * sc * 0.5, Color(0.25, 0.6, 0.2), 3.0)
-					draw_circle(b3 + Vector2(-4, -15) * sc * 0.5, 5.0 * sc * 0.5, col)
-					draw_circle(b3 + Vector2(4, -18) * sc * 0.5, 5.0 * sc * 0.5, col.lightened(0.15))
-				draw_circle(g + Vector2(0, -34 + sin(Time.get_ticks_msec() * 0.006) * 2.0) * sc * 0.5, 3.0 * sc * 0.5, Color(1.0, 0.9, 0.3))
+		var tex: Texture2D = _tex(str(s["sprite"]), stage)
+		var size := Vector2(44, 44) * sc
+		draw_texture_rect(tex, Rect2(g - Vector2(size.x * 0.5, size.y * 0.78), size), false)
+		if stage == 3:  # madura: destello que sube y baja
+			draw_circle(g + Vector2(0, -40 + sin(Time.get_ticks_msec() * 0.006) * 2.0) * sc, 2.5 * sc, Color(1.0, 0.9, 0.3))
+
+var tex_cache := {}
+
+func _tex(crop: String, stage: int) -> Texture2D:
+	var key := "%s_%d" % [crop, stage]
+	if not tex_cache.has(key):
+		tex_cache[key] = load("res://art/items/cultivo_%s.png" % key)
+	return tex_cache[key]

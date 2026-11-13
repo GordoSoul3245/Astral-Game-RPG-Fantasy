@@ -16,7 +16,8 @@
 				2,
 				4
 			],
-			"color": "#d83a3a"
+			"color": "#d83a3a",
+			"sprite": "baya"
 		},
 		"semilla_hierba": {
 			"crop": "hierba_vital",
@@ -25,7 +26,8 @@
 				2,
 				3
 			],
-			"color": "#3fbf4a"
+			"color": "#3fbf4a",
+			"sprite": "hierba"
 		},
 		"semilla_hongo": {
 			"crop": "hongo_luminoso",
@@ -35,7 +37,8 @@
 				2
 			],
 			"color": "#4fc8ff",
-			"night": true
+			"night": true,
+			"sprite": "hongo"
 		}
 	}
 }

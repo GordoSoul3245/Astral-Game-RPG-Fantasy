@@ -91,6 +91,7 @@ func _in_rects(i: int, j: int, key: String) -> bool:
 	return false
 
 func paint(ci: CanvasItem) -> void:  # suelo de losas de colores: mullido, caminos y charcas que brillan
+	_preview(ci)
 	var g: Array = cfg["ground"]
 	var t := Time.get_ticks_msec() * 0.001
 	for i in tiles:
@@ -105,6 +106,26 @@ func paint(ci: CanvasItem) -> void:  # suelo de losas de colores: mullido, camin
 				col = Color(g[(i + j) % 2]).lightened(float((i * 5 + j * 3) % 4) * 0.012)
 			ci.draw_colored_polygon(quad, col)
 			_detail(ci, i, j, t)
+
+func _preview(ci: CanvasItem) -> void:  # adelanto de la región vecina al otro lado de cada claro
+	var g: Dictionary = cfg.get("gates", {})
+	var pv: Dictionary = cfg.get("preview", {})
+	var n := int(cfg["tiles"])
+	var sc: float = main.SCALE
+	for side: String in g:
+		var col := Color(str(pv.get(side, "#35682a")))
+		var r: Array = g[side]
+		for k in range(1, 8):
+			for j in range(int(r[0]) - 3, int(r[1]) + 4):
+				var i: int = -k if side == "w" else n - 1 + k
+				if side in ["n", "s"]:
+					continue
+				var h := (i * 73 + j * 31) % 100
+				var q := PackedVector2Array([_corner(i, j), _corner(i + 1, j), _corner(i + 1, j + 1), _corner(i, j + 1)])
+				ci.draw_colored_polygon(q, col.lightened(float(h % 5) * 0.02) if (i + j) % 2 == 0 else col.darkened(0.06))
+				if h < 11 and k > 1:
+					var b := _corner(i + 0.5, j + 0.5)
+					ci.draw_colored_polygon(PackedVector2Array([b + Vector2(-9, 0) * sc, b + Vector2(9, 0) * sc, b + Vector2(0, -34) * sc]), col.darkened(0.45))
 
 func _gate_zone(i: int, j: int) -> bool:  # camino que sale del claro hacia dentro
 	var g: Dictionary = cfg.get("gates", {})

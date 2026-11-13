@@ -181,3 +181,14 @@ Lee este archivo y sigue desde "Pendiente". Lo que está escrito aquí es la fue
 - **Zonas con más contenido:** detalle de suelo (nenúfares y juncos en la marisma; rizos y guijarros en el desierto), **enemigos propios** (limo de marisma, arquero de arena, cíclope de ceniza: mismo cuerpo con tinte, más vida y botín exclusivo; cuentan como su base para las misiones) y **música** más grave en la marisma y más aguda en el desierto (`music.set_theme`).
 - Test: `tests/test_zones.gd` (incluye cruzar puentes ida y vuelta); capturas `production/qa/evidence/mundo_vivo/9_puente_valle.png` y `9_claro_marisma.png`.
 - **Por probar jugando:** los puentes son cortos y de aspecto simple; el cruce cambia de escena con fundido (no hay mundo continuo sin cortes) y las regiones no se ven desde el borde.
+
+## Mecánicas medianas, hechizos nuevos y jefes de zona
+- **Mejora de herramientas:** en el menú, el detalle de una herramienta tiene «Mejorar a +N» (hasta +3; materiales en `data/crafting.json` → `upgrades`). Solo se puede junto al yunque de Bram. Cada nivel suma +1 de daño al recurso; en la caña, +0,5 casillas de lanzamiento y barra más larga. Se guarda (`tool_up`).
+- **Horario y clima en el valle:** de noche salen hasta 4 **limos nocturnos** (variante con botín propio) y con lluvia al atardecer hasta 2; se disuelven al amanecer o al irte del valle. Con lluvia los **conejos se refugian** y no se pueden golpear.
+- **Mascotas** (`scripts/pet.gd`): con E junto a un conejo (hierba vital o bayas, 2 veces) o un zorro (carne, 3 veces) se doma; máximo 2. Conejo: 20 % de recurso extra al recolectar; zorro: +8 % de daño cuerpo a cuerpo. Siguen al héroe y se guardan (`pets`).
+- **Hechizos nuevos** (`prog.books`, grimorios en `data/items.json`): **Grimorio de escarcha** (hielo: ralentiza a la mitad 3 s; lo vende Tomás por 350) y **Grimorio de tormenta** (rayo: salta a 2 enemigos cercanos con 60 % del daño; cae del jefe de la Marisma). Cada uno con ligero, pesado y ultimate propios; el árbol de habilidades también los mejora.
+- **Jefes de zona:** **Bruja de la ciénaga** (marisma) y **Coloso de arena** (desierto), mucho más fuertes que el resto; el cofre de la zona aparece al caer el jefe (grimorio de tormenta y puntos de habilidad).
+- **Puentes y bordes:** los puentes tienen barandilla y cartel con el nombre de la región, y más allá del borde se ve un adelanto de la región vecina (suelo y siluetas), también desde los claros de las zonas.
+- **Sprites del huerto:** 12 sprites de Blender (3 cultivos × 4 fases) sustituyen a las formas dibujadas.
+- Tests: `tests/test_medium.gd`, `tests/test_zones.gd`.
+- **Por probar jugando:** equilibrio de los jefes, de las mejoras y de los bonus de mascota; el adelanto de región es solo suelo plano con siluetas.

@@ -2411,7 +2411,7 @@ func _build_links() -> void:
 	world.add_child(bridges)  # cuelga del valle: se oculta con él
 	for l: Dictionary in links:
 		if l["a"] == "valle":
-			bridges.add_link(str(l["side_a"]), l["rows_a"])
+			bridges.add_link(str(l["side_a"]), l["rows_a"], Color(zones_cfg[l["b"]]["ground"][0]), "%s →" % world_names[l["b"]])
 
 func region() -> String:  # en qué región estás: "valle", el id de una zona, o "" (dungeon, mina, casas)
 	if in_mine:
@@ -2594,6 +2594,13 @@ func _enter_zone(id: String) -> void:
 	add_child(dungeon_node)
 	var zcfg: Dictionary = cfg.duplicate()
 	zcfg["gates"] = gates_of(id)
+	var prev := {}  # color de la región que se ve al otro lado de cada claro
+	for l: Dictionary in links:
+		if l["a"] == id:
+			prev[str(l["side_a"])] = "#35682a" if l["b"] == "valle" else zones_cfg[l["b"]]["ground"][0]
+		if l["b"] == id:
+			prev[str(l["side_b"])] = "#35682a" if l["a"] == "valle" else zones_cfg[l["a"]]["ground"][0]
+	zcfg["preview"] = prev
 	dungeon_node.setup(zcfg)
 	world = dungeon_node
 	pos = tile_to_ground(dungeon_node.spawn_tile())
