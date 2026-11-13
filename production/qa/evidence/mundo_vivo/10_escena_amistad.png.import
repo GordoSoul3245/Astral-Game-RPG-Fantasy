@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bq1s7mpydqwom"
-path="res://.godot/imported/9_puerta_zona.png-cfc7536c56e0108d35cca36f5db5aa3f.ctex"
+uid="uid://ch5qbm0b102m"
+path="res://.godot/imported/10_escena_amistad.png-620932edc8dde6f83f8715c2c1679fd7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://production/qa/evidence/mundo_vivo/9_puerta_zona.png"
-dest_files=["res://.godot/imported/9_puerta_zona.png-cfc7536c56e0108d35cca36f5db5aa3f.ctex"]
+source_file="res://production/qa/evidence/mundo_vivo/10_escena_amistad.png"
+dest_files=["res://.godot/imported/10_escena_amistad.png-620932edc8dde6f83f8715c2c1679fd7.ctex"]
 
 [params]
 

@@ -1,0 +1,39 @@
+{
+	"valley_tiles": 50,
+	"trigger": 0.85,
+	"links": [
+		{
+			"a": "valle",
+			"side_a": "w",
+			"rows_a": [
+				20,
+				22
+			],
+			"b": "pantano",
+			"side_b": "e",
+			"rows_b": [
+				12,
+				15
+			]
+		},
+		{
+			"a": "valle",
+			"side_a": "e",
+			"rows_a": [
+				11,
+				13
+			],
+			"b": "desierto",
+			"side_b": "w",
+			"rows_b": [
+				12,
+				15
+			]
+		}
+	],
+	"names": {
+		"valle": "Valle de las Ruinas",
+		"pantano": "Marisma Sombría",
+		"desierto": "Desierto de Ceniza"
+	}
+}

@@ -31,6 +31,13 @@ func _process(_delta: float) -> void:
 		_start()
 
 # --- control
+func set_theme(pitch: float) -> void:  # cada región suena un poco distinta: más grave en la marisma, más aguda en el desierto
+	for p: AudioStreamPlayer in players.values():
+		p.pitch_scale = pitch
+	theme_pitch = pitch
+
+var theme_pitch := 1.0
+
 func set_zone(is_dungeon: bool) -> void:
 	dungeon = is_dungeon
 	_mix()
@@ -63,6 +70,7 @@ func _start() -> void:
 		add_child(p)
 		players[k] = p
 	for p: AudioStreamPlayer in players.values():  # todas a la vez: quedan sincronizadas
+		p.pitch_scale = theme_pitch
 		p.play()
 	_mix()
 

@@ -123,14 +123,22 @@ func capture() -> void:
 		await _shot("8_zona_" + id)
 		main._exit_mine()
 		await _wait(0.6)
-	# puerta de entrada en el valle
-	var door: Node2D = main.doors.filter(func(d: Node2D) -> bool: return d.label.begins_with("Camino"))[0]
-	main.pos = main.tile_to_ground(door.tile) + Vector2(0, 50)
+	# puente del valle hacia la marisma y el claro de la marisma hacia el valle
+	main.pos = main.tile_to_ground(Vector2(4.0, 21.5))
 	main._place()
 	main.cam.position = (main.pos - Vector2(0, 40)) * main.SCALE
 	main.clock.hour = 12.0
 	await _wait(0.8)
-	await _shot("9_puerta_zona")
+	await _shot("9_puente_valle")
+	main._enter_zone("pantano")
+	await _wait(0.8)
+	main.pos = main.tile_to_ground(Vector2(25.0, 13.5))
+	main._place()
+	main.cam.position = (main.pos - Vector2(0, 40)) * main.SCALE
+	await _wait(0.8)
+	await _shot("9_claro_marisma")
+	main._exit_mine()
+	await _wait(0.3)
 	
 	# escena de evento de amistad
 	main.menu.visible = false

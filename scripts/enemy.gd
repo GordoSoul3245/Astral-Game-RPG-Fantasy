@@ -157,6 +157,8 @@ func _build_sprite() -> void:  # <prefijo><DIR>_<idle|walk|attack>_<NN>.png, 8 d
 	spr.scale = Vector2.ONE * main.SCALE
 	var f: Array = data["sprites"]["feet"]
 	spr.position = -Vector2(f[0], f[1]) * main.SCALE
+	if data.has("tint"):  # variantes de zona: mismo cuerpo con otro color
+		spr.self_modulate = Color(str(data["tint"]))
 	add_child(spr)
 	spr.play("idle_S")
 

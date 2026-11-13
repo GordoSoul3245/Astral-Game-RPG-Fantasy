@@ -217,7 +217,7 @@ func _ready() -> void:
 	social.main = self
 	add_child(social)
 	call_deferred("_build_lamps")
-	call_deferred("_build_zone_doors")
+	call_deferred("_build_links")
 	call_deferred("_build_farm")
 	angler = load("res://scripts/angler.gd").new(self, _read_json("res://data/fishing.json"))
 	traps = load("res://scripts/traps.gd").new()
@@ -1037,7 +1037,7 @@ func on_kill(e: Node) -> void:  # botín de un enemigo: XP, monedas y objetos (d
 			quest_event("loot", drop["item"])
 	popup(e.pos, "\n".join(lines))
 	gain_xp(xp)
-	var eid: String = str(e.get("id")) if e.get("id") != null and str(e.get("id")) != "" else str(creatures.find_key(d))  # los monstruos de la dungeon llevan una copia escalada de sus datos
+	var eid: String = str(d.get("counts_as", e.get("id"))) if (e.get("id") != null and str(e.get("id")) != "") else str(creatures.find_key(d))  # los monstruos de la dungeon llevan una copia escalada de sus datos; las variantes de zona cuentan como su base
 	if eid != "<null>" and eid != "":
 		quest_event("kill", eid)
 
@@ -1815,6 +1815,7 @@ func _process(delta: float) -> void:
 	cam.offset = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * shake_amp + kick_v
 
 func _physics_process(delta: float) -> void:
+	_check_edges(delta)
 	if reaction_time > 0.0:
 		buf = ""  # herido o muerto: la acción anticipada se pierde
 		reaction_time = maxf(0.0, reaction_time - delta)
@@ -2369,24 +2370,92 @@ func _enter_mine() -> void:
 func enter_zone(id: String) -> void:
 	_transition(func() -> void: _enter_zone(id))
 
-func _build_zone_doors() -> void:  # entradas a las zonas: arcos en el campo, cerca del sitio indicado en data/zones.json
+# --- mundo conectado: el valle y las zonas son regiones vecinas; al cruzar el borde de una (por un puente o un claro) se entra en la otra
+var links: Array = []          # data/world.json
+var world_names := {}
+var travel_cd := 0.0
+
+func _build_links() -> void:
 	zones_cfg = _read_json("res://data/zones.json")
-	for id: String in zones_cfg:
-		var cfg: Dictionary = zones_cfg[id]
-		var hint := Vector2(cfg["hint"][0], cfg["hint"][1])
-		var spot := hint
-		var found := false
-		for r in range(0, 16):
-			for dx in range(-r, r + 1):
-				for dy in range(-r, r + 1):
-					if found or maxi(absi(dx), absi(dy)) != r:
-						continue
-					var t := hint + Vector2(dx, dy)
-					if not world.is_water(t) and not world.blocked(t, 1.4):
-						spot = t
-						found = true
-		var d := _add_door(spot, str(cfg["door_label"]), enter_zone.bind(id))
-		d.reach = 2.0
+	var w: Dictionary = _read_json("res://data/world.json")
+	links = w["links"]
+	world_names = w["names"]
+	var bridges := Node2D.new()
+	bridges.set_script(load("res://scripts/bridges.gd"))
+	bridges.main = self
+	world.add_child(bridges)  # cuelga del valle: se oculta con él
+	for l: Dictionary in links:
+		if l["a"] == "valle":
+			bridges.add_link(str(l["side_a"]), l["rows_a"])
+
+func region() -> String:  # en qué región estás: "valle", el id de una zona, o "" (dungeon, mina, casas)
+	if in_mine:
+		return zone_id
+	return "" if (in_dungeon or in_interior) else "valle"
+
+func region_tiles(r: String) -> int:
+	return 50 if r == "valle" else int(zones_cfg[r]["tiles"])
+
+func gates_of(id: String) -> Dictionary:  # lados abiertos de una región: side -> [fila0, fila1]
+	var g := {}
+	for l: Dictionary in links:
+		if l["a"] == id:
+			g[str(l["side_a"])] = l["rows_a"]
+		if l["b"] == id:
+			g[str(l["side_b"])] = l["rows_b"]
+	return g
+
+func _arrival(id: String, side: String, rows: Array) -> Vector2:  # casilla justo dentro del borde de `id` por ese lado
+	var n := float(region_tiles(id))
+	var mid := (float(rows[0]) + float(rows[1]) + 1.0) / 2.0
+	match side:
+		"w": return Vector2(1.7, mid)
+		"e": return Vector2(n - 1.7, mid)
+		"n": return Vector2(mid, 1.7)
+	return Vector2(mid, n - 1.7)
+
+func _check_edges(delta: float) -> void:
+	travel_cd = maxf(0.0, travel_cd - delta)
+	if travel_cd > 0.0 or transitioning or dying or links.is_empty():
+		return
+	var r := region()
+	if r == "":
+		return
+	var t := ground_to_tile(pos)
+	var n := float(region_tiles(r))
+	var trig := 0.85
+	for l: Dictionary in links:
+		for end in 2:
+			var name: String = l["a"] if end == 0 else l["b"]
+			if name != r:
+				continue
+			var side: String = l["side_a"] if end == 0 else l["side_b"]
+			var rows: Array = l["rows_a"] if end == 0 else l["rows_b"]
+			var along: float = t.y if side in ["w", "e"] else t.x
+			if along < float(rows[0]) or along >= float(rows[1]) + 1.0:
+				continue
+			var hit := (side == "w" and t.x < trig) or (side == "e" and t.x > n - trig) or (side == "n" and t.y < trig) or (side == "s" and t.y > n - trig)
+			if hit:
+				var other: String = l["b"] if end == 0 else l["a"]
+				var oside: String = l["side_b"] if end == 0 else l["side_a"]
+				var orows: Array = l["rows_b"] if end == 0 else l["rows_a"]
+				travel(other, _arrival(other, oside, orows))
+				return
+
+func travel(to: String, arrive: Vector2) -> void:  # cruza a la región vecina, con un fundido corto
+	travel_cd = 2.0
+	_transition(func() -> void: _do_travel(to, arrive))
+
+func _do_travel(to: String, arrive: Vector2) -> void:
+	if in_mine:
+		_exit_mine()
+	if to != "valle":
+		_enter_zone(to)
+	pos = tile_to_ground(arrive)
+	cam.position = (pos - Vector2(0, 40)) * SCALE
+	if music:
+		music.set_theme(float(zones_cfg[to].get("theme_pitch", 1.0)) if to != "valle" else 1.0)
+	say(str(world_names.get(to, to)), 2.5)
 
 func _enter_zone(id: String) -> void:
 	var cfg: Dictionary = zones_cfg[id]
@@ -2409,13 +2478,13 @@ func _enter_zone(id: String) -> void:
 	RenderingServer.set_default_clear_color(Color(cfg["clear"]))
 	combat.set_zone(false)
 	dungeon_node = Node2D.new()
-	dungeon_node.set_script(load("res://scripts/zone.gd"))
+	dungeon_node.set_script(load("res://scripts/region.gd"))
 	dungeon_node.main = self
 	add_child(dungeon_node)
-	dungeon_node.setup(cfg)
+	var zcfg: Dictionary = cfg.duplicate()
+	zcfg["gates"] = gates_of(id)
+	dungeon_node.setup(zcfg)
 	world = dungeon_node
-	var exit_door := _add_door(Vector2(cfg["exit"][0], cfg["exit"][1]), "Volver al valle", exit_mine)
-	exit_door.reach = 2.2
 	pos = tile_to_ground(dungeon_node.spawn_tile())
 	cam.position = (pos - Vector2(0, 40)) * SCALE
 	for e: Dictionary in cfg["enemies"]:  # monstruos fijos al nivel del héroe -2 (+ el desvío de la zona)

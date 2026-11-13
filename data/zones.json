@@ -10,18 +10,9 @@
 		"path": "#5b4a30",
 		"water": "#1c3a4a",
 		"water2": "#245068",
-		"hint": [
-			8.0,
-			17.0
-		],
-		"door_label": "Camino a la Marisma Sombría",
 		"start": [
 			14.5,
 			24.0
-		],
-		"exit": [
-			14.5,
-			26.2
 		],
 		"level_note": "Monstruos de tu nivel; hongos, hierbas y bayas.",
 		"water_rects": [
@@ -314,7 +305,7 @@
 		],
 		"enemies": [
 			{
-				"id": "slime",
+				"id": "slime_pantano",
 				"t": [
 					7.5,
 					10.5
@@ -322,7 +313,7 @@
 				"off": 0
 			},
 			{
-				"id": "slime",
+				"id": "slime_pantano",
 				"t": [
 					20.5,
 					10.5
@@ -330,7 +321,7 @@
 				"off": 0
 			},
 			{
-				"id": "slime",
+				"id": "slime_pantano",
 				"t": [
 					10.5,
 					21.5
@@ -338,7 +329,7 @@
 				"off": 0
 			},
 			{
-				"id": "slime",
+				"id": "slime_pantano",
 				"t": [
 					19.5,
 					22.0
@@ -346,7 +337,7 @@
 				"off": 0
 			},
 			{
-				"id": "slime",
+				"id": "slime_pantano",
 				"t": [
 					14.5,
 					14.5
@@ -393,7 +384,9 @@
 				"hierba_vital": 3,
 				"semilla_hongo": 2
 			}
-		}
+		},
+		"detail": "swamp",
+		"theme_pitch": 0.84
 	},
 	"desierto": {
 		"name": "Desierto de Ceniza",
@@ -406,18 +399,9 @@
 		"path": "#e4c887",
 		"water": "#2d6a7a",
 		"water2": "#3a8498",
-		"hint": [
-			33.0,
-			20.0
-		],
-		"door_label": "Camino al Desierto de Ceniza",
 		"start": [
 			14.5,
 			24.0
-		],
-		"exit": [
-			14.5,
-			26.2
 		],
 		"level_note": "Más duro: arqueros y cíclopes; hierro, carbón y cristal.",
 		"water_rects": [
@@ -654,7 +638,7 @@
 		],
 		"enemies": [
 			{
-				"id": "skeleton_archer",
+				"id": "arquero_arena",
 				"t": [
 					7.0,
 					7.5
@@ -662,7 +646,7 @@
 				"off": 0
 			},
 			{
-				"id": "skeleton_archer",
+				"id": "arquero_arena",
 				"t": [
 					21.5,
 					7.5
@@ -670,7 +654,7 @@
 				"off": 0
 			},
 			{
-				"id": "skeleton_archer",
+				"id": "arquero_arena",
 				"t": [
 					8.0,
 					18.5
@@ -678,7 +662,7 @@
 				"off": 0
 			},
 			{
-				"id": "skeleton_archer",
+				"id": "arquero_arena",
 				"t": [
 					20.5,
 					19.0
@@ -710,7 +694,7 @@
 				"off": 0
 			},
 			{
-				"id": "cyclops",
+				"id": "ciclope_ceniza",
 				"t": [
 					10.5,
 					5.5
@@ -718,7 +702,7 @@
 				"off": 1
 			},
 			{
-				"id": "cyclops",
+				"id": "ciclope_ceniza",
 				"t": [
 					18.5,
 					5.5
@@ -741,6 +725,8 @@
 				"lingote_acero": 2,
 				"carbon": 4
 			}
-		}
+		},
+		"detail": "desert",
+		"theme_pitch": 1.12
 	}
 }

@@ -279,5 +279,155 @@
 				"chance": 1.0
 			}
 		]
+	},
+	"slime_pantano": {
+		"kind": "slime",
+		"blood": "#3fa070",
+		"hp": 40,
+		"speed": 54.0,
+		"detect_range": 265.0,
+		"radius": 10.0,
+		"r_t": 0.32,
+		"staggerable": true,
+		"sprites": {
+			"prefix": "res://art/slime/slime_",
+			"feet": [
+				68.0,
+				113.7
+			],
+			"kinds": [
+				"idle",
+				"walk"
+			]
+		},
+		"hop_time": 0.8,
+		"hop_rest": 0.5,
+		"contact_damage": 11,
+		"contact_cooldown": 0.9,
+		"xp": 14,
+		"coins": [
+			3,
+			8
+		],
+		"drops": [
+			{
+				"item": "hongo_luminoso",
+				"chance": 0.5
+			},
+			{
+				"item": "hierba_vital",
+				"chance": 0.5
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 0.15
+			}
+		],
+		"name": "Limo de marisma",
+		"tint": "#6fe0b0",
+		"counts_as": "slime"
+	},
+	"arquero_arena": {
+		"kind": "archer",
+		"blood": "#e8dcc0",
+		"hp": 42,
+		"speed": 50.0,
+		"detect_range": 320.0,
+		"keep_distance": 150.0,
+		"sprites": {
+			"prefix": "res://art/skeleton/skeleton_",
+			"feet": [
+				68.0,
+				113.7
+			]
+		},
+		"flee_distance": 90.0,
+		"attack_cooldown": 1.76,
+		"windup": 0.5,
+		"recover": 0.45,
+		"staggerable": true,
+		"radius": 10.0,
+		"r_t": 0.32,
+		"projectile": {
+			"speed": 200.0,
+			"radius": 4.0,
+			"damage": 10,
+			"muzzle_height": 38.0,
+			"scale": 0.45,
+			"tint": "#e8e2c8"
+		},
+		"xp": 24,
+		"coins": [
+			6,
+			12
+		],
+		"drops": [
+			{
+				"item": "hueso_antiguo",
+				"chance": 0.4
+			},
+			{
+				"item": "carbon",
+				"chance": 0.5
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 0.2
+			}
+		],
+		"name": "Arquero de arena",
+		"tint": "#f0d080",
+		"counts_as": "skeleton_archer"
+	},
+	"ciclope_ceniza": {
+		"kind": "brute",
+		"blood": "#8e1f2a",
+		"hp": 210,
+		"speed": 38.0,
+		"detect_range": 370.0,
+		"attack_range": 48.0,
+		"windup": 0.8,
+		"attack_cooldown": 2.4,
+		"slam_radius": 55.0,
+		"slam_damage": 34,
+		"poise": 70,
+		"size": 2.5,
+		"sprites": {
+			"prefix": "res://art/cyclops/cyclops_",
+			"feet": [
+				228.0,
+				273.7
+			]
+		},
+		"radius": 22.0,
+		"r_t": 0.7,
+		"recover": 0.9,
+		"knock_resist": 0.75,
+		"xp": 120,
+		"coins": [
+			35,
+			55
+		],
+		"drops": [
+			{
+				"item": "ojo_ciclope",
+				"chance": 1.0
+			},
+			{
+				"item": "cristal_arcano",
+				"chance": 0.5
+			},
+			{
+				"item": "lingote_acero",
+				"chance": 0.2
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 0.6
+			}
+		],
+		"name": "Cíclope de ceniza",
+		"tint": "#ff9a80",
+		"counts_as": "cyclops"
 	}
 }
