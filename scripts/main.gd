@@ -125,6 +125,7 @@ func _ready() -> void:
 	hero_data = creatures["hero"]
 	prog = load("res://scripts/progress.gd").new(_read_json("res://data/equipment.json"))
 	crafting = load("res://scripts/crafting.gd").new(prog, _read_json("res://data/crafting.json"))
+	prog.skill_data = _read_json("res://data/skills.json")
 	for b: String in crafting.cfg["starting_blueprints"]:
 		crafting.learn(b)
 	hero_base = {"hp": hero_data["hp"], "mana": hero_data["mana"], "stamina": hero_data["stamina"]}
@@ -320,7 +321,7 @@ func save_game() -> void:
 		return
 	var d := {"version": 1, "level": prog.level, "xp": prog.xp, "points": prog.points, "spent": prog.spent,
 		"coins": prog.coins, "potions": prog.potions, "materials": prog.materials, "owned": prog.owned,
-		"equipped": prog.equipped, "blueprints": prog.blueprints, "slots": prog.slots, "dungeon_floor": dungeon_floor, "quests": quests.to_dict(), "clock": clock.to_dict(), "stars": prog.stars, "angler": angler.to_dict(), "bait": bait, "rod_parts": prog.rod_parts, "farm": farm.to_dict() if farm else pending_farm}
+		"equipped": prog.equipped, "blueprints": prog.blueprints, "slots": prog.slots, "dungeon_floor": dungeon_floor, "quests": quests.to_dict(), "clock": clock.to_dict(), "stars": prog.stars, "angler": angler.to_dict(), "bait": bait, "rod_parts": prog.rod_parts, "farm": farm.to_dict() if farm else pending_farm, "skills": prog.skills, "skill_points": prog.skill_points}
 	var f := FileAccess.open(save_path, FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(d, "\t"))
@@ -400,6 +401,12 @@ func load_game() -> bool:  # valida cada campo: el archivo puede estar editado o
 		for k: String in ["reel", "line"]:
 			if d["rod_parts"].get(k) == true:
 				prog.rod_parts[k] = true
+	prog.skills.clear()
+	if d.get("skills") is Dictionary:
+		for sid: String in d["skills"]:
+			if prog.skill_data["skills"].has(sid):
+				prog.skills[sid] = clampi(int(d["skills"][sid]), 0, int(prog.skill_data["skills"][sid]["max"]))
+	prog.skill_points = maxi(0, int(d.get("skill_points", 0)))
 	if d.get("farm") is Dictionary:
 		if farm:
 			farm.from_dict(d["farm"])
@@ -963,7 +970,9 @@ func popup(ground: Vector2, text: String, color := Color(1.0, 0.9, 0.5)) -> void
 	tw.tween_callback(l.queue_free)
 
 func gain_xp(n: int) -> void:
-	if prog.add_xp(n) > 0:
+	var gained: int = prog.add_xp(n)
+	if gained > 0:
+		prog.skill_points += gained  # 1 punto de habilidad por nivel
 		refresh_world_levels()
 		_apply_stats()
 		hero_hp = hero_max_hp
@@ -1299,7 +1308,7 @@ func _respawn() -> void:
 	hero.play("idle_" + facing)
 
 func gain_ultimate(damage: float) -> void:  # la ultimate se carga golpeando entidades
-	ult = minf(hero_data["ult_max"], ult + damage * hero_data["ult_per_damage"])
+	ult = minf(hero_data["ult_max"], ult + damage * hero_data["ult_per_damage"] * (1.0 + prog.skill_sum("ult_gain_pct")))
 
 var settings: RefCounted   # opciones del jugador (settings.gd): accesibilidad de efectos y volúmenes
 var music: Node
@@ -1347,7 +1356,7 @@ func spawn_projectile(source: String, ground: Vector2, dir: Vector2, spec: Dicti
 	p.damage = roundi(spec["damage"] * (prog.magic_mult() if source == "hero" else 1.0))
 	p.height = spec["muzzle_height"]
 	p.scale_mult = spec.get("scale", 1.0)
-	p.aoe = spec.get("aoe", 0.0)
+	p.aoe = float(spec.get("aoe", 0.0)) * (1.0 + (prog.skill_sum("aoe_pct") if source == "hero" else 0.0))
 	p.ground = ground
 	p.tint = Color.html(spec["tint"]) if spec.has("tint") else tint
 	add_child(p)
@@ -1447,12 +1456,15 @@ func _push_out(list: Array) -> void:  # saca al héroe de los enemigos
 			pos = e.pos + off.normalized() * (e.radius + HERO_RADIUS)
 
 # ¿alcanza el recurso para este ataque? (maná para magia, estamina para espada)
+func mana_cost(spec: Dictionary) -> float:  # la eficiencia del grimorio abarata los hechizos
+	return float(spec.get("mana", 0.0)) * (1.0 - minf(0.6, prog.skill_sum("cost_pct")))
+
 func _afford(spec: Dictionary) -> bool:
-	return mana >= spec.get("mana", 0.0) and stamina >= spec.get("stamina", 0.0)
+	return mana >= mana_cost(spec) and stamina >= spec.get("stamina", 0.0)
 
 func _pay(spec: Dictionary) -> void:
 	if spec.has("mana"):
-		mana -= spec["mana"]
+		mana -= mana_cost(spec)
 		mana_idle = 0.0
 	if spec.has("stamina"):
 		stamina -= spec["stamina"]
@@ -1494,7 +1506,8 @@ func _try_buffer() -> void:
 func _begin(spec: Dictionary, mode: String) -> void:
 	current = spec
 	current_mode = mode
-	cooldown = current["cooldown"] / prog.attack_speed()
+	var cd_skill: float = minf(0.5, prog.skill_sum("cd_pct")) if current.get("type", "") == "projectile" else 0.0  # chispa veloz
+	cooldown = current["cooldown"] / prog.attack_speed() * (1.0 - cd_skill)
 	swing_mana = 0.0
 	recover_t = 0.0
 	aim_dir = _chest_aim()
@@ -1810,7 +1823,7 @@ func _physics_process(delta: float) -> void:
 	if stamina_idle >= hero_data["stamina_regen_delay"]:
 		stamina = minf(hero_data["stamina"], stamina + hero_data["stamina_regen"] * delta)
 	if mana_idle >= hero_data["mana_regen_delay"]:
-		mana = minf(hero_data["mana"], mana + hero_data["mana_regen"] * delta)
+		mana = minf(hero_data["mana"], mana + hero_data["mana_regen"] * (1.0 + prog.skill_sum("regen_pct")) * delta)
 	if exhausted and stamina >= 20.0:
 		exhausted = false
 	if dashing:

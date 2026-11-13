@@ -196,13 +196,13 @@ func _spark(ground: Vector2, col: Color, size: float) -> void:
 # --- marca de Ignis
 func mark(e: Node) -> void:
 	if e.alive:
-		marks[e] = mark_spec["duration"]  # marcar de nuevo solo refresca
+		marks[e] = mark_spec["duration"] + main.prog.skill_sum("mark_time")  # marcar de nuevo solo refresca
 
 func consume(e: Node) -> bool:
 	return marks.erase(e)
 
 func detonate(ground: Vector2) -> void:  # la explosión no marca ni consume marcas: no puede encadenarse
-	detonate_at(ground, mark_spec["radius"], mark_spec["damage"])
+	detonate_at(ground, mark_spec["radius"], roundi(float(mark_spec["damage"]) * (1.0 + main.prog.skill_sum("mark_dmg_pct"))))
 
 func detonate_at(ground: Vector2, radius: float, damage: int) -> void:  # también la usa el frasco de Ignis (alquimia)
 	play("blast")

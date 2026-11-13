@@ -87,4 +87,14 @@ func capture() -> void:
 	main.menu.refresh()
 	await _wait(0.5)
 	await _shot("3_inventario_barra")
+	
+	# árbol de habilidades del grimorio
+	main.prog.skill_points = 5
+	main.prog.learn("brasas_vivas")
+	main.prog.learn("pozo_arcano")
+	main.prog.learn("marca_duradera")
+	main.menu.visible = true
+	main.menu._set_tab("magic")
+	await _wait(0.4)
+	await _shot("6_arbol_magia")
 	quit()

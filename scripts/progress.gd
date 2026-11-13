@@ -19,6 +19,9 @@ const POINTS_PER_LEVEL := 5
 var level := 1
 var xp := 0
 var points := 0
+var skills := {}             # arbol de habilidades del grimorio: id -> rango
+var skill_points := 0        # 1 por nivel y 1 por jefe de dungeon
+var skill_data := {}         # data/skills.json
 var spent := {}              # estadística -> puntos gastados
 var coins := 0
 var potions := 1
@@ -91,8 +94,44 @@ func spend(s: String) -> bool:
 func max_hp(base: float) -> int:
 	return roundi(base + 10.0 * (level - 1) + bonus("max_hp"))
 
+func skill_rank(id: String) -> int:
+	return int(skills.get(id, 0))
+
+func skill_sum(key: String) -> float:  # suma de lo que dan las habilidades aprendidas a esa propiedad
+	var t := 0.0
+	for id: String in skills:
+		var d: Dictionary = skill_data["skills"].get(id, {})
+		if d.get("key", "") == key:
+			t += float(skills[id]) * float(d["per"])
+	return t
+
+func why_not_learn(id: String) -> String:  # "" = se puede subir un rango
+	var d: Dictionary = skill_data["skills"].get(id, {})
+	if d.is_empty():
+		return "No existe."
+	if skill_rank(id) >= int(d["max"]):
+		return "Rango máximo."
+	for r: String in [d.get("req", ""), d.get("req2", "")]:
+		if r != "" and skill_rank(r) < 1:
+			return "Requiere: %s" % skill_data["skills"][r]["name"]
+	if skill_points <= 0:
+		return "Sin puntos de habilidad."
+	return ""
+
+func learn(id: String) -> bool:
+	if why_not_learn(id) != "":
+		return false
+	skills[id] = skill_rank(id) + 1
+	skill_points -= 1
+	return true
+
+func respec() -> void:  # devuelve todos los puntos gastados
+	for id: String in skills:
+		skill_points += int(skills[id])
+	skills.clear()
+
 func max_mana(base: float) -> float:
-	return base + 10.0 * stat("mana")
+	return base + 10.0 * stat("mana") + skill_sum("mana_max")
 
 func max_stamina(base: float) -> float:
 	return base + 10.0 * stat("endurance")
@@ -101,7 +140,7 @@ func melee_mult() -> float:
 	return 1.0 + 0.06 * stat("strength")
 
 func magic_mult() -> float:
-	return 1.0 + 0.06 * stat("magic")
+	return 1.0 + 0.06 * stat("magic") + skill_sum("dmg_pct")
 
 func defense_mult() -> float:  # fracción del daño que sí se recibe
 	return 20.0 / (20.0 + stat("defense"))

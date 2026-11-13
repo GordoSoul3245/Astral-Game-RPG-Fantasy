@@ -150,3 +150,12 @@ Lee este archivo y sigue desde "Pendiente". Lo que está escrito aquí es la fue
 - **Cosecha:** E junto a una parcela madura (2-4 unidades; 40 % de devolver una semilla). El aviso sobre la parcela muestra el progreso y si está seca.
 - Tests: `tests/test_farm.gd`; captura `production/qa/evidence/mundo_vivo/5_huerto.png`.
 - **Por probar jugando:** ritmo de crecimiento y precios; el huerto está en un único sitio y los iconos de semillas/regadera son dibujados por código.
+
+## Árbol de habilidades del grimorio
+- Pestaña **Magia** del menú (`data/skills.json`, lógica en `progress.gd`: `learn`, `why_not_learn`, `respec`). **Puntos de habilidad:** 1 por nivel y 1 por jefe de dungeon; reiniciar cuesta 25 monedas × nivel. 3 ramas, 11 habilidades con rangos y requisitos:
+  - **Brasas:** Brasas vivas (+10 % daño de magia), Chispa veloz (−8 % espera de proyectiles), Llamarada (+15 % radio de la esfera ígnea), Fuego devorador (+15 % daño; pide las dos anteriores).
+  - **Maná:** Pozo arcano (+15 maná máx.), Eficiencia (−8 % coste, tope 60 %), Flujo constante (+20 % regeneración).
+  - **Cataclismo:** Marca duradera (+1 s), Marca ardiente (+25 % daño de la explosión de la marca), Meteoro mayor (+20 % daño), Ira de Ignis (+15 % carga de la ultimate).
+- Los efectos son numéricos y viven en un solo sitio por propiedad (`prog.skill_sum`): `magic_mult`, `max_mana`, `main.mana_cost`, cadencia en `_begin`, `spawn_projectile`, `combat.mark/detonate`, `meteor._explode`, `gain_ultimate`. Se guardan (`skills`, `skill_points`).
+- Tests: `tests/test_skills.gd`; captura `production/qa/evidence/mundo_vivo/6_arbol_magia.png`.
+- **Por probar jugando:** equilibrio de los porcentajes y que 1 punto por nivel dé una progresión satisfactoria; el árbol solo mejora números, no añade hechizos nuevos.

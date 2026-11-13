@@ -203,6 +203,7 @@ func open_chest() -> void:
 	main.gain_xp(chest_xp)
 	if is_boss:  # reliquia del jefe: puntos de estadística
 		main.prog.points += 2
-		lines.append("+2 puntos de estadística")
+		main.prog.skill_points += 1
+		lines.append("+2 puntos de estadística y 1 de habilidad")
 	main.say("\n".join(lines), 6.0)
 	main.save_game()

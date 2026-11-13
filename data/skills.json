@@ -1,0 +1,128 @@
+{
+	"branches": [
+		{
+			"id": "brasas",
+			"name": "Brasas",
+			"desc": "Más daño y cadencia de los hechizos",
+			"skills": [
+				"brasas_vivas",
+				"chispa_veloz",
+				"llamarada",
+				"fuego_devorador"
+			]
+		},
+		{
+			"id": "mana",
+			"name": "Maná",
+			"desc": "Más maná y más barato",
+			"skills": [
+				"pozo_arcano",
+				"eficiencia",
+				"flujo_constante"
+			]
+		},
+		{
+			"id": "cataclismo",
+			"name": "Cataclismo",
+			"desc": "Marcas de Ignis, meteoro y ultimate",
+			"skills": [
+				"marca_duradera",
+				"marca_ardiente",
+				"meteoro_mayor",
+				"ira_de_ignis"
+			]
+		}
+	],
+	"skills": {
+		"brasas_vivas": {
+			"name": "Brasas vivas",
+			"desc": "+10 % de daño de magia por rango.",
+			"max": 3,
+			"key": "dmg_pct",
+			"per": 0.1,
+			"req": ""
+		},
+		"chispa_veloz": {
+			"name": "Chispa veloz",
+			"desc": "Los proyectiles se lanzan un 8 % más rápido por rango.",
+			"max": 3,
+			"key": "cd_pct",
+			"per": 0.08,
+			"req": "brasas_vivas"
+		},
+		"llamarada": {
+			"name": "Llamarada",
+			"desc": "La esfera ígnea explota un 15 % más ancha por rango.",
+			"max": 2,
+			"key": "aoe_pct",
+			"per": 0.15,
+			"req": "brasas_vivas"
+		},
+		"fuego_devorador": {
+			"name": "Fuego devorador",
+			"desc": "+15 % de daño de magia por rango (requiere Chispa veloz y Llamarada).",
+			"max": 2,
+			"key": "dmg_pct",
+			"per": 0.15,
+			"req": "llamarada",
+			"req2": "chispa_veloz"
+		},
+		"pozo_arcano": {
+			"name": "Pozo arcano",
+			"desc": "+15 de maná máximo por rango.",
+			"max": 3,
+			"key": "mana_max",
+			"per": 15.0,
+			"req": ""
+		},
+		"eficiencia": {
+			"name": "Eficiencia",
+			"desc": "Los hechizos cuestan un 8 % menos de maná por rango.",
+			"max": 3,
+			"key": "cost_pct",
+			"per": 0.08,
+			"req": "pozo_arcano"
+		},
+		"flujo_constante": {
+			"name": "Flujo constante",
+			"desc": "El maná se regenera un 20 % más rápido por rango.",
+			"max": 2,
+			"key": "regen_pct",
+			"per": 0.2,
+			"req": "pozo_arcano"
+		},
+		"marca_duradera": {
+			"name": "Marca duradera",
+			"desc": "La marca de Ignis dura 1 s más por rango.",
+			"max": 3,
+			"key": "mark_time",
+			"per": 1.0,
+			"req": ""
+		},
+		"marca_ardiente": {
+			"name": "Marca ardiente",
+			"desc": "La explosión de la marca hace un 25 % más de daño por rango.",
+			"max": 3,
+			"key": "mark_dmg_pct",
+			"per": 0.25,
+			"req": "marca_duradera"
+		},
+		"meteoro_mayor": {
+			"name": "Meteoro mayor",
+			"desc": "El meteoro hace un 20 % más de daño por rango.",
+			"max": 3,
+			"key": "meteor_pct",
+			"per": 0.2,
+			"req": "marca_duradera"
+		},
+		"ira_de_ignis": {
+			"name": "Ira de Ignis",
+			"desc": "La ultimate se carga un 15 % más rápido por rango.",
+			"max": 2,
+			"key": "ult_gain_pct",
+			"per": 0.15,
+			"req": "meteoro_mayor"
+		}
+	},
+	"respec_cost_per_level": 25
+}

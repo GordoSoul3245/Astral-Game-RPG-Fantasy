@@ -43,11 +43,11 @@ func _ready() -> void:
 	var gap := Control.new()
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(gap)
-	for pair in [["inv", "Inventario"], ["craft", "Crafteo"], ["fish", "Pesca"], ["stats", "Estadísticas"], ["opt", "Opciones"]]:
+	for pair in [["inv", "Inventario"], ["craft", "Crafteo"], ["fish", "Pesca"], ["magic", "Magia"], ["stats", "Estadísticas"], ["opt", "Opciones"]]:
 		var b := Button.new()
 		b.text = pair[1]
 		b.focus_mode = Control.FOCUS_NONE
-		b.custom_minimum_size = Vector2(150, 40)
+		b.custom_minimum_size = Vector2(124, 40)
 		b.add_theme_font_size_override("font_size", 18)
 		b.pressed.connect(_set_tab.bind(pair[0]))
 		head.add_child(b)
@@ -122,6 +122,8 @@ func refresh() -> void:
 		_build_craft()
 	elif tab == "fish":
 		_build_fishing()
+	elif tab == "magic":
+		_build_magic()
 	elif tab == "opt":
 		_build_options()
 	else:
@@ -415,6 +417,59 @@ func _build_stack_detail(right: VBoxContainer) -> void:  # material o consumible
 			main.say("La barra está llena: quita algo antes o arrástralo a una casilla.", 2.5)
 		refresh())
 	right.add_child(act)
+
+# --- magia: árbol de habilidades del grimorio
+func _build_magic() -> void:
+	var p = main.prog
+	var data: Dictionary = p.skill_data
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 16)
+	body.add_child(top)
+	_label("Árbol de habilidades del grimorio", top, 24, GOLD)
+	var gap := Control.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(gap)
+	_label("Puntos de habilidad: %d   (1 por nivel y 1 por jefe)" % p.skill_points, top, 20, GOOD if p.skill_points > 0 else MUTED)
+	var cost: int = int(data["respec_cost_per_level"]) * p.level
+	var rb := Button.new()
+	rb.text = "Reiniciar (%d monedas)" % cost
+	rb.focus_mode = Control.FOCUS_NONE
+	rb.disabled = p.skills.is_empty() or p.coins < cost
+	rb.pressed.connect(func() -> void:
+		p.coins -= cost
+		p.respec()
+		main._apply_stats()
+		refresh())
+	top.add_child(rb)
+	var cols := HBoxContainer.new()
+	cols.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	cols.add_theme_constant_override("separation", 16)
+	body.add_child(cols)
+	for br: Dictionary in data["branches"]:
+		var card := _card(cols, Vector2(0, 0))
+		card.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_label(str(br["name"]), card, 22, GOLD)
+		_label(str(br["desc"]), card, 14, MUTED)
+		card.add_child(HSeparator.new())
+		for sid: String in br["skills"]:
+			var d: Dictionary = data["skills"][sid]
+			var rank: int = p.skill_rank(sid)
+			var why: String = p.why_not_learn(sid)
+			var b := Button.new()
+			b.text = "%s   %d / %d" % [d["name"], rank, int(d["max"])]
+			b.focus_mode = Control.FOCUS_NONE
+			b.custom_minimum_size = Vector2(0, 46)
+			b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			b.tooltip_text = str(d["desc"])
+			b.disabled = why != ""
+			var skill_id := sid
+			b.pressed.connect(func() -> void:
+				if p.learn(skill_id):
+					main._apply_stats()
+				refresh())
+			card.add_child(b)
+			var l := _label(d["desc"] if (why == "" or rank > 0) else why, card, 13, MUTED if why == "" or rank > 0 else BAD)
+			l.autowrap_mode = TextServer.AUTOWRAP_WORD
 
 # --- pesca: libro de capturas, acuario y estado del día
 func _build_fishing() -> void:
