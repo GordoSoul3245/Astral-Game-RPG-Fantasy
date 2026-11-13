@@ -367,13 +367,18 @@ func load_game() -> bool:  # valida cada campo: el archivo puede estar editado o
 				prog.blueprints.append(str(b))
 	for b: String in crafting.cfg["starting_blueprints"]:
 		crafting.learn(b)
+	prog.books = ["katana_ceniza", "grimorio_ignis"]
+	if d.get("books") is Array:
+		for b: Variant in d["books"]:
+			if WEAPONS.has(str(b)) and not prog.books.has(str(b)):
+				prog.books.append(str(b))
 	var layout: Array = []
 	if d.get("slots") is Array:
 		for i in HOTBAR_MAX:
 			var sid := str(d["slots"][i]) if i < (d["slots"] as Array).size() else ""
 			layout.append(sid if (sid == "" or (can_hotbar(sid) and not layout.has(sid))) else "")
 	else:  # partida anterior a la barra editable: armas, herramientas equipadas y los consumibles elegidos
-		layout = WEAPONS.duplicate()
+		layout = WEAPONS.filter(func(w: String) -> bool: return prog.books.has(w))
 		for kind: String in ["pickaxe", "axe", "rod"]:
 			if prog.equipped.has(kind):
 				layout.append(prog.equipped[kind])
@@ -405,11 +410,6 @@ func load_game() -> bool:  # valida cada campo: el archivo puede estar editado o
 		for k: String in ["reel", "line"]:
 			if d["rod_parts"].get(k) == true:
 				prog.rod_parts[k] = true
-	prog.books = ["katana_ceniza", "grimorio_ignis"]
-	if d.get("books") is Array:
-		for b: Variant in d["books"]:
-			if WEAPONS.has(str(b)) and not prog.books.has(str(b)):
-				prog.books.append(str(b))
 	for pn: Node in pet_nodes:
 		pn.queue_free()
 	pet_nodes.clear()
