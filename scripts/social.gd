@@ -130,6 +130,99 @@ func pending_event(id: String) -> Dictionary:
 			return e
 	return {}
 
+# --- escena de evento: barras de cine, la cámara se acerca, el héroe mira al vecino y salen corazones
+var bars: CanvasLayer
+var bar_top: ColorRect
+var bar_bottom: ColorRect
+var zoom_before := Vector2.ONE
+var in_scene := false
+
+func npc_pos(id: String) -> Vector2:  # dónde está ese vecino (px de suelo); el héroe si no se encuentra
+	if id == "elda" and not main.villagers.is_empty():
+		return main.villagers[0].pos
+	for m: Node2D in main.merchants:
+		if (id == "tomas" and m.role == "merchant") or (id == "bram" and m.role == "smith"):
+			return m.pos
+	for n: Node2D in main.npcs:
+		if n.id == id:
+			return n.pos
+	return main.pos
+
+func _bars_setup() -> void:
+	if bars != null:
+		return
+	bars = CanvasLayer.new()
+	bars.layer = 54
+	bars.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(bars)
+	for k in 2:
+		var r := ColorRect.new()
+		r.color = Color.BLACK
+		r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		r.set_anchors_preset(Control.PRESET_TOP_WIDE if k == 0 else Control.PRESET_BOTTOM_WIDE)
+		r.custom_minimum_size = Vector2(0, 0)
+		bars.add_child(r)
+		if k == 0:
+			bar_top = r
+		else:
+			bar_bottom = r
+
+func _tween() -> Tween:
+	return create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS).set_parallel(true)
+
+func play_scene(id: String, lines: Array) -> void:
+	_bars_setup()
+	in_scene = true
+	var h := 96.0
+	bar_top.offset_top = -h
+	bar_top.offset_bottom = 0.0
+	bar_bottom.offset_top = 0.0
+	bar_bottom.offset_bottom = h
+	var tw := _tween()
+	tw.tween_property(bar_top, "offset_top", 0.0, 0.5)
+	tw.tween_property(bar_top, "offset_bottom", h, 0.5)
+	tw.tween_property(bar_bottom, "offset_top", -h, 0.5)
+	tw.tween_property(bar_bottom, "offset_bottom", 0.0, 0.5)
+	zoom_before = main.cam.zoom
+	tw.tween_property(main.cam, "zoom", zoom_before * 1.3, 0.6)
+	var to: Vector2 = npc_pos(id) - main.pos  # el héroe se vuelve hacia el vecino
+	if to.length() > 1.0:
+		main.facing = main.DIRS[posmod(roundi(to.angle() / (PI / 4.0)), 8)]
+		main.hero.play("idle_" + main.facing)
+	main.combat.play_at("chest", main.pos)
+	_hearts(npc_pos(id), 8)
+	main.dialogue.on_close = _end_scene.bind(id)
+	main.dialogue.open(name_of(id), lines)
+
+func _hearts(ground: Vector2, n: int) -> void:  # corazones que suben sobre el vecino
+	for k in n:
+		var l := Label.new()
+		l.text = "♥"
+		l.add_theme_font_size_override("font_size", 30)
+		l.add_theme_color_override("font_color", Color(1.0, 0.4, 0.55))
+		l.add_theme_color_override("font_outline_color", Color.BLACK)
+		l.add_theme_constant_override("outline_size", 6)
+		l.process_mode = Node.PROCESS_MODE_ALWAYS
+		var p: Vector2 = (ground + Vector2(main.rng_hearts.randf_range(-26.0, 26.0), -50.0)) * main.SCALE
+		l.position = p
+		l.z_index = 4000
+		main.add_child(l)
+		var tw := _tween()
+		tw.tween_property(l, "position:y", p.y - 150.0, 1.6).set_delay(float(k) * 0.12)
+		tw.tween_property(l, "modulate:a", 0.0, 0.7).set_delay(0.9 + float(k) * 0.12)
+		tw.chain().tween_callback(l.queue_free)
+
+func _end_scene(id: String) -> void:
+	in_scene = false
+	var tw := _tween()
+	tw.tween_property(bar_top, "offset_top", -96.0, 0.4)
+	tw.tween_property(bar_top, "offset_bottom", 0.0, 0.4)
+	tw.tween_property(bar_bottom, "offset_top", 0.0, 0.4)
+	tw.tween_property(bar_bottom, "offset_bottom", 96.0, 0.4)
+	tw.tween_property(main.cam, "zoom", zoom_before, 0.5)
+	main.combat.play_at("catch", main.pos)
+	_hearts(npc_pos(id), 5)
+
 func take_event(id: String) -> Array:  # lo que dice el evento y entrega su recompensa; [] si no hay
 	var e := pending_event(id)
 	if e.is_empty():

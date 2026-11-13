@@ -131,4 +131,15 @@ func capture() -> void:
 	main.clock.hour = 12.0
 	await _wait(0.8)
 	await _shot("9_puerta_zona")
+	
+	# escena de evento de amistad
+	main.menu.visible = false
+	main.get_tree().paused = false
+	var mt: Node2D = main.merchants[0]
+	main.pos = mt.pos + Vector2(-60, 30)
+	main._place()
+	main.cam.position = (main.pos - Vector2(0, 40)) * main.SCALE
+	main.social.play_scene("tomas", ["Tomás: Eres mi mejor cliente y, ahora, mi mejor amigo. Llévate estos cebos.", "(Tomás te da: 100 monedas, Cebo de carne ×10)"])
+	await _wait(2.2)
+	await _shot("10_escena_amistad")
 	quit()

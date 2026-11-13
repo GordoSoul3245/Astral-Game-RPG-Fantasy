@@ -83,6 +83,22 @@ func run_checks() -> void:
 	if v0 > 0:
 		assert(main.shop.sell_value("lingote_hierro") > v0, "Bram paga más a quien aprecia")
 
+	# escena de evento: barras de cine, acercamiento de cámara y vuelta a la normalidad al cerrar
+	var z0: Vector2 = main.cam.zoom
+	so.play_scene("bram", ["Bram: Una escena de prueba.", "Bram: Hasta luego."])
+	assert(so.in_scene and main.dialogue.visible, "la escena abre el diálogo")
+	var waited := 0.0
+	while (so.bar_top.offset_bottom < 90.0 or main.cam.zoom.x < z0.x * 1.25) and waited < 8.0:
+		await create_timer(0.2, true, false, true).timeout
+		waited += 0.2
+	assert(main.cam.zoom.x > z0.x * 1.2 and so.bar_top.offset_bottom > 80.0, "la cámara se acerca y salen las barras (zoom %.2f contra %.2f, barra %.1f)" % [main.cam.zoom.x, z0.x, so.bar_top.offset_bottom])
+	main.dialogue.close()
+	waited = 0.0
+	while (so.bar_top.offset_bottom > 1.0 or absf(main.cam.zoom.x - z0.x) > 0.01) and waited < 8.0:
+		await create_timer(0.2, true, false, true).timeout
+		waited += 0.2
+	assert(not so.in_scene and absf(main.cam.zoom.x - z0.x) < 0.01 and so.bar_top.offset_bottom < 1.0, "al cerrar todo vuelve a su sitio")
+
 	# panel de regalos
 	so.open_for("mara")
 	assert(so.visible and so.title.text.begins_with("Mara") and so.grid.get_child_count() > 0, "el panel se abre con los objetos del héroe")

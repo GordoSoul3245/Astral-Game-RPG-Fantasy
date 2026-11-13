@@ -12,6 +12,7 @@ var panel: PanelContainer
 var name_label: Label
 var text_label: Label
 var hint: Label
+var on_close: Callable   # se llama una vez al cerrarse (escenas de amistad)
 
 func _ready() -> void:
 	layer = 55
@@ -65,6 +66,10 @@ func open(who: String, text_lines: Array) -> void:
 func close() -> void:
 	visible = false
 	main.get_tree().paused = false
+	if on_close.is_valid():
+		var cb := on_close
+		on_close = Callable()
+		cb.call()
 
 func _show_line() -> void:
 	text_label.text = str(lines[idx])

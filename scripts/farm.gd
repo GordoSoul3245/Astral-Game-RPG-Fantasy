@@ -11,7 +11,7 @@ var last_total := 0.0
 func setup(m: Node) -> void:
 	main = m
 	cfg = main._read_json("res://data/farming.json")
-	z_index = 300
+	z_index = -3500  # a ras de suelo: nunca tapa al héroe ni a los vecinos
 	last_total = main.clock.total
 	_locate()
 
@@ -21,19 +21,32 @@ func _locate() -> void:  # busca cerca del inicio un hueco libre de tierra firme
 	var cols := int(g["cols"])
 	var rows := int(g["rows"])
 	var s: Vector2 = main.ground_to_tile(main.start_pos)
+	var avoid: Array[Vector2] = []  # puestos, mesas, fogata y puertas: el huerto no debe estorbar el paso hacia ellos
+	for st: Dictionary in main.stations:
+		avoid.append(st["tile"])
+	for m: Node2D in main.merchants:
+		avoid.append(main.ground_to_tile(m.pos))
+	for dr: Node2D in main.doors:
+		avoid.append(dr.tile)
 	var best := Vector2(-1, -1)
 	var best_d := 1e9
-	for dx in range(-14, 15):
-		for dy in range(-14, 15):
+	for dx in range(-24, 25):
+		for dy in range(-24, 25):
 			var o := Vector2(floorf(s.x) + dx, floorf(s.y) + dy)
 			var d := o.distance_to(s)
-			if d < 3.5 or d >= best_d:
+			if d < float(g.get("min_dist", 9.0)) or d >= best_d:
 				continue
 			var ok := true
+			var centre := o + Vector2(float(cols) * sp, float(rows) * sp) * 0.5
+			for a: Vector2 in avoid:
+				if a.distance_to(centre) < 9.0:
+					ok = false
+			if not ok:
+				continue
 			for c in cols:
 				for r in rows:
 					var t := o + Vector2(float(c) * sp, float(r) * sp) + Vector2(0.5, 0.5)
-					if main.world.is_water(t) or main.world.blocked(t, 1.5):
+					if main.world.is_water(t) or main.world.blocked(t, 1.2):
 						ok = false
 			if ok:
 				best = o

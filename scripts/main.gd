@@ -545,7 +545,7 @@ func _interact() -> void:
 		social.on_talk(sid)  # hablar suma amistad una vez al día
 		var ev: Array = social.take_event(sid)
 		if not ev.is_empty():
-			dialogue.open(social.name_of(sid), ev)
+			social.play_scene(sid, ev)
 			return
 	var v := _near_villager()
 	if v != null:
@@ -2098,6 +2098,7 @@ const WEAPONS := ["katana_ceniza", "grimorio_ignis"]
 var hotbar_row: HBoxContainer
 var clock: Node        # clock.gd: hora, día y lluvia
 var angler: RefCounted # angler.gd: libro de capturas, acuario, encargos y nasas
+var rng_hearts := RandomNumberGenerator.new()
 var social: CanvasLayer    # social.gd: amistad, regalos y eventos
 var farm: Node2D       # farm.gd: huerto
 var pending_farm := {}
