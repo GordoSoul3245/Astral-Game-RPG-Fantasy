@@ -210,6 +210,7 @@
 				"attack_speed": 1
 			},
 			"trail": "#d8d8ee",
+			"trail_fx": {"width": 1.15, "time": 1.1},
 			"desc": "Forjada por ti: honesta y pesada."
 		},
 		"espada_acero": {
@@ -221,6 +222,7 @@
 				"attack_speed": 2
 			},
 			"trail": "#bfe6ff",
+			"trail_fx": {"width": 0.85, "time": 0.9},
 			"desc": "Acero templado con ojo de cíclope."
 		},
 		"espada_cristal": {
@@ -232,6 +234,7 @@
 				"magic": 6
 			},
 			"trail": "#b48aff",
+			"trail_fx": {"time": 1.3, "shards": 4},
 			"desc": "Corta y canaliza el eco de los cristales."
 		},
 		"armadura_hierro": {

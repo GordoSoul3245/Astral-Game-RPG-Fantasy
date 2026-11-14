@@ -79,7 +79,6 @@ var current_mode := "light"
 var aim_dir := Vector2.DOWN      # dirección de apuntado del ataque, en px de suelo
 var struck := false
 var trailed := false
-var trail_flip := 1.0
 var dashing := false             # durante el dash: invulnerable y atraviesa entidades (no estructuras)
 var dash_t := 0.0
 const BUFFER_MS := 100          # punto de partida del estudio (probar 70/130)
@@ -1637,20 +1636,23 @@ func _strike() -> void:
 			for b in blasts:
 				combat.detonate(b)
 
-func _spawn_trail() -> void:
-	var t := Node2D.new()
-	t.set_script(load("res://scripts/slash_trail.gd"))
-	t.center = (pos - Vector2(0, 40)) * SCALE
-	t.aim = aim_dir.angle()
-	t.arc = deg_to_rad(current["arc"])
-	t.radius = current["trail_radius"] * SCALE
+func _spawn_trail() -> void:  # la cinta sigue el filo calibrado de esta animación; la espada pone color, ancho y persistencia
+	var t: Node2D = preload("res://scripts/slash_trail.gd").new()
+	t.pts = t.samples(current["anim"], facing)
+	if t.pts.is_empty():
+		t.free()
+		return
+	var sid: String = prog.equipped.get("sword", "")
+	var fx: Dictionary = prog.equipment[sid].get("trail_fx", {}) if sid != "" else {}
+	t.main = self
+	t.anim_key = str(hero.animation)
+	t.first = current["trail_frame"]
+	t.last = current["trail_end"]
 	t.color = Color(1.0, 0.45, 0.1) if burn_t > 0.0 else sword_trail_color()
-	t.duration = current["trail_time"]
-	t.anchor = hero
-	t.heavy = current_mode == "heavy"
-	t.flip = trail_flip
-	if current_mode == "light":
-		trail_flip = -trail_flip  # los tajos ligeros alternan de lado
+	t.width = current["trail_width"] * float(fx.get("width", 1.0))
+	t.life = current["trail_time"] * float(fx.get("time", 1.0))
+	t.shards = int(current["trail_shards"]) + int(fx.get("shards", 0)) + (3 if burn_t > 0.0 else 0)
+	t.frame_dur = 1.0 / hero.sprite_frames.get_animation_speed(hero.animation)
 	t.z_index = int(pos.y) + 6
 	add_child(t)
 

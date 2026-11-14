@@ -14,9 +14,11 @@
 			"anim": "slash_light",
 			"fps": 16.0,
 			"trail_frame": 2,
+			"trail_end": 4,
 			"strike_frame": 3,
-			"trail_time": 0.16,
-			"trail_radius": 46.0,
+			"trail_time": 0.2,
+			"trail_width": 10.0,
+			"trail_shards": 3,
 			"trail_color": "#8fd0ff"
 		},
 		"heavy": {
@@ -29,10 +31,12 @@
 			"cooldown": 0.8,
 			"anim": "slash_heavy",
 			"fps": 11.0,
-			"trail_frame": 4,
+			"trail_frame": 3,
+			"trail_end": 6,
 			"strike_frame": 5,
-			"trail_time": 0.22,
-			"trail_radius": 58.0,
+			"trail_time": 0.34,
+			"trail_width": 16.0,
+			"trail_shards": 7,
 			"trail_color": "#ffb347"
 		},
 		"ultimate": {
