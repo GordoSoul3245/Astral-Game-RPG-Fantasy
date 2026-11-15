@@ -26,12 +26,28 @@ var fr := 0                  # último fotograma emitido
 var tips := PackedVector2Array()
 var bases := PackedVector2Array()
 var born := PackedFloat32Array()
-var bits: Array = []         # fragmentos: {p, size, t0}
+var bits: Array = []         # fragmentos: {p, size, t0} (solo en el dibujo procedural)
+var sheet: Texture2D         # hoja de sprites del tajo: fila = tramo del barrido, columna = edad
+var origins := PackedVector2Array()  # posición del héroe al emitir cada tramo
+const CELL := 192            # lado de una celda de la hoja; su píxel (PAD, PAD) es el (0, 0) del sprite del héroe
+const PAD := 32
+const COLS := 5
+
+func _draw_sprites() -> void:  # cada tramo es una imagen que envejece en su sitio del mundo
+	var sc := float(main.SCALE)
+	for k in origins.size():
+		var a := (t - born[(k + 1) * sub]) / life
+		if a >= 1.0:
+			continue
+		var src := Rect2(mini(int(a * COLS), COLS - 1) * CELL, k * CELL, CELL, CELL)
+		draw_texture_rect_region(sheet, Rect2(origins[k] + (main.hero.offset - Vector2(PAD, PAD)) * sc, Vector2(CELL, CELL) * sc), src, color)
 
 func samples(anim: String, dir: String) -> Array:  # puntos calibrados de un tajo; vacío si la animación no los tiene
 	if table.is_empty():
 		table = JSON.parse_string(FileAccess.get_file_as_string("res://data/blade_points.json"))
 	sub = int(table["_sub"])
+	var path := "res://art/trails/%s_%s.png" % [anim, dir]  # hoja de sprites de este tajo (art/katana/gen_trail_sprites.py); sin ella, dibujo procedural
+	sheet = load(path) if ResourceLoader.exists(path) else null
 	return table.get(anim, {}).get(dir, [])
 
 func _ready() -> void:
@@ -58,6 +74,7 @@ func _process(delta: float) -> void:
 		else:
 			while fr < mini(f, last):
 				fr += 1
+				origins.append(main.hero.position)  # el sprite de este tramo se queda donde el héroe estaba al emitirlo
 				for j in range(1, sub + 1):  # los tramos del intervalo se reparten en el tiempo del fotograma
 					_add((fr - 1) * sub + j, float(sub - j) / sub * frame_dur)
 			if f > last:
@@ -87,6 +104,9 @@ func _in(i: int) -> Vector2:  # borde interior: el tramo viejo se estrecha hacia
 	return tips[i] + (bases[i] - tips[i]).limit_length(width * float(main.SCALE) * pow(1.0 - _age(i), 0.8))
 
 func _draw() -> void:
+	if sheet != null:
+		_draw_sprites()
+		return
 	var snap := Vector2.ONE * float(main.SCALE)
 	var n := tips.size()
 	var edge := PackedVector2Array()

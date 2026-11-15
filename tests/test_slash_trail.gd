@@ -72,6 +72,7 @@ func run_checks() -> void:
 	var t := await _attack("heavy", 1)
 	assert(t != null, "al llegar a trail_frame nace la cinta")
 	assert(t.first == heavy["trail_frame"] and t.last == heavy["trail_end"], "la cinta empieza donde dice el ataque, no en la anticipación")
+	assert(t.sheet != null, "los tajos con hoja de sprites la usan en vez del dibujo procedural")
 	var first_tip: Vector2 = t.tips[0]
 	for k in 400:
 		await _wait(0.01)
@@ -113,7 +114,7 @@ func run_checks() -> void:
 	var crystal: Node = await _attack("light", 3)
 	var fx: Dictionary = main.prog.equipment["espada_cristal"]["trail_fx"]
 	assert(crystal.pts == table["slash_light"]["SW"] and crystal.color == Color.html(main.prog.equipment["espada_cristal"]["trail"]), "la hoja de cristal usa la misma trayectoria y su color")
-	assert(is_equal_approx(crystal.life, light["trail_time"] * float(fx["time"])) and crystal.shards == light["trail_shards"] + int(fx["shards"]), "y su persistencia y fragmentos")
+	assert(is_equal_approx(crystal.life, light["trail_time"] * float(fx["time"]) / main.prog.attack_speed()) and crystal.shards == light["trail_shards"] + int(fx["shards"]), "y su persistencia y fragmentos")
 	main.prog.equipped.erase("sword")
 	await _wait(1.2)
 

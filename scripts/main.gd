@@ -1650,7 +1650,7 @@ func _spawn_trail() -> void:  # la cinta sigue el filo calibrado de esta animaci
 	t.last = current["trail_end"]
 	t.color = Color(1.0, 0.45, 0.1) if burn_t > 0.0 else sword_trail_color()
 	t.width = current["trail_width"] * float(fx.get("width", 1.0))
-	t.life = current["trail_time"] * float(fx.get("time", 1.0))
+	t.life = current["trail_time"] * float(fx.get("time", 1.0)) / prog.attack_speed()  # sigue el ritmo de la animación
 	t.shards = int(current["trail_shards"]) + int(fx.get("shards", 0)) + (3 if burn_t > 0.0 else 0)
 	t.frame_dur = 1.0 / hero.sprite_frames.get_animation_speed(hero.animation)
 	t.z_index = int(pos.y) + 6
