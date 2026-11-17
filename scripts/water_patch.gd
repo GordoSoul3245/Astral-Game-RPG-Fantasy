@@ -57,3 +57,33 @@ func build(water: Dictionary, corner: Callable) -> void:
 	poly.polygons = polys
 	poly.material = material()
 	add_child(poly)
+	# espuma de orilla: una línea de 1 px de arte en cada borde agua-tierra, partida en tramos que aparecen y se apagan
+	var foam := _Foam.new()
+	for c: Vector2i in water:
+		for side: Array in [[Vector2i(1, 0), Vector2i(1, 0), Vector2i(1, 1)], [Vector2i(-1, 0), Vector2i(0, 0), Vector2i(0, 1)],
+				[Vector2i(0, 1), Vector2i(0, 1), Vector2i(1, 1)], [Vector2i(0, -1), Vector2i(0, 0), Vector2i(1, 0)]]:
+			if water.has(c + side[0]):
+				continue
+			var a: Vector2 = corner.call(c.x + side[1].x, c.y + side[1].y)
+			var b: Vector2 = corner.call(c.x + side[2].x, c.y + side[2].y)
+			var inward: Vector2 = (corner.call(c.x + 0.5, c.y + 0.5) - (a + b) / 2.0).normalized() * 3.0
+			for k in 4:
+				foam.segs.append([a.lerp(b, k / 4.0) + inward, a.lerp(b, (k + 1) / 4.0) + inward, float(((c.x * 73 + c.y * 151 + k * 37) % 97)) / 97.0])
+	add_child(foam)
+
+class _Foam extends Node2D:
+	var segs: Array = []   # [desde, hasta, fase]
+	var tick := -1
+	func _process(_d: float) -> void:
+		var t := int(Time.get_ticks_msec() / 160)  # pocos fotogramas, como el resto de la escena
+		if t != tick:
+			tick = t
+			queue_redraw()
+	func _draw() -> void:
+		var pts := PackedVector2Array()
+		for s: Array in segs:
+			if fmod(s[2] + tick * 0.07, 1.0) > 0.25:  # la espuma va y viene a lo largo de la orilla
+				pts.append(s[0].snapped(Vector2(3, 3)))
+				pts.append(s[1].snapped(Vector2(3, 3)))
+		if not pts.is_empty():
+			draw_multiline(pts, Color(0.9, 0.97, 1.0, 0.9), 3.0)

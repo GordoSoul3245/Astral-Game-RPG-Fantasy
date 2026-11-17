@@ -17,6 +17,7 @@ func setup(data: Dictionary) -> void:
 		var tex: Texture2D = load(data["image"])
 		var grass := _add_grass(tex)
 		_add_ground(tex, grass)
+		_add_water(tex)
 		masks.erase(tex)  # la imagen grande del suelo solo hacía falta para construir
 	for o: Dictionary in data["objects"]:
 		var sp: Dictionary = data["sprites"][o["sprite"]]
@@ -45,6 +46,8 @@ func setup(data: Dictionary) -> void:
 		s.z_index = int(sort_y)
 		_trim(s)
 		add_child(s)
+		if o["sprite"].begins_with("tree_"):
+			_living_tree(s, sp, tile)
 		if not o["sprite"].begins_with("rock"):  # las rocas son bajas: no tapan
 			occluders.append(s)
 		if o["sprite"].begins_with("tree_") or o["sprite"].begins_with("rock_"):  # se pueden talar y picar
@@ -119,6 +122,25 @@ func _under_grass(r: Rect2, grass: Dictionary) -> bool:  # true si todas las cas
 			if not grass.has(Vector2i(i, j)):
 				return false
 	return true
+
+# Agua viva (WaterPatch) sobre las casillas azules de la imagen del suelo (el lago del valle).
+func _add_water(tex: Texture2D) -> void:
+	var img := _image(tex)
+	var water := {}
+	for i in tiles:
+		for j in tiles:
+			var px: Vector2 = main.tile_to_ground(Vector2(i + 0.5, j + 0.5)) + main.map_origin
+			if px.x < 0 or px.y < 0 or px.x >= img.get_width() or px.y >= img.get_height():
+				continue
+			var c := img.get_pixelv(Vector2i(px))
+			if c.a > 0.5 and c.b > c.r + 0.15 and c.b > c.g:
+				water[Vector2i(i, j)] = true
+	if water.is_empty():
+		return
+	var w := WaterPatch.new()
+	w.z_index = -3990
+	w.build(water, func(i: float, j: float) -> Vector2: return main.tile_to_ground(Vector2(i, j)) * main.SCALE)
+	add_child(w)
 
 func _add_grass(tex: Texture2D) -> Dictionary:  # devuelve las casillas con pasto
 	var img := _image(tex)
@@ -334,10 +356,30 @@ func node_near(p_ground: Vector2, reach := 1.9) -> Dictionary:  # recurso en pie
 			best = n
 	return best
 
+# Árbol vivo (LivingTree) en lugar del PNG: el Sprite2D se queda (talar, tapar al héroe y su forma para la transparencia),
+# pero no se dibuja (self_modulate transparente); lo que se ve es el árbol hijo, del mismo tamaño que el dibujo original.
+func _living_tree(s: Sprite2D, sp: Dictionary, tile: Vector2) -> void:
+	var used := _image(s.texture).get_used_rect()
+	var lt := LivingTree.new()
+	lt.seed_value = int(tile.x * 131.0 + tile.y * 17.0)
+	lt.crown = used.size.x * main.SCALE * 0.42
+	lt.height = used.size.y * main.SCALE * 0.4
+	lt.scale = Vector2.ONE / main.SCALE  # el sprite padre va a escala 3; el árbol se dibuja en px de pantalla
+	lt.position = Vector2(sp["feet"][0], sp["feet"][1])
+	s.self_modulate.a = 0.0
+	s.add_child(lt)
+	s.set_meta("living", lt)
+
 func hit_node(n: Dictionary, power: int) -> bool:  # true si este golpe lo agota
 	n["hp"] -= power
 	var s: Sprite2D = n["spr"]
 	var tw := create_tween()  # sacudida del golpe
+	var lt: Node2D = s.get_meta("living", null)
+	if lt != null:  # el árbol vivo se sacude él (el sprite no se ve)
+		var p0 := lt.position.x
+		tw.tween_property(lt, "position:x", p0 + 5.0 / main.SCALE * 3.0, 0.04)
+		tw.tween_property(lt, "position:x", p0 - 4.0 / main.SCALE * 3.0, 0.06)
+		tw.tween_property(lt, "position:x", p0, 0.06)
 	var bo: Vector2 = s.get_meta("base_off", Vector2.ZERO)
 	tw.tween_property(s, "offset:x", bo.x + 5.0, 0.04)
 	tw.tween_property(s, "offset:x", bo.x - 4.0, 0.06)
@@ -351,7 +393,10 @@ func hit_node(n: Dictionary, power: int) -> bool:  # true si este golpe lo agota
 		n["circle"][1] = 0.0
 		n["circle"][2] = 0.0
 	var fall := create_tween()
-	fall.tween_property(s, "self_modulate:a", 0.0, 0.3)
+	if lt != null:
+		fall.tween_property(lt, "modulate:a", 0.0, 0.3)
+	else:
+		fall.tween_property(s, "self_modulate:a", 0.0, 0.3)
 	fall.parallel().tween_property(s, "offset:y", float(s.get_meta("base_off", Vector2.ZERO).y) + 10.0, 0.3)
 	fall.tween_callback(func() -> void: s.visible = false)
 	return true
@@ -370,5 +415,10 @@ func _tick_respawns(delta: float) -> void:
 		var s: Sprite2D = n["spr"]
 		s.offset = s.get_meta("base_off", Vector2.ZERO)
 		s.visible = true
+		var lt: Node2D = s.get_meta("living", null)
+		if lt != null:  # vuelve a crecer el árbol vivo; el sprite sigue sin dibujarse
+			lt.modulate.a = 0.0
+			create_tween().tween_property(lt, "modulate:a", 1.0, 0.6)
+			continue
 		s.self_modulate.a = 0.0
 		create_tween().tween_property(s, "self_modulate:a", 1.0, 0.6)
