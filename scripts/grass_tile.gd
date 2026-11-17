@@ -17,8 +17,8 @@ static var _floor_mat: ShaderMaterial
 
 @export var cell := Vector2(128, 64)   # rombo de la casilla en píxeles de pantalla (ancho, alto)
 @export var cell_id := Vector2i.ZERO   # casilla (i, j): fija las posiciones de las briznas, siempre iguales
-@export var blades := 10
-@export var blade_height := 0.55     # altura relativa del sprite: pasto bajo, como un tapiz
+@export var blades := 16             # en una rejilla de 4x4 con algo de azar: cubre toda la casilla
+@export var blade_height := 0.8      # altura relativa del sprite: pasto bajo, como un tapiz
 @export var blade_scale := 3.0         # tamaño del sprite (12 px -> 36 px en pantalla con 3.0)
 @export var accent_chance := 0.0   # >0 vuelve a poner flores de acento
 
@@ -81,8 +81,9 @@ func _ready() -> void:
 	mm.instance_count = blades
 	var spots: Array = []
 	for k in blades:
-		var u := 0.12 + 0.76 * _h(cell_id.x, cell_id.y, k * 3)
-		var v := 0.12 + 0.76 * _h(cell_id.x, cell_id.y, k * 3 + 1)
+		var g := int(ceil(sqrt(float(blades))))  # rejilla regular dentro del rombo + desplazamiento aleatorio: pasto parejo
+		var u := (float(k % g) + 0.15 + 0.7 * _h(cell_id.x, cell_id.y, k * 3)) / g
+		var v := (float(k / g) + 0.15 + 0.7 * _h(cell_id.x, cell_id.y, k * 3 + 1)) / g
 		var accent := 1.0 if _h(cell_id.x, cell_id.y, k * 3 + 2) < accent_chance else 0.0
 		spots.append([Vector2((u - v) * hw, (u + v - 1.0) * hh), accent, _h(cell_id.y, cell_id.x, k)])
 	spots.sort_custom(func(a: Array, b: Array) -> bool: return a[0].y < b[0].y)  # las de atrás se dibujan primero

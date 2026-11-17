@@ -3,17 +3,17 @@
 
 uniform sampler2D patch_noise : repeat_enable, filter_linear;
 uniform sampler2D cloud_noise : repeat_enable, filter_linear;
-uniform vec4 col_a : source_color = vec4(0.34, 0.64, 0.27, 1.0);      // verde base
-uniform vec4 col_b : source_color = vec4(0.50, 0.78, 0.33, 1.0);      // mancha clara
-uniform vec4 col_c : source_color = vec4(0.24, 0.50, 0.25, 1.0);      // mancha oscura
+uniform vec4 col_a : source_color = vec4(0.43, 0.71, 0.31, 1.0);      // verde base
+uniform vec4 col_b : source_color = vec4(0.50, 0.77, 0.34, 1.0);      // mancha clara
+uniform vec4 col_c : source_color = vec4(0.37, 0.63, 0.30, 1.0);      // mancha oscura
 uniform vec4 col_accent : source_color = vec4(0.95, 0.85, 0.25, 1.0); // brizna de acento
-uniform float patch_scale = 0.0011;
+uniform float patch_scale = 0.0006;
 uniform float patch_t1 = 0.56;
 uniform float patch_t2 = 0.60;
 uniform vec2 cloud_dir = vec2(1.0, 0.4);
 uniform float cloud_speed = 0.00002;
 uniform float cloud_scale = 0.0006;
-uniform float cloud_strength = 0.35;
+uniform float cloud_strength = 0.2;
 uniform float cuts = 3.0;        // bandas de luz del toon
 uniform float cut_grad = 0.4;    // fracción de cada corte que se suaviza (toon híbrido)
 
