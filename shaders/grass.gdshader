@@ -17,7 +17,7 @@ uniform float frame_rate = 8.0;         // fotogramas por segundo del viento
 uniform float persp_wind = 0.7;         // falsa perspectiva por el viento
 uniform float persp_push = 0.9;         // falsa perspectiva por los personajes
 uniform vec2 view_dir = vec2(0.0, 1.0); // hacia dónde mira la cámara en pantalla (profundidad = eje y)
-uniform float blade_px = 36.0;          // altura de una brizna a escala 1, en px de pantalla
+uniform float blade_px = 20.0;          // altura de una brizna a escala 1, en px de pantalla
 uniform vec4 chars[64];                 // x, y = posición (mundo), z = radio; z = 0 -> sin efecto
 uniform float char_exp = 2.0;
 uniform float char_push = 1.1;
@@ -79,5 +79,5 @@ void fragment() {
 	vec4 t = texture(TEXTURE, vec2(ux * 0.5 + 0.5 * v_accent, UV.y));
 	float cl = cloud_at(v_base, TIME);
 	float light = clamp(0.62 + 0.38 * (1.0 - UV.y) - cl * cloud_strength, 0.0, 1.0);
-	COLOR = vec4(t.rgb * grass_color(v_base, v_accent) * 1.3 * hybrid_toon(light), t.a);
+	COLOR = vec4(t.rgb * grass_color(v_base, v_accent) * 1.08 * hybrid_toon(light), t.a);
 }

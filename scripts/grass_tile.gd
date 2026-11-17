@@ -17,7 +17,8 @@ static var _floor_mat: ShaderMaterial
 
 @export var cell := Vector2(128, 64)   # rombo de la casilla en píxeles de pantalla (ancho, alto)
 @export var cell_id := Vector2i.ZERO   # casilla (i, j): fija las posiciones de las briznas, siempre iguales
-@export var blades := 7
+@export var blades := 10
+@export var blade_height := 0.55     # altura relativa del sprite: pasto bajo, como un tapiz
 @export var blade_scale := 3.0         # tamaño del sprite (12 px -> 36 px en pantalla con 3.0)
 @export var accent_chance := 0.0   # >0 vuelve a poner flores de acento
 
@@ -65,7 +66,7 @@ func _ready() -> void:
 	add_child(floor_poly)
 	# malla de una brizna: base abajo al centro del origen
 	var w := BLADE_SIZE.x * blade_scale / 2.0
-	var h := BLADE_SIZE.y * blade_scale
+	var h := BLADE_SIZE.y * blade_scale * blade_height
 	var mesh := ArrayMesh.new()
 	var arrays: Array = []
 	arrays.resize(Mesh.ARRAY_MAX)
