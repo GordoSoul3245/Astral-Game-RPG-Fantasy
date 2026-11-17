@@ -63,6 +63,7 @@ func light(col: Color, energy: float, size: float) -> PointLight2D:
 	l.color = col
 	l.energy = energy
 	l.texture_scale = size
+	l.add_to_group("lights")  # main.gd apaga las que están a energía 0 (no se ven pero cuestan)
 	return l
 
 func flash(ground: Vector2, col: Color, energy: float, size: float, secs: float) -> void:  # destello que se apaga y se borra

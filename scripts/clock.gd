@@ -35,6 +35,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	advance(delta)
+	overlay.visible = rain and outdoors  # sin lluvia no dibuja nada: oculto no se procesa ni se redibuja
 	if rain and outdoors:
 		for d: Array in drops:
 			d[1] += delta * 1.6 * d[2]

@@ -172,6 +172,11 @@ func _ready() -> void:
 	hero.sprite_frames = frames
 	hero.centered = false
 	hero.scale = Vector2.ONE * SCALE
+	var hero_feet := Node2D.new()  # el pasto (grass_manager.gd) se aparta alrededor de los pies del héroe
+	hero_feet.position = FEET
+	hero_feet.add_to_group("grass_char")
+	hero_feet.set_meta("grass_radius", 100.0)
+	hero.add_child(hero_feet)
 	hero.play("idle_S")
 	var HB := preload("res://scripts/hitbox.gd")  # cuerpo del héroe medido de su sprite: lo usan los proyectiles enemigos
 	hit = HB.measure(DIRS, "res://art/hechicero/polished/idle_%s_00.png", FEET)
@@ -203,6 +208,7 @@ func _ready() -> void:
 	spell_light.texture_scale = 2.5
 	spell_light.color = Color(1.0, 0.56, 0.23)
 	spell_light.energy = 0.0
+	spell_light.add_to_group("lights")
 	add_child(spell_light)
 	cam = Camera2D.new()
 	cam.zoom = Vector2.ONE * ZOOM_DEFAULT
@@ -1821,6 +1827,11 @@ func _held(keys: Array) -> bool:
 	return false
 
 func _process(delta: float) -> void:
+	for l: Light2D in get_tree().get_nodes_in_group("lights"):  # una luz a energía 0 no ilumina pero el renderizador la procesa igual
+		var on := l.energy > 0.001
+		if l.enabled != on:
+			l.enabled = on
+	fade.visible = fade.color.a > 0.0  # el fundido transparente ocupa toda la pantalla: oculto no se pinta
 	var casting: bool = attacking and current.get("type", "") in ["projectile", "meteor"]
 	var light_target := 0.45 if (casting or burn_t > 0.0 or mega_active) and not dying else 0.0
 	spell_light.energy = lerpf(spell_light.energy, light_target, 1.0 - exp(-12.0 * delta))

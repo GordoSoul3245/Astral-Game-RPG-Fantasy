@@ -14,13 +14,10 @@ func setup(data: Dictionary) -> void:
 	tiles = int(data["tiles"])
 	walk = data["walk"]
 	if data.has("image"):  # las zonas dibujan su propio suelo
-		var ground := Sprite2D.new()
-		ground.texture = load(data["image"])
-		ground.centered = false
-		ground.position = -main.map_origin * main.SCALE
-		ground.scale = Vector2.ONE * main.SCALE
-		ground.z_index = -4000  # siempre por debajo de héroe, objetos y proyectiles
-		add_child(ground)
+		var tex: Texture2D = load(data["image"])
+		var grass := _add_grass(tex)
+		_add_ground(tex, grass)
+		masks.erase(tex)  # la imagen grande del suelo solo hacía falta para construir
 	for o: Dictionary in data["objects"]:
 		var sp: Dictionary = data["sprites"][o["sprite"]]
 		var tile := Vector2(o["tile"][0], o["tile"][1])
@@ -46,11 +43,113 @@ func setup(data: Dictionary) -> void:
 			for corner in [rc.position, rc.end, Vector2(rc.position.x, rc.end.y), Vector2(rc.end.x, rc.position.y)]:
 				sort_y = maxf(sort_y, main.tile_to_ground(corner).y)
 		s.z_index = int(sort_y)
+		_trim(s)
 		add_child(s)
 		if not o["sprite"].begins_with("rock"):  # las rocas son bajas: no tapan
 			occluders.append(s)
 		if o["sprite"].begins_with("tree_") or o["sprite"].begins_with("rock_"):  # se pueden talar y picar
 			_register_node("tree" if o["sprite"].begins_with("tree_") else "rock", tile, s, circles[-1] if o.has("circle") else null)
+
+# Rendimiento: un sprite se recorta a su parte no transparente (region_rect) y se desplaza lo mismo (offset), así se dibuja
+# igual pero la GPU no pinta los márgenes vacíos. El offset base queda en "base_off" (las sacudidas lo usan de referencia).
+func _image(tex: Texture2D) -> Image:
+	if not masks.has(tex):
+		var im: Image = tex.get_image()
+		if im.is_compressed():
+			im.decompress()
+		masks[tex] = im
+	return masks[tex]
+
+func _trim(s: Sprite2D) -> void:
+	var r := _image(s.texture).get_used_rect()
+	if r.size == Vector2i.ZERO or r.size == Vector2i(s.texture.get_size()):
+		s.set_meta("base_off", s.offset)
+		return
+	s.region_enabled = true
+	s.region_rect = Rect2(r)
+	s.offset += Vector2(r.position)
+	s.set_meta("base_off", s.offset)
+
+# --- pasto por casilla (GrassTile) sobre las casillas verdes de la imagen del suelo; caminos, arena y agua quedan como estaban.
+# Se agrupa en bloques de 10x10 casillas (un suelo y un MultiMesh por bloque) para no multiplicar las llamadas de dibujo.
+const GRASS_BLOCK := 8
+
+# Suelo del mapa (la imagen de data/map.json) como una malla de bloques de 32 px de la imagen: se omiten los bloques
+# del todo transparentes y los que quedan enteros bajo casillas de pasto (su suelo opaco los tapa). Mismo dibujo, menos GPU.
+const GROUND_BLOCK := 32
+
+func _add_ground(tex: Texture2D, grass: Dictionary) -> void:
+	var img := _image(tex)
+	var size := Vector2(img.get_size())
+	var verts := PackedVector2Array()
+	var uvs := PackedVector2Array()
+	var idx := PackedInt32Array()
+	for by in ceili(size.y / GROUND_BLOCK):
+		for bx in ceili(size.x / GROUND_BLOCK):
+			var r := Rect2i(bx * GROUND_BLOCK, by * GROUND_BLOCK, mini(GROUND_BLOCK, img.get_width() - bx * GROUND_BLOCK), mini(GROUND_BLOCK, img.get_height() - by * GROUND_BLOCK))
+			if img.get_region(r).is_invisible() or _under_grass(Rect2(r), grass):
+				continue
+			var k := verts.size()
+			for c: Vector2i in [r.position, Vector2i(r.end.x, r.position.y), r.end, Vector2i(r.position.x, r.end.y)]:
+				verts.append((Vector2(c) - main.map_origin) * main.SCALE)
+				uvs.append(Vector2(c) / size)
+			idx.append_array([k, k + 1, k + 2, k, k + 2, k + 3])
+	var arrays: Array = []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_TEX_UV] = uvs
+	arrays[Mesh.ARRAY_INDEX] = idx
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	var mi := MeshInstance2D.new()
+	mi.mesh = mesh
+	mi.texture = tex
+	mi.z_index = -4000  # siempre por debajo de héroe, objetos y proyectiles
+	add_child(mi)
+
+func _under_grass(r: Rect2, grass: Dictionary) -> bool:  # true si todas las casillas que toca el bloque son de pasto
+	var lo := Vector2(INF, INF)
+	var hi := Vector2(-INF, -INF)
+	for c: Vector2 in [r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]:
+		var t: Vector2 = main.ground_to_tile(c - main.map_origin)
+		lo = lo.min(t)
+		hi = hi.max(t)
+	for i in range(floori(lo.x), floori(hi.x) + 1):
+		for j in range(floori(lo.y), floori(hi.y) + 1):
+			if not grass.has(Vector2i(i, j)):
+				return false
+	return true
+
+func _add_grass(tex: Texture2D) -> Dictionary:  # devuelve las casillas con pasto
+	var img := _image(tex)
+	var cells := {}
+	var blocks := {}
+	for i in tiles:
+		for j in tiles:
+			if walk[i][j] != "1":
+				continue
+			var px: Vector2 = main.tile_to_ground(Vector2(i + 0.5, j + 0.5)) + main.map_origin
+			if px.x < 0 or px.y < 0 or px.x >= img.get_width() or px.y >= img.get_height():
+				continue
+			var c := img.get_pixelv(Vector2i(px))
+			if not (c.g > c.r + 0.08 and c.g > c.b + 0.08):  # solo casillas de pasto
+				continue
+			var key := Vector2i(i / GRASS_BLOCK, j / GRASS_BLOCK)
+			if not blocks.has(key):
+				blocks[key] = []
+			var q := PackedVector2Array()
+			for k: Vector2 in [Vector2(i, j), Vector2(i + 1, j), Vector2(i + 1, j + 1), Vector2(i, j + 1)]:
+				q.append(main.tile_to_ground(k) * main.SCALE)
+			blocks[key].append({"q": q, "id": Vector2i(i, j)})
+			cells[Vector2i(i, j)] = true
+	for key: Vector2i in blocks:
+		var g := GrassTile.new()
+		g.z_index = -3990  # sobre la imagen del suelo, bajo puentes, huerto y todo lo demás
+		g.build(blocks[key])
+		add_child(g)
+	if not blocks.is_empty():
+		add_child(GrassManager.new())
+	return cells
 
 # --- transparencia (estilo Project Zomboid): lo que tapa al héroe se vuelve translúcido
 const FADE_ALPHA := 0.3
@@ -72,14 +171,47 @@ func covers_hero(s: Sprite2D) -> bool:
 			return true
 	return false
 
+# Rendimiento: los tapadores se reparten en celdas de pantalla y cada fotograma solo se miran los de la celda del héroe
+# (pies y cabeza) más los que siguen translúcidos. Mismo resultado que revisarlos todos.
+const BUCKET := 512.0
+var buckets := {}            # Vector2i -> sprites cuyo rectángulo toca esa celda
+var bucketed := -1           # cuántos tapadores había al repartirlos (si cambia, se reparte de nuevo)
+var faded: Array = []        # tapadores que no están opacos del todo
+
+func _bucket_occluders() -> void:
+	buckets.clear()
+	bucketed = occluders.size()
+	for s: Sprite2D in occluders:
+		var r := Rect2(s.position, s.texture.get_size() * main.SCALE)
+		for bx in range(floori(r.position.x / BUCKET), floori(r.end.x / BUCKET) + 1):
+			for by in range(floori(r.position.y / BUCKET), floori(r.end.y / BUCKET) + 1):
+				var k := Vector2i(bx, by)
+				if not buckets.has(k):
+					buckets[k] = []
+				buckets[k].append(s)
+
 func _process(delta: float) -> void:
 	_tick_respawns(delta)
 	if not visible:
 		return
-	for s: Sprite2D in occluders:
+	if bucketed != occluders.size():
+		_bucket_occluders()
+	var feet: Vector2 = main.pos * main.SCALE
+	var head: Vector2 = (main.pos - Vector2(0, 70)) * main.SCALE
+	var near: Array = buckets.get(Vector2i(floori(feet.x / BUCKET), floori(feet.y / BUCKET)), []).duplicate()
+	for s: Sprite2D in buckets.get(Vector2i(floori(head.x / BUCKET), floori(head.y / BUCKET)), []):
+		if not near.has(s):
+			near.append(s)
+	for s: Sprite2D in faded:
+		if not near.has(s):
+			near.append(s)
+	faded.clear()
+	for s: Sprite2D in near:
 		var target := FADE_ALPHA if covers_hero(s) else 1.0
 		if s.modulate.a != target:
 			s.modulate.a = move_toward(s.modulate.a, target, delta * 4.0)
+		if s.modulate.a != 1.0:
+			faded.append(s)
 
 func _cell_walkable(i: int, j: int) -> bool:
 	return i >= 0 and i < tiles and j >= 0 and j < tiles and walk[i][j] == "1"
@@ -173,6 +305,7 @@ func add_resource(kind: String, tile: Vector2, tex_path: String, feet: Array, ra
 	s.position = (g - Vector2(feet[0], feet[1])) * main.SCALE
 	s.z_index = int(g.y)
 	s.z_as_relative = false
+	_trim(s)
 	add_child(s)
 	var circle: Variant = null
 	if radius > 0.0:
@@ -205,9 +338,10 @@ func hit_node(n: Dictionary, power: int) -> bool:  # true si este golpe lo agota
 	n["hp"] -= power
 	var s: Sprite2D = n["spr"]
 	var tw := create_tween()  # sacudida del golpe
-	tw.tween_property(s, "offset:x", 5.0, 0.04)
-	tw.tween_property(s, "offset:x", -4.0, 0.06)
-	tw.tween_property(s, "offset:x", 0.0, 0.06)
+	var bo: Vector2 = s.get_meta("base_off", Vector2.ZERO)
+	tw.tween_property(s, "offset:x", bo.x + 5.0, 0.04)
+	tw.tween_property(s, "offset:x", bo.x - 4.0, 0.06)
+	tw.tween_property(s, "offset:x", bo.x, 0.06)
 	if n["hp"] > 0:
 		return false
 	n["depleted"] = true
@@ -218,7 +352,7 @@ func hit_node(n: Dictionary, power: int) -> bool:  # true si este golpe lo agota
 		n["circle"][2] = 0.0
 	var fall := create_tween()
 	fall.tween_property(s, "self_modulate:a", 0.0, 0.3)
-	fall.parallel().tween_property(s, "offset:y", 10.0, 0.3)
+	fall.parallel().tween_property(s, "offset:y", float(s.get_meta("base_off", Vector2.ZERO).y) + 10.0, 0.3)
 	fall.tween_callback(func() -> void: s.visible = false)
 	return true
 
@@ -234,7 +368,7 @@ func _tick_respawns(delta: float) -> void:
 			n["circle"][1] = n["r0"]
 			n["circle"][2] = n["pr0"]
 		var s: Sprite2D = n["spr"]
-		s.offset = Vector2.ZERO
+		s.offset = s.get_meta("base_off", Vector2.ZERO)
 		s.visible = true
 		s.self_modulate.a = 0.0
 		create_tween().tween_property(s, "self_modulate:a", 1.0, 0.6)

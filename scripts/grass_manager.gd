@@ -27,3 +27,4 @@ func push_now() -> void:
 		arr[i] = Vector4(p.x, p.y, float(n.get_meta("grass_radius", 90.0)), 0.0)
 		i += 1
 	GrassTile.material().set_shader_parameter("chars", arr)
+	GrassTile.material().set_shader_parameter("char_count", i)

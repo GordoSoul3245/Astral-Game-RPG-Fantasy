@@ -17,6 +17,35 @@ uniform float cloud_strength = 0.2;
 uniform float cuts = 3.0;        // bandas de luz del toon
 uniform float cut_grad = 0.4;    // fracción de cada corte que se suaviza (toon híbrido)
 
+// --- viento único del mundo (scripts/wind.gd pone estos valores en todos los materiales que lo usan)
+uniform sampler2D wind_noise : repeat_enable, filter_linear;
+uniform vec2 wind_dir = vec2(1.0, 0.35);
+uniform float wind_speed = 0.00005;     // desplazamiento del ruido por segundo (en unidades de mundo * wind_scale * 1000)
+uniform float wind_scale = 0.0009;
+uniform float divergence = 0.65;        // ángulo (rad) en que se separan las dos direcciones de ruido
+uniform float wind_bright = 0.12;
+uniform float gust_light = 0.35;        // la ráfaga aclara lo que dobla: se ve pasar una ola de luz por el prado
+
+vec2 rot(vec2 v, float a) {
+	float s = sin(a), c = cos(a);
+	return vec2(c * v.x - s * v.y, s * v.x + c * v.y);
+}
+
+// viento en un punto: dos ruidos, cada uno desplazado en una dirección distinta y con una escala irracional, multiplicados
+float wind_at(vec2 p, float t) {
+	vec2 wd = normalize(wind_dir);
+	vec2 d1 = rot(wd, divergence);
+	vec2 d2 = rot(wd, -divergence);
+	float n1 = textureLod(wind_noise, p * wind_scale - d1 * t * wind_speed * 1000.0, 0.0).r;
+	float n2 = textureLod(wind_noise, p * wind_scale * 3.14159265 * 0.5 - d2 * t * wind_speed * 1000.0 * 1.7, 0.0).r;
+	return clamp(n1 * n2 * 3.2 + wind_bright, 0.0, 1.0);
+}
+
+// rejilla del arte: los sprites van a x3, así que lo calculado por píxel se ajusta a bloques de 3 px (pixel art estable)
+vec2 snap3(vec2 p) {
+	return floor(p / 3.0) * 3.0 + 1.5;
+}
+
 float hash12(vec2 p) {
 	vec3 p3 = fract(vec3(p.xyx) * 0.1031);
 	p3 += dot(p3, p3.yzx + 33.33);

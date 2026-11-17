@@ -38,11 +38,11 @@ static func material() -> ShaderMaterial:
 		_floor_mat.shader = load("res://shaders/grass_floor.gdshader")
 		var patch := _noise_tex(11, 0.012)
 		var cloud := _noise_tex(23, 0.008)
-		var wind := _noise_tex(5, 0.02)
 		for m: ShaderMaterial in [_mat, _floor_mat]:
 			m.set_shader_parameter("patch_noise", patch)
 			m.set_shader_parameter("cloud_noise", cloud)
-		_mat.set_shader_parameter("wind_noise", wind)
+		Wind.use(_mat)
+		Wind.use(_floor_mat)
 		var zeros := PackedVector4Array()
 		zeros.resize(64)
 		_mat.set_shader_parameter("chars", zeros)
@@ -57,11 +57,27 @@ static func _h(a: int, b: int, c: int) -> float:  # número estable en 0..1 por 
 	x = ((x ^ (x >> 13)) * 1103515245 + 12345) & 0x7fffffff
 	return float((x ^ (x >> 11)) & 0xffff) / 65535.0
 
-func _ready() -> void:
+func _ready() -> void:  # una sola casilla en rombo (la demo); el valle usa build() con muchas casillas a la vez
+	if get_child_count() > 0:
+		return
 	var hw := cell.x / 2.0
 	var hh := cell.y / 2.0
+	build([{"q": PackedVector2Array([Vector2(0, -hh), Vector2(hw, 0), Vector2(0, hh), Vector2(-hw, 0)]), "id": cell_id}])
+
+# Construye el pasto de varias casillas en un solo suelo y un solo MultiMesh (rendimiento: 2 llamadas de dibujo por bloque).
+# Cada casilla: {"q": esquinas [c00, c10, c11, c01] en coordenadas de este nodo, "id": Vector2i}. Cada casilla sigue con sus
+# mismas briznas (rejilla 4x4 con azar fijo por casilla), así que el resultado es el mismo que un GrassTile por casilla.
+func build(cells: Array) -> void:
 	var floor_poly := Polygon2D.new()
-	floor_poly.polygon = PackedVector2Array([Vector2(0, -hh), Vector2(hw, 0), Vector2(0, hh), Vector2(-hw, 0)])
+	var verts := PackedVector2Array()
+	var polys: Array = []
+	for c: Dictionary in cells:
+		var q: PackedVector2Array = c["q"]
+		var base := verts.size()
+		verts.append_array(q)
+		polys.append(PackedInt32Array([base, base + 1, base + 2, base + 3]))
+	floor_poly.polygon = verts
+	floor_poly.polygons = polys
 	floor_poly.material = floor_material()
 	add_child(floor_poly)
 	# malla de una brizna: base abajo al centro del origen
@@ -70,24 +86,31 @@ func _ready() -> void:
 	var mesh := ArrayMesh.new()
 	var arrays: Array = []
 	arrays.resize(Mesh.ARRAY_MAX)
-	arrays[Mesh.ARRAY_VERTEX] = PackedVector2Array([Vector2(-w, -h), Vector2(w, -h), Vector2(w, 0), Vector2(-w, 0)])
-	arrays[Mesh.ARRAY_TEX_UV] = PackedVector2Array([Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1)])
+	# rendimiento: sin acentos, la brizna solo ocupa las filas 7..11 del sprite: el cuadro se recorta a esa franja con las
+	# mismas UV (mismo dibujo y mismo movimiento, que depende de UV.y) y la GPU pinta ~58 % menos píxeles transparentes
+	var top := 0.0 if accent_chance > 0.0 else 7.0 / 12.0
+	var ht := h * (1.0 - top)
+	arrays[Mesh.ARRAY_VERTEX] = PackedVector2Array([Vector2(-w, -ht), Vector2(w, -ht), Vector2(w, 0), Vector2(-w, 0)])
+	arrays[Mesh.ARRAY_TEX_UV] = PackedVector2Array([Vector2(0, top), Vector2(1, top), Vector2(1, 1), Vector2(0, 1)])
 	arrays[Mesh.ARRAY_INDEX] = PackedInt32Array([0, 1, 2, 0, 2, 3])
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_2D
 	mm.use_custom_data = true
 	mm.mesh = mesh
-	mm.instance_count = blades
+	mm.instance_count = blades * cells.size()
 	var spots: Array = []
-	for k in blades:
-		var g := int(ceil(sqrt(float(blades))))  # rejilla regular dentro del rombo + desplazamiento aleatorio: pasto parejo
-		var u := (float(k % g) + 0.15 + 0.7 * _h(cell_id.x, cell_id.y, k * 3)) / g
-		var v := (float(k / g) + 0.15 + 0.7 * _h(cell_id.x, cell_id.y, k * 3 + 1)) / g
-		var accent := 1.0 if _h(cell_id.x, cell_id.y, k * 3 + 2) < accent_chance else 0.0
-		spots.append([Vector2((u - v) * hw, (u + v - 1.0) * hh), accent, _h(cell_id.y, cell_id.x, k)])
+	var g := int(ceil(sqrt(float(blades))))  # rejilla regular dentro de la casilla + desplazamiento aleatorio: pasto parejo
+	for c: Dictionary in cells:
+		var q: PackedVector2Array = c["q"]
+		var id: Vector2i = c["id"]
+		for k in blades:
+			var u := (float(k % g) + 0.15 + 0.7 * _h(id.x, id.y, k * 3)) / g
+			var v := (float(k / g) + 0.15 + 0.7 * _h(id.x, id.y, k * 3 + 1)) / g
+			var accent := 1.0 if _h(id.x, id.y, k * 3 + 2) < accent_chance else 0.0
+			spots.append([q[0] + (q[1] - q[0]) * u + (q[3] - q[0]) * v, accent, _h(id.y, id.x, k)])
 	spots.sort_custom(func(a: Array, b: Array) -> bool: return a[0].y < b[0].y)  # las de atrás se dibujan primero
-	for k in blades:
+	for k in spots.size():
 		var accent: float = spots[k][1]
 		var sx := 1.0 + accent * 0.15
 		var sy := 1.0 + accent * 0.45  # los acentos son más altos
