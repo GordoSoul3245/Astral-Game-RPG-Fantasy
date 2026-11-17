@@ -19,7 +19,7 @@ static var _floor_mat: ShaderMaterial
 @export var cell_id := Vector2i.ZERO   # casilla (i, j): fija las posiciones de las briznas, siempre iguales
 @export var blades := 7
 @export var blade_scale := 3.0         # tamaño del sprite (12 px -> 36 px en pantalla con 3.0)
-@export var accent_chance := 0.08
+@export var accent_chance := 0.0   # >0 vuelve a poner flores de acento
 
 static func _noise_tex(seed_value: int, freq: float) -> ImageTexture:
 	var n := FastNoiseLite.new()
