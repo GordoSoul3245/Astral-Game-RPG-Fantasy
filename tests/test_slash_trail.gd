@@ -72,7 +72,7 @@ func run_checks() -> void:
 	var t := await _attack("heavy", 1)
 	assert(t != null, "al llegar a trail_frame nace la cinta")
 	assert(t.first == heavy["trail_frame"] and t.last == heavy["trail_end"], "la cinta empieza donde dice el ataque, no en la anticipación")
-	assert(t.sheet != null, "los tajos con hoja de sprites la usan en vez del dibujo procedural")
+	assert(t.TEX != null, "la cinta lleva la textura de la estela (PixelLab)")
 	var first_tip: Vector2 = t.tips[0]
 	for k in 400:
 		await _wait(0.01)

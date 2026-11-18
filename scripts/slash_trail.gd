@@ -5,6 +5,8 @@ extends Node2D
 # Cada tramo queda donde se emitió (coordenadas del mundo), aunque el héroe se mueva mientras ataca.
 # Qué cambia entre ataques y espadas: la trayectoria sale de la animación (items.json: anim, trail_frame, trail_end);
 # el color, el ancho, la persistencia y los fragmentos salen del ataque y de la espada (trail_color/trail_width/trail_time/trail_shards, trail_fx).
+# Dibujo: la cinta lleva la textura art/trails/estela.png (de PixelLab, en grises: filo claro arriba, bandas, cola en punta a la derecha),
+# teñida con el color de la espada; así cualquier espada nueva tiene su estela solo con poner su color "trail" en equipment.json.
 
 static var table: Dictionary = {}
 
@@ -27,27 +29,13 @@ var tips := PackedVector2Array()
 var bases := PackedVector2Array()
 var born := PackedFloat32Array()
 var bits: Array = []         # fragmentos: {p, size, t0} (solo en el dibujo procedural)
-var sheet: Texture2D         # hoja de sprites del tajo: fila = tramo del barrido, columna = edad
-var origins := PackedVector2Array()  # posición del héroe al emitir cada tramo
-const CELL := 192            # lado de una celda de la hoja; su píxel (PAD, PAD) es el (0, 0) del sprite del héroe
-const PAD := 32
-const COLS := 5
-
-func _draw_sprites() -> void:  # cada tramo es una imagen que envejece en su sitio del mundo
-	var sc := float(main.SCALE)
-	for k in origins.size():
-		var a := (t - born[(k + 1) * sub]) / life
-		if a >= 1.0:
-			continue
-		var src := Rect2(mini(int(a * COLS), COLS - 1) * CELL, k * CELL, CELL, CELL)
-		draw_texture_rect_region(sheet, Rect2(origins[k] + (main.hero.offset - Vector2(PAD, PAD)) * sc, Vector2(CELL, CELL) * sc), src, color)
+const TEX := preload("res://art/trails/estela.png")
+const WIDE := 1.6            # la cinta es más ancha que el ancho base del ataque: se lee como el arco clásico del pixel art
 
 func samples(anim: String, dir: String) -> Array:  # puntos calibrados de un tajo; vacío si la animación no los tiene
 	if table.is_empty():
 		table = JSON.parse_string(FileAccess.get_file_as_string("res://data/blade_points.json"))
 	sub = int(table["_sub"])
-	var path := "res://art/trails/%s_%s.png" % [anim, dir]  # hoja de sprites de este tajo (art/katana/gen_trail_sprites.py); sin ella, dibujo procedural
-	sheet = load(path) if ResourceLoader.exists(path) else null
 	return table.get(anim, {}).get(dir, [])
 
 func _ready() -> void:
@@ -74,7 +62,6 @@ func _process(delta: float) -> void:
 		else:
 			while fr < mini(f, last):
 				fr += 1
-				origins.append(main.hero.position)  # el sprite de este tramo se queda donde el héroe estaba al emitirlo
 				for j in range(1, sub + 1):  # los tramos del intervalo se reparten en el tiempo del fotograma
 					_add((fr - 1) * sub + j, float(sub - j) / sub * frame_dur)
 			if f > last:
@@ -101,12 +88,9 @@ func _col(i: int) -> Color:  # color del filo en la muestra i: se apaga con la e
 	return c
 
 func _in(i: int) -> Vector2:  # borde interior: el tramo viejo se estrecha hacia el filo
-	return tips[i] + (bases[i] - tips[i]).limit_length(width * float(main.SCALE) * pow(1.0 - _age(i), 0.8))
+	return tips[i] + (bases[i] - tips[i]).limit_length(width * WIDE * float(main.SCALE) * pow(1.0 - _age(i), 0.8))
 
 func _draw() -> void:
-	if sheet != null:
-		_draw_sprites()
-		return
 	var snap := Vector2.ONE * float(main.SCALE)
 	var n := tips.size()
 	var edge := PackedVector2Array()
@@ -117,14 +101,12 @@ func _draw() -> void:
 		c.a = pow(1.0 - _age(i), 2.0)
 		core.append(c)
 		if i > 0 and (_col(i).a > 0.01 or _col(i - 1).a > 0.01):
-			var c1 := _col(i - 1)
-			var c2 := _col(i)
-			var s1 := c1
-			var s2 := c2
-			s1.a *= 0.3  # el interior de la cinta es suave
-			s2.a *= 0.3
+			# u = edad (lo recién cortado es la parte ancha de la textura; al envejecer se corre hacia la punta); v = del filo al interior
+			var u1 := _age(i - 1) * 0.98
+			var u2 := _age(i) * 0.98
 			draw_primitive(PackedVector2Array([edge[i - 1], edge[i], _in(i).snapped(snap), _in(i - 1).snapped(snap)]),
-				PackedColorArray([c1, c2, s2, s1]), PackedVector2Array())
+				PackedColorArray([_col(i - 1), _col(i), _col(i), _col(i - 1)]),
+				PackedVector2Array([Vector2(u1, 0.0), Vector2(u2, 0.0), Vector2(u2, 1.0), Vector2(u1, 1.0)]), TEX)
 	if n > 1:
 		draw_polyline_colors(edge, core, 3.0)
 	for b: Dictionary in bits:  # fragmentos pequeños, estilo píxel
