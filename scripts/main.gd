@@ -1140,6 +1140,20 @@ func _load_inventory() -> void:
 	info_label.add_theme_font_size_override("font_size", 20)
 	info_label.position = Vector2(16, 136)
 	ui.add_child(info_label)
+	# lo que no está en el inventario-libro de PixelLab se abre desde aquí (por ahora): Pesca, Magia, Estadísticas y Opciones
+	var hud_tabs := HBoxContainer.new()
+	hud_tabs.add_theme_constant_override("separation", 8)
+	hud_tabs.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 16)
+	hud_tabs.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	ui.add_child(hud_tabs)
+	for pair in [["fish", "Pesca"], ["magic", "Magia"], ["stats", "Estadísticas"], ["opt", "Opciones"]]:
+		var b := Button.new()
+		b.text = pair[1]
+		b.focus_mode = Control.FOCUS_NONE
+		b.custom_minimum_size = Vector2(0, 38)
+		b.add_theme_font_size_override("font_size", 17)
+		b.pressed.connect(func() -> void: menu.open_tab(pair[0]))
+		hud_tabs.add_child(b)
 	buff_label = Label.new()
 	buff_label.position = Vector2(16, 188)
 	buff_label.add_theme_font_size_override("font_size", 18)

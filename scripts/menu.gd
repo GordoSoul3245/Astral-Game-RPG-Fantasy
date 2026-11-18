@@ -17,6 +17,16 @@ var body: VBoxContainer
 var tab_buttons := {}
 var page := 0                    # página de la mochila (16 casillas por página)
 var bar_row: HBoxContainer       # la barra de objetos, abierta bajo el panel: casillas donde soltar objetos arrastrados
+var panel: PanelContainer        # el panel general (crafteo, pesca, magia, estadísticas, opciones)
+var book: Control                # el inventario-libro
+var book_items: Control
+const BOOK_SCALE := 4.0
+const BOOK_POS := Vector2(250, -60)   # el libro (contenido de y 25 a 225 del arte) queda sobre la barra de objetos
+const INK := Color("#2b1d12")
+# casillas del diseño (px del arte de 256): equipo a izquierda y derecha del muñeco, mochila 4x4
+const EQUIP_CELLS := {"sword": Rect2(33, 76, 20, 18), "armor": Rect2(33, 105, 20, 18), "amulet": Rect2(33, 135, 20, 18), "grimoire": Rect2(97, 76, 20, 18), "ring": Rect2(97, 135, 20, 18)}
+const PACK_X := [144, 165, 187, 208]
+const PACK_Y := [68, 98, 128, 158]
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -29,7 +39,7 @@ func _ready() -> void:
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
-	var panel := PanelContainer.new()
+	panel = PanelContainer.new()
 	panel.custom_minimum_size = Vector2(1180, 720)
 	panel.add_theme_stylebox_override("panel", _box(Color("#0d1020"), GOLD, 2, 12, 22, 24))
 	center.add_child(panel)
@@ -43,7 +53,7 @@ func _ready() -> void:
 	var gap := Control.new()
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(gap)
-	for pair in [["inv", "Inventario"], ["craft", "Crafteo"], ["fish", "Pesca"], ["magic", "Magia"], ["stats", "Estadísticas"], ["opt", "Opciones"]]:
+	for pair in [["inv", "Inventario"], ["craft", "Crafteo"]]:  # Pesca, Magia, Estadísticas y Opciones se abren desde los botones del HUD
 		var b := Button.new()
 		b.text = pair[1]
 		b.focus_mode = Control.FOCUS_NONE
@@ -66,6 +76,23 @@ func _ready() -> void:
 	body = VBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	v.add_child(body)
+	# inventario con el diseño de PixelLab: un libro abierto (art/ui/inventario_libro.png, 256 px a x4) con los datos encima
+	book = Control.new()
+	book.set_anchors_preset(Control.PRESET_FULL_RECT)
+	book.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(book)
+	move_child(book, bar_wrap.get_index())  # la barra de objetos queda por encima del libro
+	var bg := TextureRect.new()
+	bg.texture = load("res://art/ui/inventario_libro.png")
+	bg.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	bg.size = Vector2(256, 256) * BOOK_SCALE
+	bg.position = BOOK_POS
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	book.add_child(bg)
+	book_items = Control.new()
+	book_items.set_anchors_preset(Control.PRESET_FULL_RECT)
+	book_items.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	book.add_child(book_items)
 
 func _box(bg: Color, border: Color, width := 2, radius := 8, margin := 8, shadow := 0) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
@@ -103,6 +130,14 @@ func _set_tab(t: String) -> void:
 	tab = t
 	refresh()
 
+func open_tab(t: String) -> void:  # desde los botones del HUD
+	if main.transitioning:
+		return
+	tab = t
+	visible = true
+	get_tree().paused = true
+	refresh()
+
 func refresh() -> void:
 	var p = main.prog
 	if selected != "" and not _has(selected):
@@ -116,8 +151,13 @@ func refresh() -> void:
 	for c in body.get_children():
 		body.remove_child(c)
 		c.queue_free()
+	for c in book_items.get_children():
+		book_items.remove_child(c)
+		c.queue_free()
+	panel.get_parent().visible = tab != "inv"
+	book.visible = tab == "inv"
 	if tab == "inv":
-		_build_inv()
+		_build_book()
 	elif tab == "craft":
 		_build_craft()
 	elif tab == "fish":
@@ -186,7 +226,7 @@ func _mods_lines(mods: Dictionary, vs: Dictionary = {}, compare := false) -> Arr
 	return out
 
 # casilla cuadrada con el icono del objeto y marco del color de su rareza; id vacío = casilla vacía
-func _slot_button(id: String, size: float, equipped := false, count := 0) -> Button:
+func _slot_button(id: String, size: float, equipped := false, count := 0, page_cell := false) -> Button:
 	var p = main.prog
 	var b := _Slot.new()
 	b.menu = self
@@ -201,6 +241,10 @@ func _slot_button(id: String, size: float, equipped := false, count := 0) -> But
 		var bg := Color(0.07, 0.09, 0.15) if id == "" else col.darkened(0.82)
 		if st == "hover" and id != "":
 			bg = col.darkened(0.7)
+		if page_cell:  # casilla dibujada en el libro: vacía no tapa el arte; con objeto, marco fino de su rareza
+			bg = Color(0, 0, 0, 0) if id == "" else Color(0.1, 0.07, 0.04, 0.35 if st != "hover" else 0.55)
+			b.add_theme_stylebox_override(st, _box(bg, Color.WHITE if chosen else (col if id != "" else Color(0, 0, 0, 0)), 3 if chosen else 2, 2, 2))
+			continue
 		b.add_theme_stylebox_override(st, _box(bg, Color.WHITE if chosen else col, 3 if chosen else 2, 8, 4))
 	if id != "":
 		var icon := TextureRect.new()
@@ -242,95 +286,80 @@ func _slot_button(id: String, size: float, equipped := false, count := 0) -> But
 			b.add_child(tag)
 	return b
 
-func _card(parent: Node, min_size: Vector2, drop_zone := false) -> VBoxContainer:  # panel con fondo para una columna
+func _card(parent: Node, min_size: Vector2) -> VBoxContainer:  # panel con fondo para una columna
 	var pc := PanelContainer.new()
 	pc.custom_minimum_size = min_size
 	pc.add_theme_stylebox_override("panel", _box(Color(0.065, 0.08, 0.14), Color(0.2, 0.24, 0.36), 1, 10, 14))
 	parent.add_child(pc)
-	var v: VBoxContainer = _Zone.new() if drop_zone else VBoxContainer.new()
-	if drop_zone:
-		v.menu = self
+	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 8)
 	pc.add_child(v)
 	return v
 
-func _build_inv() -> void:
+func _book_rect(r: Rect2) -> Rect2:  # px del arte del libro -> pantalla
+	return Rect2(BOOK_POS + r.position * BOOK_SCALE, r.size * BOOK_SCALE)
+
+func _place(c: Control, r: Rect2) -> void:
+	var sr := _book_rect(r)
+	c.position = sr.position
+	c.size = sr.size
+	c.custom_minimum_size = sr.size
+	book_items.add_child(c)
+
+func _build_book() -> void:  # el inventario sobre el libro de PixelLab
 	var p = main.prog
-	var cols := HBoxContainer.new()
-	cols.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	cols.add_theme_constant_override("separation", 16)
-	body.add_child(cols)
-	# --- equipo: muñeco de ranuras (collar arriba; espada, armadura y grimorio en medio; anillo abajo)
-	var left := _card(cols, Vector2(340, 0))
-	_label("Equipo", left, 22, GOLD)
-	var doll := GridContainer.new()
-	doll.columns = 3
-	doll.add_theme_constant_override("h_separation", 10)
-	doll.add_theme_constant_override("v_separation", 8)
-	doll.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	left.add_child(doll)
-	for slot in ["", "amulet", "", "sword", "armor", "grimoire", "", "ring", ""]:
-		if slot == "":
-			var sp := Control.new()
-			sp.custom_minimum_size = Vector2(92, 92)
-			doll.add_child(sp)
-			continue
-		var cell := VBoxContainer.new()
-		cell.add_theme_constant_override("separation", 2)
-		doll.add_child(cell)
-		cell.add_child(_slot_button(p.equipped.get(slot, ""), 92, true))
-		var nm := _label(p.SLOT_NAMES[slot], cell, 14, MUTED)
-		nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	left.add_child(HSeparator.new())
-	_label("Monedas: %d" % p.coins, left, 18, GOLD)
-	# --- mochila: cuadrícula de objetos (clic = ver, doble clic = equipar)
-	var mid := _card(cols, Vector2(430, 0), true)
-	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# pestañas dibujadas: «Inventory» (esta) y «Crafting»
+	for t in [["inv", Rect2(30, 36, 52, 14)], ["craft", Rect2(175, 36, 52, 14)]]:
+		var tb := Button.new()
+		tb.flat = true
+		tb.focus_mode = Control.FOCUS_NONE
+		tb.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		tb.tooltip_text = "Inventario" if t[0] == "inv" else "Crafteo"
+		tb.pressed.connect(_set_tab.bind(t[0]))
+		_place(tb, t[1])
+	var close := _label("[I] cerrar", book_items, 16, MUTED)
+	close.position = BOOK_POS + Vector2(222, 30) * BOOK_SCALE
+	# equipo
+	for slot: String in EQUIP_CELLS:
+		var b := _slot_button(p.equipped.get(slot, ""), 72, true, 0, true)
+		b.tooltip_text = b.tooltip_text if b.tooltip_text != "" else p.SLOT_NAMES[slot]
+		_place(b, EQUIP_CELLS[slot])
+	# barras de vida y maná sobre las del dibujo
+	for row in [[175.0, float(main.hero_hp) / maxf(1.0, main.hero_max_hp), Color(0.87, 0.24, 0.14)], [183.0, main.mana / maxf(1.0, float(main.hero_data["mana"])), Color(0.14, 0.62, 0.87)]]:
+		var fill := ColorRect.new()
+		fill.color = row[2]
+		fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_place(fill, Rect2(42, row[0], 76.0 * clampf(row[1], 0.0, 1.0), 4))
+	# mochila: 16 casillas por página; soltar aquí un objeto de la barra lo quita de ella
+	var zone := _Zone.new()
+	zone.menu = self
+	_place(zone, Rect2(140, 64, 90, 116))
 	var all := _backpack()
 	var pages := maxi(1, ceili(all.size() / float(BACKPACK_SLOTS)))
 	page = clampi(page, 0, pages - 1)
-	_label("Mochila  (%d)" % all.size(), mid, 22, GOLD)
-	var grid := GridContainer.new()
-	grid.columns = 4
-	grid.add_theme_constant_override("h_separation", 10)
-	grid.add_theme_constant_override("v_separation", 6)
-	grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	mid.add_child(grid)
 	var equipped_ids: Array = p.equipped.values()
 	for i in BACKPACK_SLOTS:
 		var idx := page * BACKPACK_SLOTS + i
 		var id: String = all[idx] if idx < all.size() else ""
-		var cell := VBoxContainer.new()
-		cell.add_theme_constant_override("separation", 2)
-		grid.add_child(cell)
-		cell.add_child(_slot_button(id, 76, equipped_ids.has(id), 0 if p.equipment.has(id) or id == "" else main.crafting.count(id)))
-		var nm := _label(main.name_of(id) if id != "" else " ", cell, 12, MUTED)
-		nm.custom_minimum_size = Vector2(76, 38)
-		nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		nm.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		nm.max_lines_visible = 2
-		nm.clip_text = true
-	if pages > 1:  # flechas bajo la cuadrícula para cambiar de página
-		var nav := HBoxContainer.new()
-		nav.alignment = BoxContainer.ALIGNMENT_CENTER
-		nav.add_theme_constant_override("separation", 14)
-		mid.add_child(nav)
+		var b := _slot_button(id, 72, equipped_ids.has(id), 0 if p.equipment.has(id) or id == "" else main.crafting.count(id), true)
+		_place(b, Rect2(PACK_X[i % 4], PACK_Y[i / 4], 18, 18))
+	var coins := _label("Monedas: %d" % p.coins, book_items, 22, INK)
+	coins.position = BOOK_POS + Vector2(143, 179) * BOOK_SCALE
+	if pages > 1:
 		for dir in [-1, 1]:
 			var ab := Button.new()
 			ab.text = "◀" if dir < 0 else "▶"
 			ab.focus_mode = Control.FOCUS_NONE
-			ab.custom_minimum_size = Vector2(60, 34)
 			ab.disabled = page + dir < 0 or page + dir >= pages
 			ab.pressed.connect(func() -> void:
 				page += dir
 				refresh())
-			nav.add_child(ab)
-			if dir < 0:
-				_label("%d / %d" % [page + 1, pages], nav, 17, MUTED)
-	if all.is_empty():
-		_label("Abre los cofres de la dungeon para conseguir equipo.", mid, 15, MUTED)
-	# --- detalle del objeto elegido, con comparación contra lo que llevas puesto
-	var right := _card(cols, Vector2(330, 0))
+			_place(ab, Rect2(203 + (dir + 1) * 6, 180, 10, 9))
+	# detalle del objeto elegido (no está en el diseño): tarjeta junto al libro, con comparación contra lo que llevas puesto
+	var holder := Control.new()
+	holder.position = BOOK_POS + Vector2(244, 52) * BOOK_SCALE
+	book_items.add_child(holder)
+	var right := _card(holder, Vector2(360, 560))
 	_label("Detalle", right, 22, GOLD)
 	if selected == "":
 		_label("Elige un objeto para ver sus estadísticas.", right, 16, MUTED).autowrap_mode = TextServer.AUTOWRAP_WORD
@@ -796,7 +825,7 @@ class _Slot extends Button:  # casilla de objeto: se puede arrastrar y, si es de
 			menu.main.hotbar_clear(int(data["from"]))
 		menu.refresh()
 
-class _Zone extends VBoxContainer:  # la mochila: soltar aquí un objeto de la barra lo quita de ella
+class _Zone extends Control:  # la mochila: soltar aquí un objeto de la barra lo quita de ella
 	var menu: Node
 
 	func _can_drop_data(_at: Vector2, data: Variant) -> bool:
