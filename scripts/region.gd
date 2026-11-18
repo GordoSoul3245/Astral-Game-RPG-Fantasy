@@ -28,7 +28,8 @@ func setup(data: Dictionary) -> void:
 					"~": water[Vector2i(i, j)] = true
 					"=": paths[Vector2i(i, j)] = true
 					"T":
-						if (i + j) % 2 == 0:  # un pino cada dos casillas, con algo de azar: masa de bosque cerrada
+						# la mitad de los árboles: una red espaciada adentro (i-j múltiplo de 4) y todos los del borde de los claros, así las orillas quedan llenas
+						if (i + j) % 2 == 0 and ((i - j) % 4 == 0 or _clearing_next(lay, i, j)):
 							var h := float((i * 73 + j * 37) % 100) / 100.0
 							var o := _object("tree_arbol1", i + 0.3 + h * 0.4, j + 0.3 + fmod(h * 7.0, 1.0) * 0.4)
 							o["dir"] = ARBOL1_DIRS[(i * 5 + j * 3) % 8]  # cada árbol mira a un lado: el bosque no se ve clonado
@@ -120,6 +121,13 @@ func _in_gate_gap(p: Vector2) -> bool:  # los árboles del borde dejan libre el 
 func _object(sprite: String, x: float, y: float) -> Dictionary:
 	var r := 0.3 if sprite.begins_with("tree") else 0.5
 	return {"sprite": sprite, "tile": [x, y], "circle": r, "pcircle": 0.55 if sprite.begins_with("tree") else r}
+
+func _clearing_next(lay: Array, i: int, j: int) -> bool:  # la casilla toca pasto, camino o agua (no el borde del mapa)
+	for d: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+		var q := Vector2i(i, j) + d
+		if q.y >= 0 and q.y < lay.size() and q.x >= 0 and q.x < String(lay[q.y]).length() and String(lay[q.y])[q.x] != "T":
+			return true
+	return false
 
 func spawn_tile() -> Vector2:
 	return Vector2(cfg["start"][0], cfg["start"][1])
