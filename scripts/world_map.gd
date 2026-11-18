@@ -17,7 +17,6 @@ func setup(data: Dictionary) -> void:
 		var tex: Texture2D = load(data["image"])
 		var grass := _add_grass(tex)
 		_add_ground(tex, grass)
-		_add_dirt(tex, grass)
 		_add_water(tex)
 		masks.erase(tex)  # la imagen grande del suelo solo hacía falta para construir
 	for o: Dictionary in data["objects"]:
@@ -89,58 +88,6 @@ const GRASS_BLOCK := 8
 # Suelo del mapa (la imagen de data/map.json) como una malla de bloques de 32 px de la imagen: se omiten los bloques
 # del todo transparentes y los que quedan enteros bajo casillas de pasto (su suelo opaco los tapa). Mismo dibujo, menos GPU.
 const GROUND_BLOCK := 32
-const DIRT_TEX := "res://art/ground/tierra.png"  # bloque de tierra de PixelLab (variante 2): se usa su cara de arriba
-# vértices de la cara de arriba del bloque, en px de su imagen de 64: izquierda, arriba, derecha, abajo
-const DIRT_UV := [Vector2(0.5, 37.5), Vector2(32, 24.5), Vector2(63.5, 37.5), Vector2(32, 50.5)]
-
-# Tierra con textura: una malla con la cara de arriba del bloque en cada casilla (q = sus 4 esquinas en pantalla)
-func dirt_mesh(quads: Array) -> MeshInstance2D:
-	var verts := PackedVector2Array()
-	var uvs := PackedVector2Array()
-	var idx := PackedInt32Array()
-	for q: PackedVector2Array in quads:
-		var k := verts.size()
-		var c := (q[0] + q[1] + q[2] + q[3]) / 4.0
-		for p: Vector2 in q:  # cada esquina toma el vértice de la cara según hacia dónde queda del centro
-			var d := p - c
-			var role := (0 if d.x < 0 else 2) if absf(d.x) > absf(d.y) * 1.2 else (1 if d.y < 0 else 3)
-			verts.append(p)
-			uvs.append(DIRT_UV[role] / 64.0)
-		idx.append_array([k, k + 1, k + 2, k, k + 2, k + 3])
-	var arrays: Array = []
-	arrays.resize(Mesh.ARRAY_MAX)
-	arrays[Mesh.ARRAY_VERTEX] = verts
-	arrays[Mesh.ARRAY_TEX_UV] = uvs
-	arrays[Mesh.ARRAY_INDEX] = idx
-	var mesh := ArrayMesh.new()
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	var mi := MeshInstance2D.new()
-	mi.mesh = mesh
-	mi.texture = load(DIRT_TEX)
-	mi.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	mi.z_index = -3995  # sobre el suelo, bajo el pasto
-	return mi
-
-# Valle: las casillas marrones de la imagen del suelo (caminos y tierra) llevan el bloque de tierra
-func _add_dirt(tex: Texture2D, grass: Dictionary) -> void:
-	var img := _image(tex)
-	var quads: Array = []
-	for i in tiles:
-		for j in tiles:
-			if walk[i][j] != "1" or grass.has(Vector2i(i, j)):
-				continue
-			var px: Vector2 = main.tile_to_ground(Vector2(i + 0.5, j + 0.5)) + main.map_origin
-			if px.x < 0 or px.y < 0 or px.x >= img.get_width() or px.y >= img.get_height():
-				continue
-			var c := img.get_pixelv(Vector2i(px))
-			if not (c.r > c.g and c.g > c.b and c.r > c.b + 0.12):  # marrón: tierra (no piedra gris ni agua)
-				continue
-			var q := PackedVector2Array()
-			for k: Vector2 in [Vector2(i, j), Vector2(i + 1, j), Vector2(i + 1, j + 1), Vector2(i, j + 1)]:
-				q.append(main.tile_to_ground(k) * main.SCALE)
-			quads.append(q)
-	if not quads.is_empty():
-		add_child(dirt_mesh(quads))
 
 func _add_ground(tex: Texture2D, grass: Dictionary) -> void:
 	var img := _image(tex)

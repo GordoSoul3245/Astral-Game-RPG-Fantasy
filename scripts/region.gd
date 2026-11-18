@@ -65,13 +65,6 @@ func setup(data: Dictionary) -> void:
 	floor_node.zone = self
 	floor_node.z_index = -4000
 	add_child(floor_node)
-	var dirt: Array = []  # caminos de tierra: el bloque de tierra de PixelLab encima de las losas
-	for i in n:
-		for j in n:
-			if not water.has(Vector2i(i, j)) and (paths.has(Vector2i(i, j)) or _in_rects(i, j, "path_rects") or _gate_zone(i, j)):
-				dirt.append(PackedVector2Array([_corner(i, j), _corner(i + 1, j), _corner(i + 1, j + 1), _corner(i, j + 1)]))
-	if not dirt.is_empty():
-		add_child(dirt_mesh(dirt))
 	if data.has("layout"):  # pasto, agua y fogata vivos (los mismos del valle)
 		var cells: Array = []
 		for i in n:
