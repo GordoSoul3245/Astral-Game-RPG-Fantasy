@@ -6,6 +6,7 @@ extends "res://scripts/world_map.gd"
 var cfg := {}
 var water := {}        # Vector2i -> true: charcas, bloquean como el mar
 const ARBOL1_DIRS := ["south", "south-west", "west", "north-west", "north", "north-east", "east", "south-east"]
+var floor_mesh: ArrayMesh
 var paths := {}        # Vector2i -> true: caminos de tierra del "layout"
 var floor_node: Node2D
 
@@ -146,6 +147,11 @@ func paint(ci: CanvasItem) -> void:  # suelo de losas de colores: mullido, camin
 	_preview(ci)
 	var g: Array = cfg["ground"]
 	var t := Time.get_ticks_msec() * 0.001
+	# Rendimiento: las losas y sus motas van en una sola malla (una llamada de dibujo en vez de ~4 por casilla)
+	var verts := PackedVector2Array()
+	var cols := PackedColorArray()
+	var sc: float = main.SCALE
+	var base := Color(str(g[0]))
 	for i in tiles:
 		for j in tiles:
 			var quad := PackedVector2Array([_corner(i, j), _corner(i + 1, j), _corner(i + 1, j + 1), _corner(i, j + 1)])
@@ -156,8 +162,27 @@ func paint(ci: CanvasItem) -> void:  # suelo de losas de colores: mullido, camin
 				col = Color(cfg["path"]).lightened(float((i * 7 + j * 13) % 5) * 0.012)
 			else:
 				col = Color(g[(i + j) % 2]).lightened(float((i * 5 + j * 3) % 4) * 0.012)
-			ci.draw_colored_polygon(quad, col)
+			verts.append_array([quad[0], quad[1], quad[2], quad[0], quad[2], quad[3]])
+			for k in 6:
+				cols.append(col)
+			if not water.has(Vector2i(i, j)):  # textura: motas claras y oscuras repartidas por la casilla (hexágonos pequeños)
+				var c: Vector2 = _corner(i + 0.5, j + 0.5)
+				for k in 3:
+					var hh := (i * 131 + j * 17 + k * 53) % 100
+					var p := c + Vector2(float(hh % 21) - 10.0, float((hh * 7) % 9) - 4.0) * sc
+					var r := (1.4 + float(hh % 3) * 0.5) * sc
+					var mc := base.darkened(0.1) if hh % 2 == 0 else base.lightened(0.12)
+					for e in 6:
+						verts.append_array([p, p + Vector2.from_angle(e * TAU / 6.0) * r, p + Vector2.from_angle((e + 1) * TAU / 6.0) * r])
+						cols.append_array([mc, mc, mc])
 			_detail(ci, i, j, t)
+	var arr := []
+	arr.resize(Mesh.ARRAY_MAX)
+	arr[Mesh.ARRAY_VERTEX] = verts
+	arr[Mesh.ARRAY_COLOR] = cols
+	floor_mesh = ArrayMesh.new()  # se guarda: el lienzo solo referencia la malla, si se libera no se dibuja
+	floor_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+	ci.draw_mesh(floor_mesh, null)
 
 func _preview(ci: CanvasItem) -> void:  # adelanto de la región vecina al otro lado de cada claro
 	var g: Dictionary = cfg.get("gates", {})
@@ -198,12 +223,6 @@ func _detail(ci: CanvasItem, i: int, j: int, t: float) -> void:  # detalles de s
 	var c: Vector2 = _corner(i + 0.5, j + 0.5)
 	var sc: float = main.SCALE
 	var kind: String = str(cfg.get("detail", ""))
-	if not water.has(Vector2i(i, j)):  # textura: motas claras y oscuras repartidas por la casilla
-		var base := Color(str(cfg["ground"][0]))
-		for k in 3:
-			var hh := (i * 131 + j * 17 + k * 53) % 100
-			var off := Vector2(float(hh % 21) - 10.0, float((hh * 7) % 9) - 4.0) * sc
-			ci.draw_circle(c + off, (1.4 + float(hh % 3) * 0.5) * sc, base.darkened(0.1) if hh % 2 == 0 else base.lightened(0.12))
 	if kind == "snow":
 		if water.has(Vector2i(i, j)):
 			if h < 18:  # grietas del hielo
@@ -229,5 +248,5 @@ func _detail(ci: CanvasItem, i: int, j: int, t: float) -> void:  # detalles de s
 
 func _process(delta: float) -> void:
 	super._process(delta)
-	if floor_node and not water.is_empty():
-		floor_node.queue_redraw()  # las charcas brillan
+	if floor_node and not water.is_empty() and not cfg.has("layout"):  # las charcas brillan; en las zonas con layout el agua viva (WaterPatch) ya se mueve sola
+		floor_node.queue_redraw()

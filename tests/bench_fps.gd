@@ -20,6 +20,9 @@ func run() -> void:
 	main.testing = true
 	await _wait(2.0)
 	main.clock.hour = 12.0
+	if "bosque" in OS.get_cmdline_user_args():  # -- bosque: mide en el Bosque del Fogón (el inicio de partida)
+		main._enter_zone("bosque")
+		await _wait(1.0)
 	var start: Vector2 = main.pos
 	var vp := root.get_viewport_rid()
 	RenderingServer.viewport_set_measure_render_time(vp, true)
