@@ -28,8 +28,9 @@ func setup(data: Dictionary) -> void:
 					"~": water[Vector2i(i, j)] = true
 					"=": paths[Vector2i(i, j)] = true
 					"T":
-						# la mitad de los árboles: una red espaciada adentro (i-j múltiplo de 4) y todos los del borde de los claros, así las orillas quedan llenas
-						if (i + j) % 2 == 0 and ((i - j) % 4 == 0 or _clearing_next(lay, i, j)):
+						# bosque ralo: adentro una red al tresbolillo (i-j múltiplo de 4, uno sí y uno no) y todos los del borde de los claros, así las orillas quedan llenas
+						var inner := (i - j) % 4 == 0 and posmod((i + j) / 2 + floori((i - j) / 4.0), 2) == 0
+						if (i + j) % 2 == 0 and (inner or _clearing_next(lay, i, j)):
 							var h := float((i * 73 + j * 37) % 100) / 100.0
 							var o := _object("tree_arbol1", i + 0.3 + h * 0.4, j + 0.3 + fmod(h * 7.0, 1.0) * 0.4)
 							o["dir"] = ARBOL1_DIRS[(i * 5 + j * 3) % 8]  # cada árbol mira a un lado: el bosque no se ve clonado
