@@ -20,8 +20,16 @@ var bar_row: HBoxContainer       # la barra de objetos, abierta bajo el panel: c
 var panel: PanelContainer        # el panel general (crafteo, pesca, magia, estadísticas, opciones)
 var book: Control                # el inventario-libro
 var book_items: Control
+var book_bg: TextureRect
+var craft_sel := ""              # receta elegida en el libro de crafteo
+var craft_page := 0              # página de recetas (6 por página, como las filas del dibujo)
+# libro de crafteo (art/ui/crafteo_libro.png, diseño de PixelLab con el estilo del inventario)
+const CRAFT_ROWS_Y := [70, 92, 114, 136, 158, 180]
+const CRAFT_INGR_X := [155, 176, 197]
 const BOOK_SCALE := 4.0
-const BOOK_POS := Vector2(250, -60)   # el libro (contenido de y 25 a 225 del arte) queda sobre la barra de objetos
+const BOOK_POS := Vector2(448, -60)  # centrado: (1920 - 256 x 4) / 2
+const CRAFT_POS := Vector2(448, -10)  # el libro de crafteo tiene el título más arriba: baja para que no se corte
+var book_pos := BOOK_POS   # el libro (contenido de y 25 a 225 del arte) queda sobre la barra de objetos
 const INK := Color("#2b1d12")
 # casillas del diseño (px del arte de 256): equipo a izquierda y derecha del muñeco, mochila 4x4
 const EQUIP_CELLS := {"sword": Rect2(33, 76, 20, 18), "armor": Rect2(33, 105, 20, 18), "amulet": Rect2(33, 135, 20, 18), "grimoire": Rect2(97, 76, 20, 18), "ring": Rect2(97, 135, 20, 18)}
@@ -83,7 +91,7 @@ func _ready() -> void:
 	add_child(book)
 	move_child(book, bar_wrap.get_index())  # la barra de objetos queda por encima del libro
 	var bg := TextureRect.new()
-	bg.texture = load("res://art/ui/inventario_libro.png")
+	book_bg = bg
 	bg.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	bg.size = Vector2(256, 256) * BOOK_SCALE
 	bg.position = BOOK_POS
@@ -117,6 +125,10 @@ func _label(text: String, parent: Node, size := 18, color := Color.WHITE) -> Lab
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		var k: int = event.physical_keycode
+		if visible and tab == "craft" and k in [KEY_ENTER, KEY_KP_ENTER]:
+			_craft_now()
+			get_viewport().set_input_as_handled()
+			return
 		if k == KEY_I or k == KEY_TAB or (k == KEY_ESCAPE and visible):
 			if main.transitioning:
 				return
@@ -154,12 +166,18 @@ func refresh() -> void:
 	for c in book_items.get_children():
 		book_items.remove_child(c)
 		c.queue_free()
-	panel.get_parent().visible = tab != "inv"
-	book.visible = tab == "inv"
+	panel.get_parent().visible = tab not in ["inv", "craft"]
+	book.visible = tab in ["inv", "craft"]
 	if tab == "inv":
+		book_bg.texture = load("res://art/ui/inventario_libro.png")
+		book_pos = BOOK_POS
+		book_bg.position = book_pos
 		_build_book()
 	elif tab == "craft":
-		_build_craft()
+		book_bg.texture = load("res://art/ui/crafteo_libro.png")
+		book_pos = CRAFT_POS
+		book_bg.position = book_pos
+		_build_craft_book()
 	elif tab == "fish":
 		_build_fishing()
 	elif tab == "magic":
@@ -241,9 +259,8 @@ func _slot_button(id: String, size: float, equipped := false, count := 0, page_c
 		var bg := Color(0.07, 0.09, 0.15) if id == "" else col.darkened(0.82)
 		if st == "hover" and id != "":
 			bg = col.darkened(0.7)
-		if page_cell:  # casilla dibujada en el libro: vacía no tapa el arte; con objeto, marco fino de su rareza
-			bg = Color(0, 0, 0, 0) if id == "" else Color(0.1, 0.07, 0.04, 0.35 if st != "hover" else 0.55)
-			b.add_theme_stylebox_override(st, _box(bg, Color.WHITE if chosen else (col if id != "" else Color(0, 0, 0, 0)), 3 if chosen else 2, 2, 2))
+		if page_cell:  # casilla dibujada en el libro: sin fondo ni borde, solo el objeto centrado en el cuadrado del arte
+			b.add_theme_stylebox_override(st, StyleBoxEmpty.new())
 			continue
 		b.add_theme_stylebox_override(st, _box(bg, Color.WHITE if chosen else col, 3 if chosen else 2, 8, 4))
 	if id != "":
@@ -254,8 +271,26 @@ func _slot_button(id: String, size: float, equipped := false, count := 0, page_c
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		icon.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 6)
 		b.add_child(icon)
-		if is_eq:
-			b.tooltip_text = "%s\n%s" % [p.equipment[id]["name"], "\n".join(_mods_lines(p.equipment[id]["mods"]))]
+		if is_eq:  # el detalle aparece al pasar el ratón: estadísticas, comparación con lo puesto y qué hacer con él
+			var it: Dictionary = p.equipment[id]
+			var cur: String = p.equipped.get(it["slot"], "")
+			var on := cur == id
+			var lines: Array[String] = ["%s  (%s · %s)" % [it["name"], TIER_NAMES[int(it["tier"])], p.SLOT_NAMES[it["slot"]]]]
+			lines.append_array(_mods_lines(it["mods"], {} if (cur == "" or on) else p.equipment[cur]["mods"], not on and cur != ""))
+			lines.append(it["desc"])
+			if cur != "" and not on:
+				lines.append("Reemplaza: %s" % p.equipment[cur]["name"])
+			lines.append("Doble clic: %s" % ("quitar" if on else "equipar"))
+			if it.has("tool"):
+				var cost: Dictionary = main.crafting.up_cost(id)
+				if cost.is_empty():
+					lines.append("Mejora al máximo (+%d)" % main.crafting.up_level(id))
+				else:
+					var parts: Array[String] = []
+					for m: String in cost:
+						parts.append("%s %d/%d" % [main.crafting.item_name(m), main.crafting.count(m), int(cost[m])])
+					lines.append("Clic derecho junto al yunque de Bram: mejorar a +%d (%s)" % [main.crafting.up_level(id) + 1, ", ".join(parts)])
+			b.tooltip_text = "\n".join(lines)
 		else:
 			b.tooltip_text = "%s\n%s" % [main.name_of(id), main.crafting.item_desc(id)]
 			if count > 0:
@@ -270,11 +305,22 @@ func _slot_button(id: String, size: float, equipped := false, count := 0, page_c
 		b.pressed.connect(func() -> void:
 			selected = id
 			refresh())
-		b.gui_input.connect(func(ev: InputEvent) -> void:  # doble clic: equipar
-			if is_eq and ev is InputEventMouseButton and ev.pressed and ev.double_click and not equipped:
-				p.equip(id)
+		b.gui_input.connect(func(ev: InputEvent) -> void:  # doble clic: equipar o quitar; clic derecho en la forja: mejorar la herramienta
+			if not (is_eq and ev is InputEventMouseButton and ev.pressed):
+				return
+			var slot: String = p.equipment[id]["slot"]
+			if ev.button_index == MOUSE_BUTTON_LEFT and ev.double_click:
+				if p.equipped.get(slot, "") == id:
+					p.unequip(slot)
+				else:
+					p.equip(id)
 				main._apply_stats()
-				refresh())
+				refresh()
+			elif ev.button_index == MOUSE_BUTTON_RIGHT and p.equipment[id].has("tool") and main._near_station().get("station", "") == "forge":
+				var cost: Dictionary = main.crafting.up_cost(id)
+				if not cost.is_empty() and main.crafting.missing(cost).is_empty():
+					main.say(main.crafting.upgrade(id), 2.0)
+					refresh())
 		if equipped:
 			var tag := Label.new()
 			tag.text = "E"
@@ -297,7 +343,7 @@ func _card(parent: Node, min_size: Vector2) -> VBoxContainer:  # panel con fondo
 	return v
 
 func _book_rect(r: Rect2) -> Rect2:  # px del arte del libro -> pantalla
-	return Rect2(BOOK_POS + r.position * BOOK_SCALE, r.size * BOOK_SCALE)
+	return Rect2(book_pos + r.position * BOOK_SCALE, r.size * BOOK_SCALE)
 
 func _place(c: Control, r: Rect2) -> void:
 	var sr := _book_rect(r)
@@ -318,7 +364,7 @@ func _build_book() -> void:  # el inventario sobre el libro de PixelLab
 		tb.pressed.connect(_set_tab.bind(t[0]))
 		_place(tb, t[1])
 	var close := _label("[I] cerrar", book_items, 16, MUTED)
-	close.position = BOOK_POS + Vector2(222, 30) * BOOK_SCALE
+	close.position = book_pos + Vector2(222, 30) * BOOK_SCALE
 	# equipo
 	for slot: String in EQUIP_CELLS:
 		var b := _slot_button(p.equipped.get(slot, ""), 72, true, 0, true)
@@ -344,7 +390,7 @@ func _build_book() -> void:  # el inventario sobre el libro de PixelLab
 		var b := _slot_button(id, 72, equipped_ids.has(id), 0 if p.equipment.has(id) or id == "" else main.crafting.count(id), true)
 		_place(b, Rect2(PACK_X[i % 4], PACK_Y[i / 4], 18, 18))
 	var coins := _label("Monedas: %d" % p.coins, book_items, 22, INK)
-	coins.position = BOOK_POS + Vector2(143, 179) * BOOK_SCALE
+	coins.position = book_pos + Vector2(143, 179) * BOOK_SCALE
 	if pages > 1:
 		for dir in [-1, 1]:
 			var ab := Button.new()
@@ -355,119 +401,7 @@ func _build_book() -> void:  # el inventario sobre el libro de PixelLab
 				page += dir
 				refresh())
 			_place(ab, Rect2(203 + (dir + 1) * 6, 180, 10, 9))
-	# detalle del objeto elegido (no está en el diseño): tarjeta junto al libro, con comparación contra lo que llevas puesto
-	var holder := Control.new()
-	holder.position = BOOK_POS + Vector2(244, 52) * BOOK_SCALE
-	book_items.add_child(holder)
-	var right := _card(holder, Vector2(360, 560))
-	_label("Detalle", right, 22, GOLD)
-	if selected == "":
-		_label("Elige un objeto para ver sus estadísticas.", right, 16, MUTED).autowrap_mode = TextServer.AUTOWRAP_WORD
-		return
-	if not p.equipment.has(selected):
-		_build_stack_detail(right)
-		return
-	var it: Dictionary = p.equipment[selected]
-	var tier := int(it["tier"])
-	var tcol: Color = TIER_COLORS[tier]
-	var big := _slot_button(selected, 128, p.equipped.get(it["slot"], "") == selected)
-	big.disabled = false
-	big.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	right.add_child(big)
-	var nm := _label(it["name"], right, 22, tcol)
-	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var sub := _label("%s  ·  %s" % [TIER_NAMES[tier], p.SLOT_NAMES[it["slot"]]], right, 15, MUTED)
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	right.add_child(HSeparator.new())
-	var cur_id: String = p.equipped.get(it["slot"], "")
-	var is_eq := cur_id == selected
-	var vs: Dictionary = {} if (cur_id == "" or is_eq) else p.equipment[cur_id]["mods"]
-	for line in _mods_lines(it["mods"], vs, not is_eq and cur_id != ""):
-		var good := not line.contains("▼")
-		_label(line, right, 17, GOOD if good else BAD)
-	var d := _label(it["desc"], right, 15, MUTED)
-	d.autowrap_mode = TextServer.AUTOWRAP_WORD
-	if cur_id != "" and not is_eq:
-		_label("Reemplaza: %s" % p.equipment[cur_id]["name"], right, 14, MUTED)
-	var sp := Control.new()
-	sp.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right.add_child(sp)
-	var act := Button.new()
-	act.text = "Quitar" if is_eq else "Equipar"
-	act.focus_mode = Control.FOCUS_NONE
-	act.custom_minimum_size = Vector2(0, 44)
-	act.add_theme_font_size_override("font_size", 18)
-	for st in ["normal", "hover", "pressed", "focus"]:
-		act.add_theme_stylebox_override(st, _box(Color(0.35, 0.27, 0.1) if st != "hover" else Color(0.5, 0.38, 0.12), GOLD, 2, 8, 6))
-	act.pressed.connect(func() -> void:
-		if is_eq:
-			p.unequip(it["slot"])
-		else:
-			p.equip(selected)
-		main._apply_stats()
-		refresh())
-	right.add_child(act)
-	if it.has("tool"):  # mejora en la forja: +1 de daño al recurso por nivel (+0.5 casillas de lanzamiento en la caña)
-		var cost: Dictionary = main.crafting.up_cost(selected)
-		var up := Button.new()
-		up.focus_mode = Control.FOCUS_NONE
-		up.custom_minimum_size = Vector2(0, 40)
-		if cost.is_empty():
-			up.text = "Mejora al máximo (+%d)" % main.crafting.up_level(selected)
-			up.disabled = true
-		else:
-			var parts: Array[String] = []
-			for m: String in cost:
-				parts.append("%s %d/%d" % [main.crafting.item_name(m), main.crafting.count(m), int(cost[m])])
-			up.text = "Mejorar a +%d  (%s)" % [main.crafting.up_level(selected) + 1, ", ".join(parts)]
-			var at_forge: bool = main._near_station().get("station", "") == "forge"
-			up.disabled = not at_forge or not main.crafting.missing(cost).is_empty()
-			up.tooltip_text = "Se hace junto al yunque de Bram" if not at_forge else ""
-		up.pressed.connect(func() -> void:
-			main.say(main.crafting.upgrade(selected), 2.0)
-			refresh())
-		right.add_child(up)
 
-func _build_stack_detail(right: VBoxContainer) -> void:  # material o consumible: nombre, cantidad, descripción y, si se usa, botón de la barra
-	var cr = main.crafting
-	var p = main.prog
-	if main.WEAPONS.has(selected):
-		var wb := _slot_button(selected, 128, false)
-		wb.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		right.add_child(wb)
-		_label(main.name_of(selected), right, 22).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		_label("Arma base: arrástrala a una casilla de la barra de objetos para llevarla.", right, 15, MUTED).autowrap_mode = TextServer.AUTOWRAP_WORD
-		return
-	var big := _slot_button(selected, 128, false, cr.count(selected))
-	big.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	right.add_child(big)
-	_label(cr.item_name(selected), right, 22).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_label("Cantidad: %d" % cr.count(selected), right, 15, MUTED).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var st: Array = cr.stars_of(selected)
-	if int(st[0]) + int(st[1]) > 0:
-		_label("Calidad: ★ ×%d   ★★ ×%d" % [int(st[0]), int(st[1])], right, 15, GOLD).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	right.add_child(HSeparator.new())
-	var d := _label(cr.item_desc(selected), right, 15, MUTED)
-	d.autowrap_mode = TextServer.AUTOWRAP_WORD
-	if not cr.is_consumable(selected):
-		return
-	var sp := Control.new()
-	sp.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right.add_child(sp)
-	var act := Button.new()
-	act.text = "Quitar de la barra" if main.hotbar.has(selected) else "Poner en la barra"
-	act.focus_mode = Control.FOCUS_NONE
-	act.custom_minimum_size = Vector2(0, 44)
-	act.add_theme_font_size_override("font_size", 18)
-	act.pressed.connect(func() -> void:
-		if main.hotbar.has(selected):
-			main.hotbar_remove(selected)
-		elif not main.hotbar_add(selected):
-			main.say("La barra está llena: quita algo antes o arrástralo a una casilla.", 2.5)
-		refresh())
-	right.add_child(act)
-
-# --- magia: árbol de habilidades del grimorio
 func _build_magic() -> void:
 	var p = main.prog
 	var data: Dictionary = p.skill_data
@@ -604,98 +538,145 @@ func _build_fishing() -> void:
 		_label("No llevas peces. Pesca alguno.", right, 15, MUTED)
 
 # --- crafteo a mano (estilo Terraria): recetas a la izquierda, tus materiales y consumibles a la derecha
-var side_card: VBoxContainer
+func _book_text(text: String, r: Rect2, size: int, color: Color, center := false) -> Label:
+	var l := Label.new()
+	l.text = text
+	l.add_theme_font_size_override("font_size", size)
+	l.add_theme_color_override("font_color", color)
+	l.clip_text = true
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if center:
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_place(l, r)
+	return l
 
-func _build_craft() -> void:
-	var cols := HBoxContainer.new()
-	cols.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	cols.add_theme_constant_override("separation", 16)
-	body.add_child(cols)
-	var panel: HBoxContainer = preload("res://scripts/craft_panel.gd").new()
-	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	panel.setup(main, "hand")
-	cols.add_child(panel)
-	side_card = _card(cols, Vector2(330, 0))
-	panel.crafted.connect(func(_r: Dictionary) -> void: _build_side())
-	_build_side()
+func _book_icon(id: String, r: Rect2, dim := false) -> TextureRect:
+	var ic := TextureRect.new()
+	ic.texture = load(main.icon_of(id))
+	ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	ic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if dim:
+		ic.modulate = Color(1, 1, 1, 0.45)
+	_place(ic, r)
+	return ic
 
-func _build_side() -> void:  # materiales con su cantidad y consumibles que se usan con un clic
-	for c in side_card.get_children():
-		c.queue_free()
+func _build_craft_book() -> void:  # crafteo a mano sobre el libro: recetas a la izquierda, objeto, ingredientes y botón a la derecha
 	var cr = main.crafting
-	var p = main.prog
-	_label("Consumibles", side_card, 20, GOLD)
-	var owned: Array = cr.consumables_owned()
-	if owned.is_empty():
-		_label("Nada aún. Cocina en la fogata o prepara pociones en la mesa de alquimia.", side_card, 14, MUTED).autowrap_mode = TextServer.AUTOWRAP_WORD
-	for id: String in owned:
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 8)
-		side_card.add_child(row)
-		var ic := TextureRect.new()
-		ic.texture = load(cr.icon(id))
-		ic.custom_minimum_size = Vector2(36, 36)
-		ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		row.add_child(ic)
-		var tx := VBoxContainer.new()
-		tx.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(tx)
-		_label("%s  ×%d" % [cr.item_name(id), cr.count(id)], tx, 15)
-		_label(cr.item_desc(id), tx, 12, MUTED).autowrap_mode = TextServer.AUTOWRAP_WORD
-		var use := Button.new()
-		use.text = "Usar"
-		use.focus_mode = Control.FOCUS_NONE
-		use.pressed.connect(func() -> void:
-			var m: String = cr.use(main, id)
-			if m != "":
-				main.say(m, 2.0)
-			_build_side())
-		row.add_child(use)
-		var q := Button.new()
-		q.text = "★ Barra" if main.hotbar.has(id) else "A la barra"
-		q.tooltip_text = "Poner o quitar de la barra de objetos (máx. 6 espacios); se usa con el clic izquierdo"
-		q.focus_mode = Control.FOCUS_NONE
-		q.pressed.connect(func() -> void:
-			if main.hotbar.has(id):
-				main.hotbar_remove(id)
-			elif not main.hotbar_add(id):
-				main.say("La barra está llena: quita algo antes.", 2.0)
-			_build_side())
-		row.add_child(q)
-	side_card.add_child(HSeparator.new())
-	_label("Materiales", side_card, 20, GOLD)
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	side_card.add_child(scroll)
-	var grid := GridContainer.new()
-	grid.columns = 4
-	grid.add_theme_constant_override("h_separation", 6)
-	grid.add_theme_constant_override("v_separation", 6)
-	scroll.add_child(grid)
-	for id: String in p.materials:
-		if cr.is_consumable(id) or cr.is_blueprint(id) or p.materials[id] <= 0:
-			continue
-		var cell := Panel.new()
-		cell.custom_minimum_size = Vector2(66, 66)
-		cell.add_theme_stylebox_override("panel", _box(Color(0.07, 0.09, 0.15), Color(0.3, 0.34, 0.45), 1, 6, 2))
-		cell.tooltip_text = "%s\n%s" % [cr.item_name(id), cr.item_desc(id)]
-		var im := TextureRect.new()
-		im.texture = load(cr.icon(id))
-		im.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		im.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		im.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 4)
-		cell.add_child(im)
-		var n := Label.new()
-		n.text = str(p.materials[id])
-		n.add_theme_font_size_override("font_size", 14)
-		n.add_theme_color_override("font_outline_color", Color.BLACK)
-		n.add_theme_constant_override("outline_size", 5)
-		n.position = Vector2(40, 44)
-		cell.add_child(n)
-		grid.add_child(cell)
-	if p.materials.is_empty():
-		_label("(ninguno)", side_card, 14, MUTED)
+	for t in [["inv", Rect2(29, 31, 45, 12)], ["craft", Rect2(78, 31, 45, 12)]]:
+		var tb := Button.new()
+		tb.flat = true
+		tb.focus_mode = Control.FOCUS_NONE
+		tb.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		tb.tooltip_text = "Inventario" if t[0] == "inv" else "Crafteo"
+		tb.pressed.connect(_set_tab.bind(t[0]))
+		_place(tb, t[1])
+	var close := _label("[I] cerrar", book_items, 16, MUTED)
+	close.position = book_pos + Vector2(222, 30) * BOOK_SCALE
+	var ids: Array = cr.recipes_for("hand")
+	if ids.is_empty():
+		return
+	if not ids.has(craft_sel):
+		craft_sel = ids[0]
+	var per := CRAFT_ROWS_Y.size()
+	var pages := ceili(ids.size() / float(per))
+	craft_page = clampi(craft_page, 0, pages - 1)
+	# recetas: una por fila del dibujo; la elegida se marca con un velo dorado suave
+	for k in per:
+		var idx := craft_page * per + k
+		if idx >= ids.size():
+			break
+		var rid: String = ids[idx]
+		var out: String = cr.output_of(rid)
+		var ok: bool = cr.why_not(rid) == ""
+		var y: float = CRAFT_ROWS_Y[k]
+		if rid == craft_sel:
+			var mark := ColorRect.new()
+			mark.color = Color(0.85, 0.6, 0.2, 0.22)
+			mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			_place(mark, Rect2(35, y, 81, 16))
+		_book_icon(out, Rect2(37.5, y + 2, 13, 13), not ok)
+		var nm: String = cr.item_name(out) + (" ×%d" % cr.qty_of(rid) if cr.qty_of(rid) > 1 and not main.prog.equipment.has(out) else "")
+		for other: String in ids:  # dos recetas con el mismo resultado se distinguen por su ingrediente principal
+			if other != rid and cr.output_of(other) == out:
+				nm += " (%s)" % cr.item_name(cr.inputs_of(rid).keys()[0]).to_lower()
+				break
+		_book_text(nm, Rect2(54, y, 60, 17), 17, INK if ok else Color(0.45, 0.36, 0.27))
+		var rb := Button.new()
+		rb.flat = true
+		rb.focus_mode = Control.FOCUS_NONE
+		rb.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		rb.tooltip_text = cr.item_desc(out) if ok else cr.why_not(rid)
+		rb.pressed.connect(func() -> void:
+			craft_sel = rid
+			refresh())
+		_place(rb, Rect2(34, y, 82, 17))
+	if pages > 1:
+		for dir in [-1, 1]:
+			var ab := Button.new()
+			ab.text = "◀" if dir < 0 else "▶"
+			ab.focus_mode = Control.FOCUS_NONE
+			ab.disabled = craft_page + dir < 0 or craft_page + dir >= pages
+			ab.pressed.connect(func() -> void:
+				craft_page += dir
+				refresh())
+			_place(ab, Rect2(58 + (dir + 1) * 12, 199, 10, 8))
+		_book_text("%d / %d" % [craft_page + 1, pages], Rect2(69, 199, 12, 8), 14, INK, true)
+	# objeto: icono grande, nombre y descripción (las estadísticas, al pasar el ratón)
+	var out: String = cr.output_of(craft_sel)
+	_book_icon(out, Rect2(170, 75, 26, 26))
+	var hover := Control.new()
+	hover.tooltip_text = cr.item_desc(out)
+	if main.prog.equipment.has(out):
+		var lines: Array[String] = [main.prog.equipment[out]["name"]]
+		lines.append_array(_mods_lines(main.prog.equipment[out]["mods"]))
+		hover.tooltip_text = "\n".join(lines)
+	_place(hover, Rect2(166, 71, 34, 34))
+	_book_text(cr.item_name(out), Rect2(146, 109, 78, 9), 19, INK, true)
+	var d := _book_text(cr.item_desc(out), Rect2(146, 118, 78, 18), 13, Color(0.32, 0.24, 0.16), true)
+	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	d.clip_text = false
+	d.max_lines_visible = 2
+	# ingredientes: icono en cada casilla y lo que tienes / lo que pide
+	var ins: Dictionary = cr.inputs_of(craft_sel)
+	var miss: Dictionary = cr.missing(ins)
+	var k2 := 0
+	for id: String in ins:
+		if k2 >= CRAFT_INGR_X.size():
+			break
+		var x: float = CRAFT_INGR_X[k2]
+		_book_icon(id, Rect2(x + 1, 151, 14, 14))
+		_book_text("%d/%d" % [cr.count(id), int(ins[id])], Rect2(x - 2, 166, 20, 6), 13, Color(0.7, 0.15, 0.12) if miss.has(id) else Color(0.18, 0.4, 0.15), true)
+		var tip := Control.new()
+		tip.tooltip_text = "%s: tienes %d, necesitas %d" % [cr.item_name(id), cr.count(id), int(ins[id])]
+		_place(tip, Rect2(x, 150, 16, 16))
+		k2 += 1
+	# botón dibujado «Craftear» (también con Intro)
+	var reason: String = cr.why_not(craft_sel)
+	var go := Button.new()
+	go.flat = true
+	go.focus_mode = Control.FOCUS_NONE
+	go.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if reason == "" else Control.CURSOR_FORBIDDEN
+	go.tooltip_text = "Craftear  [Intro]" if reason == "" else reason
+	go.pressed.connect(_craft_now)
+	_place(go, Rect2(144, 172, 79, 22))
+	if reason != "":  # sin materiales: el botón se ve apagado
+		var veil := ColorRect.new()
+		veil.color = Color(0.85, 0.78, 0.62, 0.45)
+		veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_place(veil, Rect2(146, 175, 75, 16))
+
+func _craft_now() -> void:
+	if craft_sel == "" or main.crafting.why_not(craft_sel) != "":
+		return
+	var r: Dictionary = main.crafting.craft(craft_sel)
+	if r["ok"]:
+		main._apply_stats()
+		main.save_game()
+	main.say(("¡Obtuviste %s!" % r["msg"]) if r["ok"] else r["msg"], 2.0)
+	refresh()
 
 func _slider_row(grid: GridContainer, text: String, hint: String, value: float, on: Callable) -> void:  # etiqueta, control 0-100 % y pista
 	_label(text, grid, 19)

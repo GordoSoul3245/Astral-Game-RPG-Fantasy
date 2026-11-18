@@ -177,7 +177,7 @@ func run_checks() -> void:
 	main.menu.visible = true
 	main.menu.refresh()
 	await process_frame
-	assert(main.menu.tab_buttons.has("craft") and main.menu.side_card != null, "pestaña de crafteo")
+	assert(main.menu.tab_buttons.has("craft") and main.menu.book.visible and main.menu.craft_sel != "", "pestaña de crafteo (libro)")
 	print("PASS crafting_world: mesa y fogata junto al mercader, recolección por herramienta, mina, forja, cocina, alquimia con planos y guardado")
 	quit()
 

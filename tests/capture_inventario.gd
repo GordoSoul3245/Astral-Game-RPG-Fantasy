@@ -1,5 +1,5 @@
 extends SceneTree
-# Captura del inventario-libro (diseño de PixelLab) con objetos, y de Estadísticas abierta desde el botón del HUD.
+# Captura del inventario-libro y del crafteo-libro (diseños de PixelLab) con objetos, y de Estadísticas abierta desde el botón del HUD.
 # Ejecutar sin --headless. Deja PNG en production/qa/evidence/inventario/.
 const DIR := "res://production/qa/evidence/inventario/"
 var main: Node
@@ -32,4 +32,10 @@ func run() -> void:
 	paused = false
 	main.menu.open_tab("stats")
 	await _shot("estadisticas_desde_hud.png")
+	main.menu.visible = false
+	paused = false
+	main.prog.materials["piedra"] = 5
+	main.prog.materials["carbon"] = 1
+	main.menu.open_tab("craft")
+	await _shot("crafteo.png")
 	quit()
