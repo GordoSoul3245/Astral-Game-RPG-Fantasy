@@ -44,9 +44,17 @@ func setup(data: Dictionary) -> void:
 			for corner in [rc.position, rc.end, Vector2(rc.position.x, rc.end.y), Vector2(rc.end.x, rc.position.y)]:
 				sort_y = maxf(sort_y, main.tile_to_ground(corner).y)
 		s.z_index = int(sort_y)
-		_trim(s)
+		if sp.has("anim"):  # sprite animado cuadro a cuadro (árbol de PixelLab): sin recorte, cada cuadro mueve sus hojas
+			var frames: Array[Texture2D] = []
+			for k in 9:
+				frames.append(load(sp["anim"] % [o.get("dir", "south"), k]))
+			s.texture = frames[0]
+			s.set_meta("frames", frames)
+			anim_sprites.append([s, randf() * 9.0])
+		else:
+			_trim(s)
 		add_child(s)
-		if o["sprite"].begins_with("tree_"):
+		if o["sprite"].begins_with("tree_") and not sp.has("anim"):
 			_living_tree(s, sp, tile)
 		if not o["sprite"].begins_with("rock"):  # las rocas son bajas: no tapan
 			occluders.append(s)
@@ -212,7 +220,16 @@ func _bucket_occluders() -> void:
 					buckets[k] = []
 				buckets[k].append(s)
 
+var anim_sprites: Array = []  # [sprite, desfase en cuadros]
+var anim_t := 0.0
+
 func _process(delta: float) -> void:
+	anim_t += delta * 6.0  # 6 cuadros por segundo: brisa tranquila
+	for a: Array in anim_sprites:
+		var s: Sprite2D = a[0]
+		if is_instance_valid(s):
+			var fr: Array = s.get_meta("frames")
+			s.texture = fr[int(anim_t + a[1]) % fr.size()]
 	_tick_respawns(delta)
 	if not visible:
 		return

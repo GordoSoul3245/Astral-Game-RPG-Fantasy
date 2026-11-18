@@ -5,6 +5,7 @@ extends "res://scripts/world_map.gd"
 
 var cfg := {}
 var water := {}        # Vector2i -> true: charcas, bloquean como el mar
+const ARBOL1_DIRS := ["south", "south-west", "west", "north-west", "north", "north-east", "east", "south-east"]
 var paths := {}        # Vector2i -> true: caminos de tierra del "layout"
 var floor_node: Node2D
 
@@ -29,7 +30,9 @@ func setup(data: Dictionary) -> void:
 					"T":
 						if (i + j) % 2 == 0:  # un pino cada dos casillas, con algo de azar: masa de bosque cerrada
 							var h := float((i * 73 + j * 37) % 100) / 100.0
-							forest.append(_object("tree_a", i + 0.3 + h * 0.4, j + 0.3 + fmod(h * 7.0, 1.0) * 0.4))
+							var o := _object("tree_arbol1", i + 0.3 + h * 0.4, j + 0.3 + fmod(h * 7.0, 1.0) * 0.4)
+							o["dir"] = ARBOL1_DIRS[(i * 5 + j * 3) % 8]  # cada árbol mira a un lado: el bosque no se ve clonado
+							forest.append(o)
 	for r: Array in data["water_rects"]:
 		for i in range(int(r[0]), int(r[2])):
 			for j in range(int(r[1]), int(r[3])):
@@ -42,6 +45,7 @@ func setup(data: Dictionary) -> void:
 			row += "0" if ((edge and not _gate(i, j)) or water.has(Vector2i(i, j))) else "1"
 		rows.append(row)
 	var sprites: Dictionary = main._read_json("res://data/map.json")["sprites"]
+	sprites["tree_arbol1"] = {"path": "res://art/arbol1/south/frame_000.png", "frame": [124, 124], "feet": [62.0, 114.0], "anim": "res://art/arbol1/%s/frame_%03d.png"}  # árbol de PixelLab con reposo (9 cuadros, 8 direcciones)
 	var objs: Array = forest
 	for t: Array in data["trees"]:
 		objs.append(_object(str(t[2]), float(t[0]), float(t[1])))
