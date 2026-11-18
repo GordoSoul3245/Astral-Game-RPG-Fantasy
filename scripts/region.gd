@@ -5,6 +5,7 @@ extends "res://scripts/world_map.gd"
 
 var cfg := {}
 var water := {}        # Vector2i -> true: charcas, bloquean como el mar
+var paths := {}        # Vector2i -> true: caminos de tierra del "layout"
 var floor_node: Node2D
 
 class _Floor extends Node2D:
@@ -16,6 +17,19 @@ class _Floor extends Node2D:
 func setup(data: Dictionary) -> void:
 	cfg = data
 	var n := int(data["tiles"])
+	var forest: Array = []
+	if data.has("layout"):  # mapa dibujado como texto: T bosque, . pasto, = camino, ~ agua (fila = j, columna = i)
+		var lay: Array = data["layout"]
+		for j in lay.size():
+			var row: String = lay[j]
+			for i in row.length():
+				match row[i]:
+					"~": water[Vector2i(i, j)] = true
+					"=": paths[Vector2i(i, j)] = true
+					"T":
+						if (i + j) % 2 == 0:  # un pino cada dos casillas, con algo de azar: masa de bosque cerrada
+							var h := float((i * 73 + j * 37) % 100) / 100.0
+							forest.append(_object("tree_a", i + 0.3 + h * 0.4, j + 0.3 + fmod(h * 7.0, 1.0) * 0.4))
 	for r: Array in data["water_rects"]:
 		for i in range(int(r[0]), int(r[2])):
 			for j in range(int(r[1]), int(r[3])):
@@ -28,7 +42,7 @@ func setup(data: Dictionary) -> void:
 			row += "0" if ((edge and not _gate(i, j)) or water.has(Vector2i(i, j))) else "1"
 		rows.append(row)
 	var sprites: Dictionary = main._read_json("res://data/map.json")["sprites"]
-	var objs: Array = []
+	var objs: Array = forest
 	for t: Array in data["trees"]:
 		objs.append(_object(str(t[2]), float(t[0]), float(t[1])))
 	for l: Dictionary in data["tree_lines"]:
@@ -44,6 +58,31 @@ func setup(data: Dictionary) -> void:
 	floor_node.zone = self
 	floor_node.z_index = -4000
 	add_child(floor_node)
+	if data.has("layout"):  # pasto, agua y fogata vivos (los mismos del valle)
+		var cells: Array = []
+		for i in n:
+			for j in n:
+				var c := Vector2i(i, j)
+				if not water.has(c) and not paths.has(c):
+					cells.append({"q": PackedVector2Array([_corner(i, j), _corner(i + 1, j), _corner(i + 1, j + 1), _corner(i, j + 1)]), "id": c})
+		for k in range(0, cells.size(), 100):  # bloques de 100 casillas: pocas llamadas de dibujo
+			var g := GrassTile.new()
+			g.z_index = -3990
+			g.build(cells.slice(k, k + 100))
+			add_child(g)
+		add_child(GrassManager.new())
+		if not water.is_empty():
+			var w := WaterPatch.new()
+			w.z_index = -3990
+			w.build(water, _corner)
+			add_child(w)
+		if data.has("camp"):
+			var camp := Node2D.new()
+			camp.set_script(load("res://scripts/payador.gd"))
+			camp.main = main
+			camp.fire_tile = Vector2(data["camp"]["fire"][0], data["camp"]["fire"][1])
+			camp.seat_tile = Vector2(data["camp"]["old_man"][0], data["camp"]["old_man"][1])
+			add_child(camp)
 	var specs: Dictionary = main.crafting.cfg["world_sprites"]
 	var glow := {"crystal": Color(0.65, 0.45, 1.0), "mushroom": Color(0.35, 1.0, 0.8)}
 	for nd: Dictionary in data["nodes"]:
@@ -100,7 +139,7 @@ func paint(ci: CanvasItem) -> void:  # suelo de losas de colores: mullido, camin
 			var col: Color
 			if water.has(Vector2i(i, j)):
 				col = Color(cfg["water"]).lerp(Color(cfg["water2"]), 0.5 + 0.5 * sin(t * 1.5 + i * 0.7 + j * 0.9))
-			elif _in_rects(i, j, "path_rects") or _gate_zone(i, j):
+			elif paths.has(Vector2i(i, j)) or _in_rects(i, j, "path_rects") or _gate_zone(i, j):
 				col = Color(cfg["path"]).lightened(float((i * 7 + j * 13) % 5) * 0.012)
 			else:
 				col = Color(g[(i + j) % 2]).lightened(float((i * 5 + j * 3) % 4) * 0.012)

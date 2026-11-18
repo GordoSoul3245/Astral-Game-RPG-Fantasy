@@ -29,11 +29,13 @@ func run_checks() -> void:
 	main.save_path = "user://test_zones_save.json"
 	main.testing = true
 	await _wait(0.5)
-	assert(main.zones_cfg.size() == 3 and main.zones_cfg.has("nieve"), "hay tres zonas")
-	assert(main.links.size() == 3 and main.world.get_children().any(func(c: Node) -> bool: return c.get_script() != null and c.get_script().resource_path.ends_with("bridges.gd")), "el valle tiene puentes hacia las zonas")
+	assert(main.zones_cfg.size() == 4 and main.zones_cfg.has("nieve") and main.zones_cfg.has("bosque"), "hay cuatro zonas (con el Bosque del Fogón)")
+	assert(main.links.size() == 4 and main.world.get_children().any(func(c: Node) -> bool: return c.get_script() != null and c.get_script().resource_path.ends_with("bridges.gd")), "el valle tiene puentes hacia las zonas")
 
 	for id: String in main.zones_cfg:
 		var cfg: Dictionary = main.zones_cfg[id]
+		if cfg.get("peaceful", false):  # el bosque del inicio no tiene monstruos, jefe ni cofre: se comprueba aparte
+			continue
 		main.prog.level = 6
 		main.pos = main.tile_to_ground(Vector2(10, 30))
 		main._enter_zone(id)
@@ -128,6 +130,23 @@ func run_checks() -> void:
 			t += int(main.creatures[e["id"]]["hp"]) + int(e["off"]) * 100
 		weights[id] = t
 	assert(weights["desierto"] > weights["pantano"] and weights["nieve"] > weights["desierto"], "cada zona es más dura: marisma, desierto, cumbres")
+
+	# Bosque del Fogón: se llega a la fogata y al lago desde el inicio, el viejo está y se le puede hablar
+	main._enter_zone("bosque")
+	await _wait(0.4)
+	var b: Node2D = main.dungeon_node
+	var bs: Vector2 = b.spawn_tile()
+	var bseen := _reachable(b.walk, Vector2i(int(bs.x), int(bs.y)))
+	var camp: Dictionary = main.zones_cfg["bosque"]["camp"]
+	assert(bseen.has(Vector2i(int(camp["fire"][0]) + 1, int(camp["fire"][1]) + 1)), "bosque: la fogata se alcanza desde el inicio")
+	assert(bseen.has(Vector2i(10, 9)), "bosque: el camino de la izquierda llega a la orilla del lago")
+	assert(b.water.size() > 30 and b.paths.size() > 100, "bosque: hay lago y camino")
+	assert(main.doors.any(func(d: Node) -> bool: return d.label == "Hablar con el viejo"), "bosque: el viejo de la fogata se puede hablar")
+	main.pos = main.tile_to_ground(Vector2(17.5, 0.5))
+	main.travel_cd = 0.0
+	main._check_edges(0.0)
+	await _wait(1.0)
+	assert(main.region() == "valle", "bosque: el camino del norte lleva al valle (el pueblo)")
 
 	# guardado de zonas abiertas
 	main.save_game()

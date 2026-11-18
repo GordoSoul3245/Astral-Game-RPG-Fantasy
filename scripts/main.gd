@@ -245,9 +245,11 @@ func _ready() -> void:
 	_build_menu()
 	quests = load("res://scripts/quests.gd").new(_read_json("res://data/quests.json"))
 	testing = get_tree().get_script() != null  # los tests corren con un SceneTree propio: no tocan la partida guardada
+	var fresh := false  # partida nueva: se empieza en el Bosque del Fogón, al sur del camino
 	if not testing:
-		if not get_tree().get_meta("new_game", false):
-			load_game()
+		fresh = get_tree().get_meta("new_game", false)
+		if not fresh:
+			fresh = not load_game()
 		if get_tree().has_meta("new_game"):
 			get_tree().remove_meta("new_game")
 	_apply_stats()
@@ -295,6 +297,8 @@ func _ready() -> void:
 		start_menu.main = self
 		add_child(start_menu)
 		save_game()
+		if fresh and zones_cfg.has("bosque"):
+			call_deferred("_enter_zone", "bosque")
 
 # --- pueblo: misiones, mercader y guardado
 var quests: RefCounted

@@ -43,12 +43,27 @@
 				12,
 				15
 			]
+		},
+		{
+			"a": "valle",
+			"side_a": "s",
+			"rows_a": [
+				22,
+				25
+			],
+			"b": "bosque",
+			"side_b": "n",
+			"rows_b": [
+				15,
+				20
+			]
 		}
 	],
 	"names": {
 		"valle": "Valle de las Ruinas",
 		"pantano": "Marisma Sombría",
 		"desierto": "Desierto de Ceniza",
-		"nieve": "Cumbres Heladas"
+		"nieve": "Cumbres Heladas",
+		"bosque": "Bosque del Fogón"
 	}
 }
