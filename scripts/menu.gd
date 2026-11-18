@@ -24,11 +24,12 @@ var book_bg: TextureRect
 var craft_sel := ""              # receta elegida en el libro de crafteo
 var craft_page := 0              # página de recetas (6 por página, como las filas del dibujo)
 # libro de crafteo (art/ui/crafteo_libro.png, diseño de PixelLab con el estilo del inventario)
-const CRAFT_ROWS_Y := [70, 92, 114, 136, 158, 180]
+const CRAFT_ROWS_Y := [66, 88, 110, 132, 154, 176]
 const CRAFT_INGR_X := [155, 176, 197]
+const CRAFT_INGR_Y := 147
 const BOOK_SCALE := 4.0
 const BOOK_POS := Vector2(448, -60)  # centrado: (1920 - 256 x 4) / 2
-const CRAFT_POS := Vector2(448, -10)  # el libro de crafteo tiene el título más arriba: baja para que no se corte
+const CRAFT_POS := BOOK_POS  # el libro de crafteo es el mismo del inventario (solo cambia el interior de las páginas)
 var book_pos := BOOK_POS   # el libro (contenido de y 25 a 225 del arte) queda sobre la barra de objetos
 const INK := Color("#2b1d12")
 # casillas del diseño (px del arte de 256): equipo a izquierda y derecha del muñeco, mochila 4x4
@@ -565,7 +566,7 @@ func _book_icon(id: String, r: Rect2, dim := false) -> TextureRect:
 
 func _build_craft_book() -> void:  # crafteo a mano sobre el libro: recetas a la izquierda, objeto, ingredientes y botón a la derecha
 	var cr = main.crafting
-	for t in [["inv", Rect2(29, 31, 45, 12)], ["craft", Rect2(78, 31, 45, 12)]]:
+	for t in [["inv", Rect2(30, 36, 52, 14)], ["craft", Rect2(175, 36, 52, 14)]]:
 		var tb := Button.new()
 		tb.flat = true
 		tb.focus_mode = Control.FOCUS_NONE
@@ -596,14 +597,14 @@ func _build_craft_book() -> void:  # crafteo a mano sobre el libro: recetas a la
 			var mark := ColorRect.new()
 			mark.color = Color(0.85, 0.6, 0.2, 0.22)
 			mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			_place(mark, Rect2(35, y, 81, 16))
-		_book_icon(out, Rect2(37.5, y + 2, 13, 13), not ok)
+			_place(mark, Rect2(32, y, 81, 16))
+		_book_icon(out, Rect2(34.5, y + 2, 13, 13), not ok)
 		var nm: String = cr.item_name(out) + (" ×%d" % cr.qty_of(rid) if cr.qty_of(rid) > 1 and not main.prog.equipment.has(out) else "")
 		for other: String in ids:  # dos recetas con el mismo resultado se distinguen por su ingrediente principal
 			if other != rid and cr.output_of(other) == out:
 				nm += " (%s)" % cr.item_name(cr.inputs_of(rid).keys()[0]).to_lower()
 				break
-		_book_text(nm, Rect2(54, y, 60, 17), 17, INK if ok else Color(0.45, 0.36, 0.27))
+		_book_text(nm, Rect2(51, y, 60, 17), 17, INK if ok else Color(0.45, 0.36, 0.27))
 		var rb := Button.new()
 		rb.flat = true
 		rb.focus_mode = Control.FOCUS_NONE
@@ -612,7 +613,7 @@ func _build_craft_book() -> void:  # crafteo a mano sobre el libro: recetas a la
 		rb.pressed.connect(func() -> void:
 			craft_sel = rid
 			refresh())
-		_place(rb, Rect2(34, y, 82, 17))
+		_place(rb, Rect2(31, y, 82, 17))
 	if pages > 1:
 		for dir in [-1, 1]:
 			var ab := Button.new()
@@ -622,20 +623,20 @@ func _build_craft_book() -> void:  # crafteo a mano sobre el libro: recetas a la
 			ab.pressed.connect(func() -> void:
 				craft_page += dir
 				refresh())
-			_place(ab, Rect2(58 + (dir + 1) * 12, 199, 10, 8))
-		_book_text("%d / %d" % [craft_page + 1, pages], Rect2(69, 199, 12, 8), 14, INK, true)
+			ab.tooltip_text = "Página %d / %d" % [craft_page + 1, pages]
+			_place(ab, Rect2(103 + (dir + 1) * 5, 52, 8, 8))  # junto al título «Recetas»
 	# objeto: icono grande, nombre y descripción (las estadísticas, al pasar el ratón)
 	var out: String = cr.output_of(craft_sel)
-	_book_icon(out, Rect2(170, 75, 26, 26))
+	_book_icon(out, Rect2(170, 72, 26, 26))
 	var hover := Control.new()
 	hover.tooltip_text = cr.item_desc(out)
 	if main.prog.equipment.has(out):
 		var lines: Array[String] = [main.prog.equipment[out]["name"]]
 		lines.append_array(_mods_lines(main.prog.equipment[out]["mods"]))
 		hover.tooltip_text = "\n".join(lines)
-	_place(hover, Rect2(166, 71, 34, 34))
-	_book_text(cr.item_name(out), Rect2(146, 109, 78, 9), 19, INK, true)
-	var d := _book_text(cr.item_desc(out), Rect2(146, 118, 78, 18), 13, Color(0.32, 0.24, 0.16), true)
+	_place(hover, Rect2(166, 68, 34, 34))
+	_book_text(cr.item_name(out), Rect2(146, 106, 78, 9), 19, INK, true)
+	var d := _book_text(cr.item_desc(out), Rect2(146, 115, 78, 18), 13, Color(0.32, 0.24, 0.16), true)
 	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	d.clip_text = false
 	d.max_lines_visible = 2
@@ -647,11 +648,11 @@ func _build_craft_book() -> void:  # crafteo a mano sobre el libro: recetas a la
 		if k2 >= CRAFT_INGR_X.size():
 			break
 		var x: float = CRAFT_INGR_X[k2]
-		_book_icon(id, Rect2(x + 1, 151, 14, 14))
-		_book_text("%d/%d" % [cr.count(id), int(ins[id])], Rect2(x - 2, 166, 20, 6), 13, Color(0.7, 0.15, 0.12) if miss.has(id) else Color(0.18, 0.4, 0.15), true)
+		_book_icon(id, Rect2(x + 1, CRAFT_INGR_Y + 1, 14, 14))
+		_book_text("%d/%d" % [cr.count(id), int(ins[id])], Rect2(x - 2, CRAFT_INGR_Y + 16, 20, 6), 13, Color(0.7, 0.15, 0.12) if miss.has(id) else Color(0.18, 0.4, 0.15), true)
 		var tip := Control.new()
 		tip.tooltip_text = "%s: tienes %d, necesitas %d" % [cr.item_name(id), cr.count(id), int(ins[id])]
-		_place(tip, Rect2(x, 150, 16, 16))
+		_place(tip, Rect2(x, CRAFT_INGR_Y, 16, 16))
 		k2 += 1
 	# botón dibujado «Craftear» (también con Intro)
 	var reason: String = cr.why_not(craft_sel)
@@ -661,12 +662,12 @@ func _build_craft_book() -> void:  # crafteo a mano sobre el libro: recetas a la
 	go.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if reason == "" else Control.CURSOR_FORBIDDEN
 	go.tooltip_text = "Craftear  [Intro]" if reason == "" else reason
 	go.pressed.connect(_craft_now)
-	_place(go, Rect2(144, 172, 79, 22))
+	_place(go, Rect2(144, 169, 79, 22))
 	if reason != "":  # sin materiales: el botón se ve apagado
 		var veil := ColorRect.new()
 		veil.color = Color(0.85, 0.78, 0.62, 0.45)
 		veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_place(veil, Rect2(146, 175, 75, 16))
+		_place(veil, Rect2(146, 172, 75, 16))
 
 func _craft_now() -> void:
 	if craft_sel == "" or main.crafting.why_not(craft_sel) != "":
