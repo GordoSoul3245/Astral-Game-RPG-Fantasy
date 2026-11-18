@@ -297,8 +297,8 @@ func _ready() -> void:
 		start_menu.main = self
 		add_child(start_menu)
 		save_game()
-		if fresh and zones_cfg.has("bosque"):
-			call_deferred("_enter_zone", "bosque")
+		if fresh:  # diferido: zones_cfg se llena en _build_links, también diferido y encolado antes
+			(func() -> void: if zones_cfg.has("bosque"): _enter_zone("bosque")).call_deferred()
 
 # --- pueblo: misiones, mercader y guardado
 var quests: RefCounted
