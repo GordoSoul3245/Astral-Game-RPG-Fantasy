@@ -43,6 +43,6 @@ func run() -> void:
 		gpu += RenderingServer.viewport_get_measured_render_time_gpu(vp)
 		rcpu += RenderingServer.viewport_get_measured_render_time_cpu(vp) + RenderingServer.get_frame_setup_time_cpu()
 	var secs := (Time.get_ticks_usec() - t0) / 1_000_000.0
-	print("BENCH fps=%.1f ms=%.2f gpu_ms=%.2f render_cpu_ms=%.2f draw_calls=%d nodes=%d" % [frames / secs, secs * 1000.0 / frames, gpu / frames, rcpu / frames,
+	print("BENCH fps=%.1f ms=%.2f proc_ms=%.2f gpu_ms=%.2f render_cpu_ms=%.2f draw_calls=%d nodes=%d" % [frames / secs, secs * 1000.0 / frames, proc * 1000.0 / frames, gpu / frames, rcpu / frames,
 		Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME), Performance.get_monitor(Performance.OBJECT_NODE_COUNT)])
 	quit()

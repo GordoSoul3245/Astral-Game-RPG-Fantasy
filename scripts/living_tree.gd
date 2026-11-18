@@ -93,7 +93,11 @@ func _ready() -> void:
 	inst.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	inst.material = leaf_material()
 	add_child(inst)
-	# hojas que caen: pocas, girando con el centro de giro desplazado (órbita) para que parezca turbulencia
+	# hojas que caen: pocas, girando con el centro de giro desplazado (órbita) para que parezca turbulencia.
+	# Rendimiento: solo uno de cada tres árboles suelta hojas (en un bosque se ven igual y cuesta un tercio)
+	if seed_value % 3 != 0:
+		queue_redraw()
+		return
 	var fall := CPUParticles2D.new()
 	var at := AtlasTexture.new()
 	at.atlas = LEAF
@@ -126,24 +130,30 @@ func _ready() -> void:
 	add_child(fall)
 	queue_redraw()
 
-func _draw() -> void:
+var _v: PackedVector2Array
+var _c: PackedColorArray
+var _mesh: ArrayMesh
+
+func _draw() -> void:  # rendimiento: todos los polígonos van a una malla (una llamada de dibujo por árbol, no ~12)
+	_v = PackedVector2Array()
+	_c = PackedColorArray()
 	var h: float = -_layers[0][0].y
 	var w0 := 15.0
 	var w1 := 9.0
 	# raíces (nebari): se abren a los lados y se hunden en el suelo
 	for side in [-1.0, 1.0]:
 		var c := TRUNK[0] if side > 0 else TRUNK[1]
-		draw_colored_polygon(PackedVector2Array([_snap(Vector2(side * w0 * 0.4, -18)), _snap(Vector2(side * (w0 + 18), 3)), _snap(Vector2(side * (w0 + 6), 6)), _snap(Vector2(side * w0 * 0.2, 2))]), c)
-	draw_colored_polygon(PackedVector2Array([_snap(Vector2(-6, -10)), _snap(Vector2(4, 9)), _snap(Vector2(-2, 9))]), TRUNK[0])
+		_poly(PackedVector2Array([_snap(Vector2(side * w0 * 0.4, -18)), _snap(Vector2(side * (w0 + 18), 3)), _snap(Vector2(side * (w0 + 6), 6)), _snap(Vector2(side * w0 * 0.2, 2))]), c)
+	_poly(PackedVector2Array([_snap(Vector2(-6, -10)), _snap(Vector2(4, 9)), _snap(Vector2(-2, 9))]), TRUNK[0])
 	# tronco que se afina: lado iluminado (izquierda) más claro
-	draw_colored_polygon(PackedVector2Array([_snap(Vector2(-w0, 0)), _snap(Vector2(w0, 0)), _snap(Vector2(w1, -h)), _snap(Vector2(-w1, -h))]), TRUNK[1])
-	draw_colored_polygon(PackedVector2Array([_snap(Vector2(w0 * 0.25, 0)), _snap(Vector2(w0, 0)), _snap(Vector2(w1, -h)), _snap(Vector2(w1 * 0.25, -h))]), TRUNK[0])
-	draw_colored_polygon(PackedVector2Array([_snap(Vector2(-w0, 0)), _snap(Vector2(-w0 * 0.55, 0)), _snap(Vector2(-w1 * 0.55, -h)), _snap(Vector2(-w1, -h))]), TRUNK[2])
+	_poly(PackedVector2Array([_snap(Vector2(-w0, 0)), _snap(Vector2(w0, 0)), _snap(Vector2(w1, -h)), _snap(Vector2(-w1, -h))]), TRUNK[1])
+	_poly(PackedVector2Array([_snap(Vector2(w0 * 0.25, 0)), _snap(Vector2(w0, 0)), _snap(Vector2(w1, -h)), _snap(Vector2(w1 * 0.25, -h))]), TRUNK[0])
+	_poly(PackedVector2Array([_snap(Vector2(-w0, 0)), _snap(Vector2(-w0 * 0.55, 0)), _snap(Vector2(-w1 * 0.55, -h)), _snap(Vector2(-w1, -h))]), TRUNK[2])
 	# dos ramas gruesas que entran en la copa (el flujo del árbol)
 	for side in [-1.0, 1.0]:
 		var b0 := Vector2(0, -h * 0.82)
 		var b1 := Vector2(side * crown * 0.55, -h - crown * 0.25)
-		draw_colored_polygon(PackedVector2Array([_snap(b0 + Vector2(-5, 0)), _snap(b0 + Vector2(5, 0)), _snap(b1 + Vector2(3, 0)), _snap(b1 + Vector2(-3, 0))]), TRUNK[1] if side < 0 else TRUNK[0])
+		_poly(PackedVector2Array([_snap(b0 + Vector2(-5, 0)), _snap(b0 + Vector2(5, 0)), _snap(b1 + Vector2(3, 0)), _snap(b1 + Vector2(-3, 0))]), TRUNK[1] if side < 0 else TRUNK[0])
 	# fondo de la copa: la forma oscura sobre la que se reparten las hojas (sin huecos)
 	for li in _layers.size():
 		var c: Vector2 = _layers[li][0]
@@ -151,4 +161,16 @@ func _draw() -> void:
 		for k in 20:
 			var a := TAU * k / 20.0
 			pts.append(_snap(c + Vector2(cos(a) * _layers[li][1] * 0.9, sin(a) * _layers[li][2] * 0.9)))
-		draw_colored_polygon(pts, CORE[mini(li, 1)])
+		_poly(pts, CORE[mini(li, 1)])
+	var arr := []
+	arr.resize(Mesh.ARRAY_MAX)
+	arr[Mesh.ARRAY_VERTEX] = _v
+	arr[Mesh.ARRAY_COLOR] = _c
+	_mesh = ArrayMesh.new()  # se guarda: el lienzo solo referencia la malla
+	_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+	draw_mesh(_mesh, null)
+
+func _poly(pts: PackedVector2Array, col: Color) -> void:
+	for k in Geometry2D.triangulate_polygon(pts):
+		_v.append(pts[k])
+		_c.append(col)

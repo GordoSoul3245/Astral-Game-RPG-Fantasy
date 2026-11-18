@@ -384,6 +384,8 @@ func _living_tree(s: Sprite2D, sp: Dictionary, tile: Vector2) -> void:
 	lt.scale = Vector2.ONE / main.SCALE  # el sprite padre va a escala 3; el árbol se dibuja en px de pantalla
 	lt.position = Vector2(sp["feet"][0], sp["feet"][1])
 	s.self_modulate.a = 0.0
+	s.region_enabled = true
+	s.region_rect = Rect2()  # rendimiento: el sprite invisible no manda nada a dibujar (tapar y talar usan su textura, no su región)
 	s.add_child(lt)
 	s.set_meta("living", lt)
 
