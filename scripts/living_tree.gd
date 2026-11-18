@@ -1,3 +1,4 @@
+@tool
 class_name LivingTree
 extends Node2D
 # Árbol vivo (docs/ARTE_VIVO.md, ideas 2-8 y 15): anatomía aunque sea estilizado y copa de hojas que respira con el viento.

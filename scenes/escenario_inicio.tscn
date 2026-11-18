@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://0ss0bbn6dnhf"]
+
+[ext_resource type="Script" path="res://scripts/grass_tile.gd" id="1_pasto"]
+[ext_resource type="Script" path="res://scripts/living_tree.gd" id="2_arbol"]
+
+[sub_resource type="TileSet" id="TileSet_suelo"]
+tile_shape = 1
+tile_layout = 5
+tile_size = Vector2i(128, 64)
+
+[node name="EscenarioInicio" type="Node2D" unique_id=1315995282]
+
+[node name="Suelo" type="TileMapLayer" parent="." unique_id=1992515346]
+tile_set = SubResource("TileSet_suelo")
+
+[node name="Pasto" type="Node2D" parent="."]
+z_index = -10
+
+[node name="Casilla" type="Node2D" parent="Pasto"]
+script = ExtResource("1_pasto")
+
+[node name="Objetos" type="Node2D" parent="." unique_id=2081870571]
+y_sort_enabled = true
+
+[node name="Arbol" type="Node2D" parent="Objetos"]
+position = Vector2(256, 64)
+script = ExtResource("2_arbol")
+
+[node name="Inicio" type="Marker2D" parent="." unique_id=935749069]

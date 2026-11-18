@@ -1,3 +1,4 @@
+@tool
 class_name GrassTile
 extends Node2D
 # Una casilla de pasto: suelo (rombo) + briznas en un solo MultiMesh. Réplica en 2D del método de Dylearn
