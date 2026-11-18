@@ -1084,7 +1084,7 @@
 	},
 	"bosque": {
 		"name": "Bosque del Fogón",
-		"tiles": 30,
+		"tiles": 45,
 		"clear": "#0b140c",
 		"peaceful": true,
 		"ground": [
@@ -1095,52 +1095,67 @@
 		"water": "#5aa2c8",
 		"water2": "#6fb3d6",
 		"start": [
-			18.5,
-			27.0
+			3.5,
+			39.5
 		],
 		"level_note": "Un camino de tierra entre los pinos. Al fondo, una fogata y alguien que toca la guitarra.",
 		"detail": "",
 		"theme_pitch": 0.9,
 		"layout": [
-			"TTTTTTTTTTTT.==========.TTTTTT",
-			"TTTTT....TTT.==========..TTTTT",
-			"TTT...~~...T.===========.TTTTT",
-			"TT..~~~~~~.T.===========.TTTTT",
-			"TT.~~~~~~~...===========.TTTTT",
-			"T..~~~~~~~~..===========.TTTTT",
-			"T.~~~~~~~~~..===========.TTTTT",
-			"T.~~~~~~~~~===========...TTTTT",
-			"T.~~~~~~~~~===========.TTTTTTT",
-			"T..~~~~~~~============.TTTTTTT",
-			"TT..~~~~~~============.TTTTTTT",
-			"TTT..~~~...===========.TTTTTTT",
-			"TTTT.....T.......=====.TTTTTTT",
-			"TTTTTTTTTTTTTTTT.=====.TTTTTTT",
-			"TTTTTTTTTTTTTTTT.=====.TTTTTTT",
-			"TTTTTTTTTTTTTTTT.=====.TTTTTTT",
-			"TTTTTTTTTTTTTTTT.=====.TTTTTTT",
-			"TTTTTTTTTTTTTTTT.=====.TTTTTTT",
-			"TTTTTTTTTTTTTTTT.====..TTTTTTT",
-			"TTTTTTTTTTTTTTTT.====.TTTTTTTT",
-			"TTTTTTTTTTTTTTTT.====.TTTTTTTT",
-			"TTTTTTTTTTTTTTTT.====.TTTTTTTT",
-			"TTTTTTTTTTTTTTTT.====.TTTTTTTT",
-			"TTTTTTTTTTTTTTTT.====.TTTTTTTT",
-			"TTTTTTTTTTTTTTTT.====.TTTTTTTT",
-			"TTTTTTTTTTTT.....====...TTTTTT",
-			"TTTTTTTTTTTT.==========.TTTTTT",
-			"TTTTTTTTTTTT.==========.TTTTTT",
-			"TTTTTTTTTTTT.==========.TTTTTT",
-			"TTTTTTTTTTTT.==========.TTTTTT"
+			"TTTTTTTTTTTTTTTTTTTTTTTT.=====.TTTTTTTTTTTTTT",
+			"TTTTTTTTTTTTTTTTTTTTTTTT.====..TTTTTTTTTTTTTT",
+			"TTTTTTT.....TTTTTTTTTTT..====..TTTTTTTTTTTTTT",
+			"TTTTT....~....TTTTTTTTT..====..TTTTTTTTTTTTTT",
+			"TTT...~~~~~~~...TTTTTTT..====..TTTTTTTTTTTTTT",
+			"TTT..~~~~~~~~~..TTTTTTT..====.TTTTTTTTTTTTTTT",
+			"TT..~~~~~~~~~~~..TT.TTT.=====.TTTTTTTTTTTTTTT",
+			"TT.~~~~~~~~~~~~~........=====.TTTTTTTTTTTTTTT",
+			"T..~~~~~~~~~~~~~.......=====..TTTTTTTTTTTTTTT",
+			"T..~~~~~~~~~~~~~.......=====..TTTTTTTTTTTTTTT",
+			"T.~~~~~~~~~~~~~~~.....=====..TTTTTTTTTTTTTTTT",
+			"T..~~~~~~~~~~~~~......=====.TTTTTTTTTTTTTTTTT",
+			"T..~~~~~~~~~~~~~.....=====..TTTTTTTTTTTTTTTTT",
+			"TT.~~~~~~~~~~~~~.....=====.TTTTTTTTTTTTTTTTTT",
+			"TT..~~~~~~~~~~~.....=====..TTTTTTTTTTTTTTTTTT",
+			"TTT..~~~~~~~~~.....=====..TTTTTTTTTTTTTTTTTTT",
+			"TTT...~~~~~~~......=====..TTTTTTTTTTTTTTTTTTT",
+			"TTTTT....~....TT..=====..TTTTTTTTTTTTTTTTTTTT",
+			"TTTTTTT.....TTTT..=====.TTTTTTTTTTTTTTTTTTTTT",
+			"TTTTTTTTTTTTTTT..=====..TTTTTTTTTTTTTTTTTTTTT",
+			"TTTTTTTTTTTTTTT..=====.TTTTTTTTTTTTTTTTTTTTTT",
+			"TTTTTTTTTTTTTT..=====..TTTTTTTTTTTTTTTTTTTTTT",
+			"TTTTTTTTTTTTTT.=====..TTTTTTTTTTTTTTTTTTTTTTT",
+			"TTTTTTTTTTTTT..=====..TTTTTTTTTTTTTTTTTTTTTTT",
+			"TTTTTTTTTTTTT.=====..TTTTTTTTTTTTTTTTTTTTTTTT",
+			"TTTTTTTTTTTT..=====.TTTTTTTTTTTTTTTTTTTTTTTTT",
+			"TTTTTTTTTTT..=====..TTTTTTTTTTTTTTTTTTTTTTTTT",
+			"TTTTTTTTTTT.======.TTTTTTTTTTTTTTTTTTTTTTTTTT",
+			"TTTTTTTTTT..=====..TTTTTTTTTTTTTTTTTTTTTTTTTT",
+			"TTTTTTTTT..=====..TTTTTTTTTTTTTTTTTTTTTTTTTTT",
+			"TTTTTTTT..======.TTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+			"TTTTTTT..======..TTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+			"TTTTTT..======..TTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+			"TTTTT..======..TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+			"TTT...======..TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+			".....======..TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+			"....=======.TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+			"...=======..TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+			"..======...TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+			"=======..TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+			"======..TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+			"=====...TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+			"====....TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+			".=.....TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+			"....TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
 		],
 		"camp": {
 			"fire": [
 				18.0,
-				4.5
+				11.5
 			],
 			"old_man": [
 				19.4,
-				4.7
+				11.7
 			]
 		},
 		"water_rects": [],
@@ -1151,22 +1166,22 @@
 			{
 				"kind": "berry",
 				"t": [
-					24.5,
-					8.5
+					29.5,
+					9.5
 				]
 			},
 			{
 				"kind": "mushroom",
 				"t": [
-					11.5,
-					13.5
+					13.5,
+					23.5
 				]
 			},
 			{
 				"kind": "herb",
 				"t": [
-					15.5,
-					13.0
+					16.5,
+					29.5
 				]
 			}
 		],

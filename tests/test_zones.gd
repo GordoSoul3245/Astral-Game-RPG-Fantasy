@@ -139,10 +139,10 @@ func run_checks() -> void:
 	var bseen := _reachable(b.walk, Vector2i(int(bs.x), int(bs.y)))
 	var camp: Dictionary = main.zones_cfg["bosque"]["camp"]
 	assert(bseen.has(Vector2i(int(camp["fire"][0]) + 1, int(camp["fire"][1]) + 1)), "bosque: la fogata se alcanza desde el inicio")
-	assert(bseen.has(Vector2i(10, 9)), "bosque: el camino de la izquierda llega a la orilla del lago")
+	assert(bseen.has(Vector2i(16, 8)), "bosque: se llega a la orilla del lago")
 	assert(b.water.size() > 30 and b.paths.size() > 100, "bosque: hay lago y camino")
 	assert(main.doors.any(func(d: Node) -> bool: return d.label == "Hablar con el viejo"), "bosque: el viejo de la fogata se puede hablar")
-	main.pos = main.tile_to_ground(Vector2(17.5, 0.5))
+	main.pos = main.tile_to_ground(Vector2(27.5, 0.5))
 	main.travel_cd = 0.0
 	main._check_edges(0.0)
 	await _wait(1.0)

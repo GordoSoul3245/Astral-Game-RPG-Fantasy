@@ -19,8 +19,8 @@ func capture() -> void:
 	main.clock.rain = false
 	main._enter_zone("bosque")
 	await create_timer(1.0, true, false, true).timeout
-	var a: Vector2 = main.tile_to_ground(Vector2(18.5, 16.0))
-	var b: Vector2 = main.tile_to_ground(Vector2(19.0, 6.5))
+	var a: Vector2 = main.tile_to_ground(Vector2(3.5, 39.5))  # inicio, junto a la esquina de abajo
+	var b: Vector2 = main.tile_to_ground(Vector2(20.0, 14.0))  # hasta la fogata
 	for k in 60:
 		main.pos = a.lerp(b, k / 59.0)
 		main._place()
