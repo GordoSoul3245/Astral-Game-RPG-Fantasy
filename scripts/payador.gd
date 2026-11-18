@@ -14,6 +14,7 @@ var fire_frames: Array[Texture2D] = []
 var man: Sprite2D
 var facing := ""
 var ground := Vector2.ZERO
+var following := false   # tras la última copla anda al lado del héroe (shortcut: solo dentro de la zona; cruzar regiones pide un acompañante en main)
 
 const FEET := Vector2(68, 113.7)   # los pies dentro del sprite de 128 px (misma cámara que el héroe)
 
@@ -75,12 +76,21 @@ func _exit_tree() -> void:
 func _talk() -> void:
 	main.dialogue.open("El viejo", COPLAS[mini(talks, COPLAS.size() - 1)])
 	talks += 1
+	following = following or talks >= COPLAS.size()
 
 func _process(delta: float) -> void:
 	t += delta
 	fire.texture = fire_frames[int(t * 8.0) % 4]
 	var to_hero: Vector2 = main.pos - ground
-	_face(to_hero if to_hero.length() < 160.0 else main.tile_to_ground(fire_tile) - ground)
+	if following and to_hero.length() > 45.0:  # camina detrás sin pisarle los talones
+		ground += to_hero.normalized() * minf(70.0 * delta, to_hero.length() - 45.0)
+		door.tile = main.ground_to_tile(ground)
+		man.z_index = int(ground.y)
+		_face(to_hero)
+	else:
+		_face(to_hero if to_hero.length() < 160.0 else main.tile_to_ground(fire_tile) - ground)
+	# respiración: el sprite sube 1 px de arte (3 en pantalla) cada tanto, en la rejilla pixel art
+	man.position = (ground - FEET - Vector2(0, 1.0 if fmod(t, 1.8) < 0.9 else 0.0)) * main.SCALE
 	if fmod(t, 2.6) < delta:  # alguna nota de guitarra que sube
 		var n := Label.new()
 		n.text = "♪" if randf() < 0.5 else "♫"
