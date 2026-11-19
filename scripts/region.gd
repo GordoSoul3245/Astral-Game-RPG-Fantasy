@@ -169,13 +169,13 @@ func paint(ci: CanvasItem) -> void:  # suelo de losas de colores: mullido, camin
 			if water.has(Vector2i(i, j)):
 				col = Color(cfg["water"]).lerp(Color(cfg["water2"]), 0.5 + 0.5 * sin(t * 1.5 + i * 0.7 + j * 0.9))
 			elif paths.has(Vector2i(i, j)) or _in_rects(i, j, "path_rects") or _gate_zone(i, j):
-				col = Color(cfg["path"]).lightened(float((i * 7 + j * 13) % 5) * 0.012)
+				col = Color(cfg["path"]) if paths.has(Vector2i(i, j)) else Color(cfg["path"]).lightened(float((i * 7 + j * 13) % 5) * 0.012)  # el camino del layout: marrón liso como el del valle
 			else:
 				col = Color(g[(i + j) % 2]).lightened(float((i * 5 + j * 3) % 4) * 0.012)
 			verts.append_array([quad[0], quad[1], quad[2], quad[0], quad[2], quad[3]])
 			for k in 6:
 				cols.append(col)
-			if not water.has(Vector2i(i, j)):  # textura: motas claras y oscuras repartidas por la casilla (hexágonos pequeños)
+			if not water.has(Vector2i(i, j)) and not paths.has(Vector2i(i, j)):  # textura: motas claras y oscuras repartidas por la casilla (hexágonos pequeños)
 				var c: Vector2 = _corner(i + 0.5, j + 0.5)
 				for k in 3:
 					var hh := (i * 131 + j * 17 + k * 53) % 100
