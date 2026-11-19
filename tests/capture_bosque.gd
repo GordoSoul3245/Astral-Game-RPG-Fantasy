@@ -1,6 +1,6 @@
 extends SceneTree
-# Clip del Bosque del Fogón: el héroe sube por el camino hasta la fogata del viejo. Guarda 60 cuadros a 12 por segundo en
-# production/qa/evidence/bosque/ (cuadro_000.png...) para montar un vídeo con ffmpeg. Ejecutar sin --headless.
+# Clip del Bosque del FogÃ³n: el hÃ©roe sube por el camino hasta la fogata del viejo. Guarda 60 cuadros a 12 por segundo en
+# production/qa/evidence/bosque/ (cuadro_000.png...) para montar un vÃ­deo con ffmpeg. Ejecutar sin --headless.
 
 const DIR := "res://production/qa/evidence/bosque/"
 
@@ -19,8 +19,8 @@ func capture() -> void:
 	main.clock.rain = false
 	main._enter_zone("bosque")
 	await create_timer(1.0, true, false, true).timeout
-	var a: Vector2 = main.tile_to_ground(Vector2(3.5, 39.5))  # inicio, junto a la esquina de abajo
-	var b: Vector2 = main.tile_to_ground(Vector2(20.0, 14.0))  # hasta la fogata
+	var a: Vector2 = main.tile_to_ground(Vector2(11.5, 39.5))  # inicio
+	var b: Vector2 = main.tile_to_ground(Vector2(20.0, 27.0))  # por la fogata hasta el estrechamiento
 	for k in 60:
 		main.pos = a.lerp(b, k / 59.0)
 		main._place()

@@ -26,8 +26,9 @@ func setup(data: Dictionary) -> void:
 		var s := Sprite2D.new()
 		s.texture = load(sp["path"])
 		s.centered = false
-		s.scale = Vector2.ONE * main.SCALE
-		s.position = (g - Vector2(sp["feet"][0], sp["feet"][1])) * main.SCALE
+		var sz := float(o.get("size", 1.0))  # tamaño del objeto (árboles variados o un árbol hito)
+		s.scale = Vector2.ONE * main.SCALE * sz
+		s.position = (g - Vector2(sp["feet"][0], sp["feet"][1]) * sz) * main.SCALE
 		var sort_y := g.y
 		if o.has("circle"):
 			var circle := [tile, float(o["circle"]), float(o.get("pcircle", o["circle"]))]  # [centro, radio al caminar, radio para proyectiles (follaje)]
@@ -196,7 +197,7 @@ func covers_hero(s: Sprite2D) -> bool:
 		masks[s.texture] = im
 	var img: Image = masks[s.texture]
 	for h in [12.0, 40.0, 70.0]:  # pies, pecho y cabeza, px de suelo sobre los pies
-		var p: Vector2 = ((main.pos - Vector2(0, h)) * main.SCALE - s.position) / main.SCALE
+		var p: Vector2 = ((main.pos - Vector2(0, h)) * main.SCALE - s.position) / s.scale.x
 		if p.x >= 0 and p.y >= 0 and p.x < img.get_width() and p.y < img.get_height() and img.get_pixel(int(p.x), int(p.y)).a > 0.5:
 			return true
 	return false
@@ -212,7 +213,7 @@ func _bucket_occluders() -> void:
 	buckets.clear()
 	bucketed = occluders.size()
 	for s: Sprite2D in occluders:
-		var r := Rect2(s.position, s.texture.get_size() * main.SCALE)
+		var r := Rect2(s.position, s.texture.get_size() * s.scale.x)
 		for bx in range(floori(r.position.x / BUCKET), floori(r.end.x / BUCKET) + 1):
 			for by in range(floori(r.position.y / BUCKET), floori(r.end.y / BUCKET) + 1):
 				var k := Vector2i(bx, by)

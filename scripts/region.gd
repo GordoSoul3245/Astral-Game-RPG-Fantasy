@@ -28,14 +28,12 @@ func setup(data: Dictionary) -> void:
 				match row[i]:
 					"~": water[Vector2i(i, j)] = true
 					"=": paths[Vector2i(i, j)] = true
-					"T":
-						# bosque ralo: adentro una red al tresbolillo (i-j múltiplo de 4, uno sí y uno no) y todos los del borde de los claros, así las orillas quedan llenas
-						var inner := (i - j) % 4 == 0 and posmod((i + j) / 2 + floori((i - j) / 4.0), 2) == 0
-						if (i + j) % 2 == 0 and (inner or _clearing_next(lay, i, j)):
-							var h := float((i * 73 + j * 37) % 100) / 100.0
-							var o := _object("tree_arbol1", i + 0.3 + h * 0.4, j + 0.3 + fmod(h * 7.0, 1.0) * 0.4)
-							o["dir"] = ARBOL1_DIRS[(i * 5 + j * 3) % 8]  # cada árbol mira a un lado: el bosque no se ve clonado
-							forest.append(o)
+					"T":  # un árbol por casilla T (el generador ya decide bosquetes y claros), corrido, girado y de tamaño variado
+						var h := float((i * 73 + j * 37) % 100) / 100.0
+						var o := _object("tree_arbol1", i + 0.2 + h * 0.6, j + 0.2 + fmod(h * 7.0, 1.0) * 0.6)
+						o["dir"] = ARBOL1_DIRS[(i * 5 + j * 3) % 8]  # cada árbol mira a un lado: el bosque no se ve clonado
+						o["size"] = 0.85 + float((i * 31 + j * 17) % 7) * 0.05  # 0,85 a 1,15
+						forest.append(o)
 	for r: Array in data["water_rects"]:
 		for i in range(int(r[0]), int(r[2])):
 			for j in range(int(r[1]), int(r[3])):
@@ -44,14 +42,20 @@ func setup(data: Dictionary) -> void:
 	for i in n:
 		var row := ""
 		for j in n:
-			var edge := i < 1 or j < 1 or i >= n - 1 or j >= n - 1  # el borde es el límite del mapa, salvo en los claros que llevan a otra región
-			row += "0" if ((edge and not _gate(i, j)) or water.has(Vector2i(i, j))) else "1"
+			var b := int(cfg.get("border", 1))  # franja de borde que no se pisa (con bosque denso encima, así nunca se ve el vacío del mapa)
+			var edge := i < b or j < b or i >= n - b or j >= n - b  # el borde es el límite del mapa, salvo en los claros que llevan a otra región
+			row += "0" if ((edge and not _gate(i, j) and not paths.has(Vector2i(i, j))) or water.has(Vector2i(i, j))) else "1"
 		rows.append(row)
 	var sprites: Dictionary = main._read_json("res://data/map.json")["sprites"]
 	sprites["tree_arbol1"] = {"path": "res://art/arbol1/south/frame_000.png", "frame": [124, 124], "feet": [62.0, 114.0], "anim": "res://art/arbol1/%s/frame_%03d.png"}  # árbol de PixelLab con reposo (9 cuadros, 8 direcciones)
 	var objs: Array = forest
-	for t: Array in data["trees"]:
-		objs.append(_object(str(t[2]), float(t[0]), float(t[1])))
+	for t: Array in data["trees"]:  # [x, y, sprite, tamaño opcional]: un árbol grande puede ser un hito
+		var o := _object(str(t[2]), float(t[0]), float(t[1]))
+		if t.size() > 3:
+			o["size"] = float(t[3])
+			o["circle"] = float(o["circle"]) * float(t[3])
+			o["pcircle"] = float(o["pcircle"]) * float(t[3])
+		objs.append(o)
 	for l: Dictionary in data["tree_lines"]:
 		var a := Vector2(l["line"][0], l["line"][1])
 		var b := Vector2(l["line"][2], l["line"][3])
@@ -124,13 +128,6 @@ func _object(sprite: String, x: float, y: float) -> Dictionary:
 	var r := 0.3 if sprite.begins_with("tree") else 0.5
 	return {"sprite": sprite, "tile": [x, y], "circle": r, "pcircle": 0.55 if sprite.begins_with("tree") else r}
 
-func _clearing_next(lay: Array, i: int, j: int) -> bool:  # la casilla toca pasto, camino o agua (no el borde del mapa)
-	for d: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-		var q := Vector2i(i, j) + d
-		if q.y >= 0 and q.y < lay.size() and q.x >= 0 and q.x < String(lay[q.y]).length() and String(lay[q.y])[q.x] != "T":
-			return true
-	return false
-
 func spawn_tile() -> Vector2:
 	return Vector2(cfg["start"][0], cfg["start"][1])
 
@@ -152,6 +149,19 @@ func paint(ci: CanvasItem) -> void:  # suelo de losas de colores: mullido, camin
 	var cols := PackedColorArray()
 	var sc: float = main.SCALE
 	var base := Color(str(g[0]))
+	if cfg.has("border"):  # fuera del mapa: suelo de bosque que se oscurece hacia el fondo, así no se ve el vacío negro
+		var m := 14
+		var clear := Color(str(cfg["clear"]))
+		for i in range(-m, tiles + m):
+			for j in range(-m, tiles + m):
+				var d := maxi(maxi(-i, i - tiles + 1), maxi(-j, j - tiles + 1))
+				if d <= 0:
+					continue
+				var q := PackedVector2Array([_corner(i, j), _corner(i + 1, j), _corner(i + 1, j + 1), _corner(i, j + 1)])
+				var oc := Color(g[(i + j) % 2]).darkened(0.35).lerp(clear, clampf(float(d) / m, 0.0, 1.0))
+				verts.append_array([q[0], q[1], q[2], q[0], q[2], q[3]])
+				for k in 6:
+					cols.append(oc)
 	for i in tiles:
 		for j in tiles:
 			var quad := PackedVector2Array([_corner(i, j), _corner(i + 1, j), _corner(i + 1, j + 1), _corner(i, j + 1)])

@@ -1084,7 +1084,7 @@
 	},
 	"bosque": {
 		"name": "Bosque del Fogón",
-		"tiles": 45,
+		"tiles": 51,
 		"clear": "#0b140c",
 		"peaceful": true,
 		"ground": [
@@ -1095,96 +1095,138 @@
 		"water": "#5aa2c8",
 		"water2": "#6fb3d6",
 		"start": [
-			3.5,
+			11.5,
 			39.5
 		],
 		"level_note": "Un camino de tierra entre los pinos. Al fondo, una fogata y alguien que toca la guitarra.",
 		"detail": "",
 		"theme_pitch": 0.9,
 		"layout": [
-			"TTTTTTTTTTTTTTTTTTTTTTTT.=====.TTTTTTTTTTTTTT",
-			"TTTTTTTTTTTTTTTTTTTTTTTT.====..TTTTTTTTTTTTTT",
-			"TTTTTTT.....TTTTTTTTTTT..====..TTTTTTTTTTTTTT",
-			"TTTTT....~....TTTTTTTTT..====..TTTTTTTTTTTTTT",
-			"TTT...~~~~~~~...TTTTTTT..====..TTTTTTTTTTTTTT",
-			"TTT..~~~~~~~~~..TTTTTTT..====.TTTTTTTTTTTTTTT",
-			"TT..~~~~~~~~~~~..TT.TTT.=====.TTTTTTTTTTTTTTT",
-			"TT.~~~~~~~~~~~~~........=====.TTTTTTTTTTTTTTT",
-			"T..~~~~~~~~~~~~~.......=====..TTTTTTTTTTTTTTT",
-			"T..~~~~~~~~~~~~~.......=====..TTTTTTTTTTTTTTT",
-			"T.~~~~~~~~~~~~~~~.....=====..TTTTTTTTTTTTTTTT",
-			"T..~~~~~~~~~~~~~......=====.TTTTTTTTTTTTTTTTT",
-			"T..~~~~~~~~~~~~~.....=====..TTTTTTTTTTTTTTTTT",
-			"TT.~~~~~~~~~~~~~.....=====.TTTTTTTTTTTTTTTTTT",
-			"TT..~~~~~~~~~~~.....=====..TTTTTTTTTTTTTTTTTT",
-			"TTT..~~~~~~~~~.....=====..TTTTTTTTTTTTTTTTTTT",
-			"TTT...~~~~~~~......=====..TTTTTTTTTTTTTTTTTTT",
-			"TTTTT....~....TT..=====..TTTTTTTTTTTTTTTTTTTT",
-			"TTTTTTT.....TTTT..=====.TTTTTTTTTTTTTTTTTTTTT",
-			"TTTTTTTTTTTTTTT..=====..TTTTTTTTTTTTTTTTTTTTT",
-			"TTTTTTTTTTTTTTT..=====.TTTTTTTTTTTTTTTTTTTTTT",
-			"TTTTTTTTTTTTTT..=====..TTTTTTTTTTTTTTTTTTTTTT",
-			"TTTTTTTTTTTTTT.=====..TTTTTTTTTTTTTTTTTTTTTTT",
-			"TTTTTTTTTTTTT..=====..TTTTTTTTTTTTTTTTTTTTTTT",
-			"TTTTTTTTTTTTT.=====..TTTTTTTTTTTTTTTTTTTTTTTT",
-			"TTTTTTTTTTTT..=====.TTTTTTTTTTTTTTTTTTTTTTTTT",
-			"TTTTTTTTTTT..=====..TTTTTTTTTTTTTTTTTTTTTTTTT",
-			"TTTTTTTTTTT.======.TTTTTTTTTTTTTTTTTTTTTTTTTT",
-			"TTTTTTTTTT..=====..TTTTTTTTTTTTTTTTTTTTTTTTTT",
-			"TTTTTTTTT..=====..TTTTTTTTTTTTTTTTTTTTTTTTTTT",
-			"TTTTTTTT..======.TTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-			"TTTTTTT..======..TTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-			"TTTTTT..======..TTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-			"TTTTT..======..TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-			"TTT...======..TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-			".....======..TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-			"....=======.TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-			"...=======..TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-			"..======...TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-			"=======..TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-			"======..TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-			"=====...TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-			"====....TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-			".=.....TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
-			"....TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
+			"TTTT..T........T.....T...T..==T.T..TTT.T..T...TTT..",
+			".TTT.TTT....T......T..TTT.T.==TTT.T.T..T...T....T..",
+			"..TT..T.TT.....TT...T..TT..===....T.T....TTTTTTTTT.",
+			"T....T.TT...............T..===.......TT.........T..",
+			".....T.................T...===........T.....T.....T",
+			"T.T.T........T........TT...===...T..TTT...........T",
+			"...TT.T...........T....T..===.....T...T..........T.",
+			"T.TT.T...T....T......T....===....TT.........T...TTT",
+			"..T.TTT.........T........====..TT......TT.T...T.T.T",
+			"T.........T..............===.....T....T......T...T.",
+			"..T..TT...........~~~~~~.===.T.....T.TT....T..T....",
+			".TT.......T..T.~~~~~~~~~.====.T....T..T............",
+			"...............~~~~~~~~~..===...T.T.TT...TT.....T.T",
+			"T.............~~~~~~~~~...===....T...T.T...........",
+			"..T...........~~~~~~~~~....===.....................",
+			".............~~~~~~~~~~....===.....T............T..",
+			".T...........~~~~~~~~~T...T===..........T.........T",
+			"..........T..~~~~~T.~......===...........T......T..",
+			"T.T.T....T.....~~~........====.................T...",
+			"T.T..........T.........T..===.......TT..........T..",
+			".TT....T.....T.....T....T====......T............TT.",
+			"T.............T.T.......====....T..........T.T...T.",
+			"T...T.......TTT.TT..T.TT===......T.T.TT.......T....",
+			".TT....T.........T....T===T.......T.TTTT......TT.T.",
+			"..............T...T..TT==.TT......TT..T....T.......",
+			".T.T.T..T...T..T......T==.TT.........TT........T...",
+			"..TTT...................==.......TTTT...T..........",
+			".T..T..T................==TT.......TTT..T..T....T..",
+			".T.TT.T..T..T..........===T.......T.TT........T..T.",
+			"T.TTT.TTT....T.........===......T...........T...T..",
+			"T...T.....TT.........T.===.....T......TT.....TT.T..",
+			"TTT....T.............T.===..................T....T.",
+			"...T...T..TT..........====.......................TT",
+			".T.T..T.TT...........====...............T.......T.T",
+			"...........T.......=====...........................",
+			".TT......TT.....========......T...............T..TT",
+			"TT.......T.T..========.........TT................T.",
+			"T...........========.........TT.T..................",
+			"T....T.....======.....T.T......TTT......T.........T",
+			"T....TTT..=====...T...........TT..........T.....TT.",
+			"T.....T...====...................TT.............T.T",
+			"T.....T..====.....T...T.....T..T..T......T......T..",
+			"T........===.T....................TTT.T.....T......",
+			"..T.....===.T.T..TTT.............T...........TT...T",
+			"..T.....===.......T..T..............T.......T......",
+			".TT.....==T...T..T.T.T..T................T..T.TTTT.",
+			".T.....T.T.T..TTTT.TT..............T.....TT...TT.TT",
+			"..T.......T.....T.TT.T..................T.T..TT..TT",
+			".T.T....TT..TTT...........T..T.T.TTTT............T.",
+			".TTT.T..TT.T..T.T..T.T...TT.T..T.TT..TT.....T....T.",
+			".T....TT..TTTTT..TTTT..TTTTT..TTT.T...T.T...T......"
 		],
 		"camp": {
 			"fire": [
-				18.0,
-				11.5
+				16.0,
+				32.5
 			],
 			"old_man": [
-				19.4,
-				11.7
+				17.4,
+				32.7
 			]
 		},
 		"water_rects": [],
 		"path_rects": [],
 		"tree_lines": [],
-		"trees": [],
+		"trees": [
+			[
+				30.5,
+				19.5,
+				"tree_arbol1",
+				1.7
+			]
+		],
 		"nodes": [
 			{
 				"kind": "berry",
 				"t": [
-					29.5,
-					9.5
+					14.5,
+					41.5
+				]
+			},
+			{
+				"kind": "berry",
+				"t": [
+					15.5,
+					40.5
 				]
 			},
 			{
 				"kind": "mushroom",
 				"t": [
-					13.5,
-					23.5
+					21.5,
+					26.5
+				]
+			},
+			{
+				"kind": "mushroom",
+				"t": [
+					22.5,
+					27.5
+				]
+			},
+			{
+				"kind": "mushroom",
+				"t": [
+					21.5,
+					28.5
 				]
 			},
 			{
 				"kind": "herb",
 				"t": [
-					16.5,
-					29.5
+					23.5,
+					13.5
+				]
+			},
+			{
+				"kind": "herb",
+				"t": [
+					24.5,
+					15.5
 				]
 			}
 		],
-		"enemies": []
+		"enemies": [],
+		"border": 3
 	}
 }

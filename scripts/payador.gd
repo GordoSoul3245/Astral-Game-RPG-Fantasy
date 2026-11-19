@@ -41,6 +41,33 @@ func _ready() -> void:
 	fire.position = fg * main.SCALE
 	fire.z_index = int(fg.y)
 	add_child(fire)
+	# humo: una columna alta que se ve desde el inicio de la partida y guía hasta la fogata (por encima de las copas)
+	var smoke := CPUParticles2D.new()
+	smoke.position = (fg - Vector2(0, 12)) * main.SCALE
+	smoke.z_index = 3900
+	smoke.amount = 40
+	smoke.lifetime = 6.0
+	smoke.preprocess = 6.0
+	smoke.local_coords = false
+	smoke.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	smoke.emission_rect_extents = Vector2(6, 2)
+	smoke.direction = Vector2(0, -1)
+	smoke.spread = 8.0
+	smoke.gravity = Vector2(Wind.DIR.x * 6.0, 0)  # la columna se inclina con el viento del mundo
+	smoke.initial_velocity_min = 55.0
+	smoke.initial_velocity_max = 75.0
+	smoke.scale_amount_min = 18.0  # bocanadas cuadradas de humo, en la rejilla de 3 px
+	smoke.scale_amount_max = 27.0
+	var sc := Curve.new()
+	sc.add_point(Vector2(0, 0.6))
+	sc.add_point(Vector2(1, 1.8))
+	smoke.scale_amount_curve = sc
+	var ramp := Gradient.new()
+	ramp.set_color(0, Color(0.75, 0.72, 0.68, 0.0))
+	ramp.add_point(0.12, Color(0.72, 0.7, 0.66, 0.6))
+	ramp.set_color(1, Color(0.8, 0.8, 0.8, 0.0))
+	smoke.color_ramp = ramp
+	add_child(smoke)
 	var l: PointLight2D = main.combat.light(Color(1.0, 0.62, 0.3), 0.9, 2.6)
 	l.position = (fg - Vector2(0, 10)) * main.SCALE
 	add_child(l)
