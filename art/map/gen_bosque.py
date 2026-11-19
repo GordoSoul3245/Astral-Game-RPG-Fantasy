@@ -18,15 +18,15 @@ BORDER = 3
 rng = random.Random(1137)
 
 START = (11.5, 39.5)
-FIRE = (16.0, 32.5)                          # a un costado del camino, arriba-izquierda en la primera pantalla
-OLD_MAN = (17.4, 32.7)
+FIRE = (18.9, 31.1)                          # a un costado del camino, arriba-izquierda en la primera pantalla
+OLD_MAN = (21.3, 29.7)
 BIG_TREE = (30.5, 19.5)                     # hito regional: árbol viejo
 LAKE = [((19.0, 14.0), 4.6, 3.6), ((16.0, 16.5), 3.2, 2.6), ((21.5, 11.5), 2.4, 2.0)]  # lóbulos (centro, rx, ry)
 # camino: del borde sur, pasa junto a la fogata, se estrecha, rodea el árbol viejo, bordea el lago y sale al norte
 PATH = [(9, 45), (11, 41), (14, 38), (18, 36.5), (22, 35), (24.5, 32), (25, 28), (24, 24.5), (26, 21.5), (28.5, 18),
         (28, 14), (26.5, 10), (28, 6), (29, 2), (29, -2)]
 PINCH = (24.5, 25.5)                         # estrechamiento entre dos bosquetes
-CLEARINGS = [(START, 3.0), ((16.5, 32.5), 4.0), (BIG_TREE, 2.6), ((29.5, 25.5), 1.8)]
+CLEARINGS = [(START, 3.0), (FIRE, 4.0), (BIG_TREE, 2.6), ((29.5, 25.5), 1.8)]
 NODES = [("berry", 14.5, 41.5), ("berry", 15.5, 40.5),          # primera recompensa junto al inicio
          ("mushroom", 21.5, 26.5), ("mushroom", 22.5, 27.5), ("mushroom", 21.5, 28.5),  # corro de hongos a la sombra
          ("herb", 23.5, 13.5), ("herb", 24.5, 15.5)]             # hierbas en la orilla del lago

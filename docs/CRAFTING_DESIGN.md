@@ -1,6 +1,6 @@
 # Diseño: sistema de creación conectado (forja, alquimia, runas, cocina, invocación)
 
-Estado: **implementado en parte** (crafteo a mano, forja, cocina, alquimia con planos, recolección y mina; ver `docs/DESIGN_NOTES.md` §5c). Sin implementar: la matriz de elementos, runas e invocación. Investigación y propuesta para Ecos de la Ruina.
+Estado: **implementado en parte** (crafteo a mano, forja, cocina, alquimia con planos, recolección y mina; ver `docs/DESIGN_NOTES.md` §5c). Sin implementar: la matriz de elementos, runas e invocación. Investigación y propuesta para Astral.
 Lo marcado como *(fuente)* viene de las páginas citadas al final; el resto es análisis propio y conocimiento general de diseño de juegos.
 
 ## 1. Qué hacen otros juegos y por qué funciona
@@ -54,7 +54,7 @@ Cualquier oficio recibe un conjunto de esencias y devuelve un resultado con esa 
 | **Alquimia** | NPC nueva o mesa en el pueblo | Gel, plantas, ojos | Pociones y bombas lanzables | Efectos ocultos que se descubren usando el ingrediente |
 | **Runas** | Altar | Núcleos y runas | Hechizos y armas con ranuras ordenadas | Forma + elemento + modificador definen la bola de energía |
 | **Cocina** | Hoguera, casa | Carne de caza y plantas | Comidas con bonus temporales a las 7 estadísticas | Conecta con la caza de fauna y el descanso |
-| **Invocación** | Círculo ritual | Núcleos y maná | Un "eco" aliado que reutiliza los sprites de un monstruo derrotado | Conecta con el bestiario y la lore (Ecos de la Ruina) |
+| **Invocación** | Círculo ritual | Núcleos y maná | Un "eco" aliado que reutiliza los sprites de un monstruo derrotado | Conecta con el bestiario y la lore (Astral) |
 
 ### Cómo se une con el combate (para que no sea un menú aparte)
 - **Partes al romper la postura:** el material raro cae al romperle la postura a un élite, no solo al matarlo (como en Monster Hunter, pero con tu sistema de postura).

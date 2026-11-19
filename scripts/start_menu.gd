@@ -26,15 +26,17 @@ func _ready() -> void:
 	title = main.menu._label("", column, 32, Color("#d9a441"))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	play_button = _button(column, "", _resume)
+	_button(column, "Opciones", _options)
 	back_button = _button(column, "Volver al inicio", _return_to_title)
 	_button(column, "Guardar y salir", _quit)
-	title.text = "Pausa"
+	title.text = "Astral"
 	play_button.text = "Reanudar"
 	startup = false
 	visible = false
 
 func _button(parent: Node, text: String, action: Callable) -> Button:
 	var button := Button.new()
+	main.menu.style_button(button)
 	button.text = text
 	button.custom_minimum_size.y = 54
 	button.add_theme_font_size_override("font_size", 22)
@@ -44,12 +46,17 @@ func _button(parent: Node, text: String, action: Callable) -> Button:
 
 func _show(at_start: bool) -> void:
 	startup = at_start
-	title.text = "Ecos de la Ruina" if startup else "Pausa"
+	title.text = "Astral"
 	play_button.text = "Jugar / Continuar" if startup else "Reanudar"
 	back_button.visible = not startup
 	visible = true
 	get_tree().paused = true
 	play_button.grab_focus()
+
+func _options() -> void:
+	visible = false
+	main.menu.options_closed.connect(_show.bind(false), CONNECT_ONE_SHOT)
+	main.menu.open_tab("opt")
 
 func _resume() -> void:
 	visible = false

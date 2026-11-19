@@ -16,12 +16,12 @@
 		"ult_per_damage": 2.0
 	},
 	"dragon": {
-		"hp": 60,
+		"hp": 150,
 		"speed": 55.0,
 		"detect_range": 170.0,
 		"keep_distance": 110.0,
 		"attack_range": 140.0,
-		"attack_cooldown": 2.8,
+		"attack_cooldown": 1.12,
 		"projectile": {
 			"speed": 150.0,
 			"radius": 6.0,
@@ -184,12 +184,12 @@
 	"cyclops": {
 		"kind": "brute",
 		"blood": "#8e1f2a",
-		"hp": 160,
+		"hp": 400,
 		"speed": 38.0,
 		"detect_range": 370.0,
 		"attack_range": 48.0,
 		"windup": 0.8,
-		"attack_cooldown": 2.4,
+		"attack_cooldown": 0.96,
 		"slam_radius": 55.0,
 		"slam_damage": 28,
 		"poise": 70,
@@ -228,11 +228,11 @@
 	"storm_mage": {
 		"kind": "mage",
 		"blood": "#6a4fd8",
-		"hp": 320,
+		"hp": 800,
 		"speed": 34.0,
 		"detect_range": 480.0,
 		"keep_distance": 150.0,
-		"attack_cooldown": 2.0,
+		"attack_cooldown": 0.8,
 		"size": 1.5,
 		"sprites": {
 			"prefix": "res://art/stormmage/stormmage_",
@@ -382,12 +382,12 @@
 	"ciclope_ceniza": {
 		"kind": "brute",
 		"blood": "#8e1f2a",
-		"hp": 210,
+		"hp": 525,
 		"speed": 38.0,
 		"detect_range": 370.0,
 		"attack_range": 48.0,
 		"windup": 0.8,
-		"attack_cooldown": 2.4,
+		"attack_cooldown": 0.96,
 		"slam_radius": 55.0,
 		"slam_damage": 34,
 		"poise": 70,
@@ -480,11 +480,11 @@
 	"bruja_cienaga": {
 		"kind": "mage",
 		"blood": "#6a4fd8",
-		"hp": 380,
+		"hp": 950,
 		"speed": 34.0,
 		"detect_range": 480.0,
 		"keep_distance": 150.0,
-		"attack_cooldown": 2.0,
+		"attack_cooldown": 0.8,
 		"size": 1.5,
 		"sprites": {
 			"prefix": "res://art/stormmage/stormmage_",
@@ -539,12 +539,12 @@
 	"coloso_arena": {
 		"kind": "brute",
 		"blood": "#8e1f2a",
-		"hp": 520,
+		"hp": 1300,
 		"speed": 38.0,
 		"detect_range": 370.0,
 		"attack_range": 48.0,
 		"windup": 0.8,
-		"attack_cooldown": 2.4,
+		"attack_cooldown": 0.96,
 		"slam_radius": 55.0,
 		"slam_damage": 40,
 		"poise": 70,
@@ -690,12 +690,12 @@
 	"ciclope_helado": {
 		"kind": "brute",
 		"blood": "#8e1f2a",
-		"hp": 250,
+		"hp": 625,
 		"speed": 38.0,
 		"detect_range": 370.0,
 		"attack_range": 48.0,
 		"windup": 0.8,
-		"attack_cooldown": 2.4,
+		"attack_cooldown": 0.96,
 		"slam_radius": 55.0,
 		"slam_damage": 38,
 		"poise": 70,
@@ -737,12 +737,12 @@
 	"gigante_escarcha": {
 		"kind": "brute",
 		"blood": "#8e1f2a",
-		"hp": 700,
+		"hp": 1750,
 		"speed": 38.0,
 		"detect_range": 370.0,
 		"attack_range": 48.0,
 		"windup": 0.8,
-		"attack_cooldown": 2.4,
+		"attack_cooldown": 0.96,
 		"slam_radius": 55.0,
 		"slam_damage": 46,
 		"poise": 70,
@@ -785,5 +785,438 @@
 		"boss": true,
 		"tint": "#e6f6ff",
 		"counts_as": "cyclops"
+	},
+	"escarabajo_brasa": {
+		"kind": "pattern",
+		"name": "Escarabajo de brasa",
+		"blood": "#ff7a2a",
+		"hp": 38,
+		"speed": 46.0,
+		"detect_range": 280.0,
+		"radius": 10.0,
+		"r_t": 0.32,
+		"size": 0.45,
+		"staggerable": true,
+		"sprites": {
+			"prefix": "res://art/monstruos/escarabajo_brasa/escarabajo_brasa_",
+			"feet": [
+				68.0,
+				113.7
+			]
+		},
+		"windup": 0.6,
+		"recover": 0.7,
+		"attack_cooldown": 2.4,
+		"attacks": [
+			{
+				"type": "zone_ring",
+				"count": 1,
+				"dist": 0.0,
+				"radius": 30.0,
+				"damage": 11,
+				"range": 34.0,
+				"color": "#ff7a2a"
+			},
+			{
+				"type": "charge",
+				"damage": 13,
+				"range": 150.0
+			}
+		],
+		"xp": 14,
+		"coins": [
+			3,
+			7
+		],
+		"drops": [
+			{
+				"item": "carbon",
+				"chance": 0.5
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 0.15
+			}
+		]
+	},
+	"hongo_espora": {
+		"kind": "pattern",
+		"name": "Hongo de esporas",
+		"blood": "#a6ff7a",
+		"hp": 30,
+		"speed": 26.0,
+		"detect_range": 300.0,
+		"keep_distance": 120.0,
+		"radius": 10.0,
+		"r_t": 0.32,
+		"size": 0.7,
+		"staggerable": true,
+		"sprites": {
+			"prefix": "res://art/monstruos/hongo_espora/hongo_espora_",
+			"feet": [
+				68.0,
+				113.7
+			]
+		},
+		"windup": 0.8,
+		"recover": 0.6,
+		"attack_cooldown": 2.6,
+		"attacks": [
+			{
+				"type": "zone_hero",
+				"count": 1,
+				"radius": 26.0,
+				"damage": 10,
+				"range": 220.0,
+				"windup": 1.0,
+				"color": "#a6ff7a"
+			},
+			{
+				"type": "shot",
+				"n": 3,
+				"spread": 0.3,
+				"range": 220.0,
+				"projectile": {
+					"speed": 90.0,
+					"radius": 6.0,
+					"damage": 8,
+					"muzzle_height": 20.0,
+					"scale": 0.9,
+					"tint": "#a6ff7a"
+				}
+			}
+		],
+		"xp": 15,
+		"coins": [
+			3,
+			8
+		],
+		"drops": [
+			{
+				"item": "hongo_luminoso",
+				"chance": 0.6
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 0.15
+			}
+		]
+	},
+	"lobo_espectral": {
+		"kind": "pattern",
+		"name": "Lobo espectral",
+		"mini": true,
+		"blood": "#9fd0ff",
+		"hp": 380,
+		"speed": 72.0,
+		"detect_range": 380.0,
+		"radius": 16.0,
+		"r_t": 0.5,
+		"size": 1.1,
+		"poise": 70,
+		"knock_resist": 0.5,
+		"sprites": {
+			"prefix": "res://art/monstruos/lobo_espectral/lobo_espectral_",
+			"feet": [
+				132.0,
+				177.7
+			]
+		},
+		"windup": 0.55,
+		"recover": 0.6,
+		"attack_cooldown": 0.9,
+		"attacks": [
+			{
+				"type": "leap",
+				"radius": 30.0,
+				"damage": 24,
+				"range": 200.0,
+				"windup": 0.7,
+				"color": "#9fd0ff"
+			},
+			{
+				"type": "zone_ring",
+				"count": 6,
+				"dist": 40.0,
+				"radius": 22.0,
+				"damage": 18,
+				"range": 60.0,
+				"color": "#9fd0ff"
+			},
+			{
+				"type": "charge",
+				"damage": 22,
+				"range": 220.0
+			}
+		],
+		"xp": 130,
+		"coins": [
+			30,
+			50
+		],
+		"drops": [
+			{
+				"item": "cristal_arcano",
+				"chance": 0.5
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 0.6
+			}
+		]
+	},
+	"golem_cristal": {
+		"kind": "pattern",
+		"name": "Gólem de cristal",
+		"mini": true,
+		"blood": "#c58cff",
+		"hp": 500,
+		"speed": 30.0,
+		"detect_range": 370.0,
+		"radius": 22.0,
+		"r_t": 0.7,
+		"size": 2.25,
+		"poise": 90,
+		"knock_resist": 0.85,
+		"sprites": {
+			"prefix": "res://art/monstruos/golem_cristal/golem_cristal_",
+			"feet": [
+				228.0,
+				273.7
+			]
+		},
+		"windup": 0.85,
+		"recover": 0.9,
+		"attack_cooldown": 1.0,
+		"attacks": [
+			{
+				"type": "zone_line",
+				"count": 6,
+				"step": 26.0,
+				"radius": 20.0,
+				"damage": 30,
+				"range": 170.0,
+				"color": "#c58cff"
+			},
+			{
+				"type": "ring",
+				"n": 10,
+				"range": 200.0,
+				"projectile": {
+					"speed": 120.0,
+					"radius": 6.0,
+					"damage": 16,
+					"muzzle_height": 60.0,
+					"scale": 1.2,
+					"tint": "#c58cff"
+				}
+			},
+			{
+				"type": "zone_ring",
+				"count": 1,
+				"dist": 0.0,
+				"radius": 60.0,
+				"damage": 34,
+				"range": 55.0,
+				"color": "#c58cff"
+			}
+		],
+		"xp": 160,
+		"coins": [
+			35,
+			60
+		],
+		"drops": [
+			{
+				"item": "cristal_arcano",
+				"chance": 1.0
+			},
+			{
+				"item": "lingote_acero",
+				"chance": 0.3
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 0.6
+			}
+		]
+	},
+	"rey_osario": {
+		"kind": "pattern",
+		"name": "Rey osario",
+		"boss": true,
+		"blood": "#7dffb0",
+		"hp": 1600,
+		"speed": 34.0,
+		"detect_range": 480.0,
+		"keep_distance": 150.0,
+		"radius": 18.0,
+		"r_t": 0.55,
+		"size": 2.15,
+		"poise": 120,
+		"knock_resist": 0.9,
+		"sprites": {
+			"prefix": "res://art/monstruos/rey_osario/rey_osario_",
+			"feet": [
+				228.0,
+				273.7
+			]
+		},
+		"windup": 0.8,
+		"recover": 0.6,
+		"attack_cooldown": 0.8,
+		"attacks": [
+			{
+				"type": "zone_line",
+				"count": 8,
+				"step": 24.0,
+				"radius": 20.0,
+				"damage": 34,
+				"range": 300.0,
+				"color": "#e8e2c8"
+			},
+			{
+				"type": "ring",
+				"n": 12,
+				"range": 300.0,
+				"projectile": {
+					"speed": 110.0,
+					"radius": 9.0,
+					"damage": 18,
+					"muzzle_height": 70.0,
+					"scale": 1.4,
+					"tint": "#7dffb0"
+				}
+			},
+			{
+				"type": "zone_hero",
+				"count": 3,
+				"spread": 50.0,
+				"radius": 26.0,
+				"damage": 36,
+				"range": 320.0,
+				"windup": 1.0,
+				"bolt": true,
+				"color": "#7dffb0"
+			},
+			{
+				"type": "shot",
+				"n": 5,
+				"spread": 0.22,
+				"range": 300.0,
+				"projectile": {
+					"speed": 130.0,
+					"radius": 8.0,
+					"damage": 18,
+					"muzzle_height": 70.0,
+					"scale": 1.2,
+					"tint": "#7dffb0"
+				}
+			}
+		],
+		"xp": 450,
+		"coins": [
+			240,
+			320
+		],
+		"drops": [
+			{
+				"item": "hueso_antiguo",
+				"chance": 1.0
+			},
+			{
+				"item": "cristal_arcano",
+				"chance": 1.0
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 1.0
+			}
+		]
+	},
+	"reina_arana": {
+		"kind": "pattern",
+		"name": "Reina araña",
+		"boss": true,
+		"blood": "#ff5ab0",
+		"hp": 1800,
+		"speed": 56.0,
+		"detect_range": 480.0,
+		"radius": 26.0,
+		"r_t": 0.8,
+		"size": 1.6,
+		"poise": 120,
+		"knock_resist": 0.9,
+		"sprites": {
+			"prefix": "res://art/monstruos/reina_arana/reina_arana_",
+			"feet": [
+				228.0,
+				273.7
+			]
+		},
+		"windup": 0.7,
+		"recover": 0.7,
+		"attack_cooldown": 0.8,
+		"attacks": [
+			{
+				"type": "leap",
+				"radius": 44.0,
+				"damage": 40,
+				"range": 260.0,
+				"windup": 0.9,
+				"color": "#ff5ab0"
+			},
+			{
+				"type": "shot",
+				"n": 3,
+				"spread": 0.25,
+				"range": 260.0,
+				"projectile": {
+					"speed": 140.0,
+					"radius": 6.0,
+					"damage": 16,
+					"muzzle_height": 40.0,
+					"scale": 1.0,
+					"tint": "#ff5ab0"
+				}
+			},
+			{
+				"type": "zone_ring",
+				"count": 8,
+				"dist": 70.0,
+				"radius": 24.0,
+				"damage": 28,
+				"range": 120.0,
+				"color": "#ff5ab0"
+			},
+			{
+				"type": "charge",
+				"damage": 36,
+				"range": 240.0
+			}
+		],
+		"xp": 480,
+		"coins": [
+			260,
+			340
+		],
+		"drops": [
+			{
+				"item": "gel_slime",
+				"chance": 1.0
+			},
+			{
+				"item": "cristal_arcano",
+				"chance": 1.0
+			},
+			{
+				"item": "lingote_acero",
+				"chance": 0.8
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 1.0
+			}
+		]
 	}
 }

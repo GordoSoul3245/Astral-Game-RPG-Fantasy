@@ -3,9 +3,10 @@ extends RefCounted
 # pasillos de 2 casillas (o una arena con pilares en los pisos de jefe). Cuadrícula N x N; la casilla (i, j) es i = x, j = y.
 # Lógica pura: floors.gd coloca monstruos, puertas y cofre; dungeon.gd lo dibuja y world_map.gd lo usa para colisiones y rutas.
 
-const N := 25
-const ENTRY := Rect2i(9, 0, 7, 5)    # contiene el punto de aparición (12.5, 2.4) y la puerta de salida (12.5, 0.25)
-const EXIT := Rect2i(9, 20, 7, 5)    # contiene la puerta al siguiente piso (12.5, 24.75)
+const N := 30
+const CENTER := Vector2(N / 2.0, N / 2.0)
+const ENTRY := Rect2i(12, 0, 7, 5)    # contiene el punto de aparición (12.5, 2.4) y la puerta de salida (12.5, 0.25)
+const EXIT := Rect2i(12, 19, 7, N - 19)    # contiene la puerta al siguiente piso (12.5, 24.75)
 const ARENA := Rect2i(3, 7, 19, 12)
 const PILLARS := [Vector2i(6, 10), Vector2i(17, 10), Vector2i(6, 15), Vector2i(17, 15)]
 
@@ -17,10 +18,10 @@ static func generate(n: int, rng: RandomNumberGenerator, boss: bool, rooms_mode 
 		for i in N:
 			walk_open.append("1".repeat(N))
 		var open_spots: Array[Vector2] = []
-		for i in range(3, 22):
-			for j in range(7, 22):
+		for i in range(3, N - 3):
+			for j in range(7, N - 3):
 				open_spots.append(Vector2(i + 0.5, j + 0.5))
-		return {"walk": walk_open, "rooms": [Rect2i(1, 6, 23, 17)], "spots": open_spots, "boss_spot": Vector2(12.5, 11.5), "chest_spot": Vector2(12.5, 12.5), "boss": boss}
+		return {"walk": walk_open, "rooms": [Rect2i(0, 0, N, N)], "spots": open_spots, "boss_spot": CENTER - Vector2.DOWN, "chest_spot": CENTER, "boss": boss}
 	var g: Array = []
 	for i in N:
 		var col: Array = []
@@ -33,8 +34,8 @@ static func generate(n: int, rng: RandomNumberGenerator, boss: bool, rooms_mode 
 	if boss:
 		rooms.append(ARENA)
 		_carve(g, ARENA, true)
-		_carve(g, Rect2i(11, 5, 3, 2), true)
-		_carve(g, Rect2i(11, 19, 3, 1), true)
+		_carve(g, Rect2i(14, 5, 3, 2), true)
+		_carve(g, Rect2i(14, 19, 3, 1), true)
 		for p: Vector2i in PILLARS:
 			_carve(g, Rect2i(p.x, p.y, 2, 2), false)
 	else:

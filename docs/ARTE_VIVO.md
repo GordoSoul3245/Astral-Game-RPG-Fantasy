@@ -1,7 +1,7 @@
 # Arte natural y con vida (guía del proyecto)
 
 Fuente: "Stylized Grass & Trees for Pixel Art 3D in Godot 4" (Eduardo Schildt) y el video de pasto de Dylearn.
-Ecos de la Ruina es 2D con sprites pre-renderizados desde Blender, así que cada idea va traducida a nuestro pipeline.
+Astral es 2D con sprites pre-renderizados desde Blender, así que cada idea va traducida a nuestro pipeline.
 
 ## Las ideas de fondo (no recetas sueltas)
 1. **Todo comparte una sola luz y una sola paleta.** El pasto usa la misma luz y el mismo color que el suelo de debajo:

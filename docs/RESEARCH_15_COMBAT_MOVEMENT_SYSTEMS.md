@@ -1,4 +1,4 @@
-# Quince referencias de combate, movimiento y vida para Ecos de la Ruina
+# Quince referencias de combate, movimiento y vida para Astral
 
 Investigación: 10 de noviembre de 2026. Documento para el usuario y Claude Code. Complementa DESIGN_NOTES.md, GAME_BRIEF.md y COMBAT_LIGHTING_REPORT.md. No constituye autorización para implementar todas las propuestas.
 

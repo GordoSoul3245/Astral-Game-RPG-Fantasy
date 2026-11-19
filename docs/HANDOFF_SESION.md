@@ -1,9 +1,9 @@
-# Handoff: Ecos de la Ruina (proyecto `astral`)
+# Handoff: Astral (proyecto `astral`)
 
 Pégame este archivo al empezar otra sesión. Contiene lo hecho, el estado real del repo y lo pendiente.
 
 ## 1. Proyecto y entorno
-- Juego: **Ecos de la Ruina**, RPG isométrico de acción en **Godot 4.7.2** (renderer GL Compatibility, GDScript).
+- Juego: **Astral**, RPG isométrico de acción en **Godot 4.7.2** (renderer GL Compatibility, GDScript).
 - Carpeta: `C:\Users\Mateo\Documents\astral`. Repo: `github.com/GordoSoul3245/Astral-Game-RPG-Fantasy`, rama `main`.
 - Godot consola (tests y capturas): `C:/Users/Mateo/Downloads/Godot_v4.7.2-stable_win64.exe/Godot_v4.7.2-stable_win64_console.exe`
   - Tests: `--headless --path . --script res://tests/<nombre>.gd` (con `--fixed-fps 60` para `test_playthrough`).

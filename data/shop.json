@@ -107,7 +107,11 @@
 			},
 			{
 				"id": "grimorio_escarcha",
-				"price": 350
+				"price": 200
+			},
+			{
+				"id": "grimorio_tierra",
+				"price": 200
 			}
 		]
 	},

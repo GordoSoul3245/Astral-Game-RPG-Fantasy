@@ -74,10 +74,14 @@ func _ready() -> void:
 	l.position = (fg - Vector2(0, 10)) * main.SCALE
 	add_child(l)
 	ground = main.tile_to_ground(seat_tile)
-	for lg: Vector2 in [ground, main.tile_to_ground(fire_tile + Vector2(-1.4, -0.4)), main.tile_to_ground(fire_tile + Vector2(0.2, 1.3))]:
+	# Los asientos rodean el fuego. El punto del asiento es la cadera del gaucho en el suelo.
+	for lg: Vector2 in [ground, fg + Vector2(-70, 25), fg + Vector2(70, 25)]:
+		var tangent := (lg - fg).orthogonal()
+		var directions := ["east", "south-east", "south", "south-west", "west", "north-west", "north", "north-east"]
+		var direction: String = directions[posmod(roundi(tangent.angle() / (PI / 4.0)), 8)]
 		var log_sprite := Sprite2D.new()
-		log_sprite.texture = preload("res://art/map/tronco_fogon.png")
-		log_sprite.position = (lg - Vector2(0, 12)) * main.SCALE
+		log_sprite.texture = load("res://art/map/tronco_%s.png" % direction)
+		log_sprite.position = (lg - Vector2(0, 15)) * main.SCALE
 		log_sprite.scale = Vector2.ONE * main.SCALE
 		log_sprite.z_index = int(lg.y) - 1
 		add_child(log_sprite)
@@ -108,6 +112,11 @@ func _exit_tree() -> void:
 		door.queue_free()
 
 func _talk() -> void:
+	if not main.quests.met_gaucho:
+		main.quests.met_gaucho = true
+		main.dialogue.open("El viejo", main.quests.payada)
+		main.save_game()
+		return
 	main.dialogue.open("El viejo", COPLAS[mini(talks, COPLAS.size() - 1)])
 	talks += 1
 	following = following or talks >= COPLAS.size()

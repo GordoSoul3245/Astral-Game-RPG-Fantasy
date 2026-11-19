@@ -14,7 +14,8 @@ var main: Node
 var tab := "inv"
 var selected := ""               # objeto elegido: se muestra en el panel de detalle
 var body: VBoxContainer
-var tab_buttons := {}
+signal options_closed
+var heading: Label
 var page := 0                    # página de la mochila (16 casillas por página)
 var bar_row: HBoxContainer       # la barra de objetos, abierta bajo el panel: casillas donde soltar objetos arrastrados
 var panel: PanelContainer        # el panel general (crafteo, pesca, magia, estadísticas, opciones)
@@ -50,7 +51,7 @@ func _ready() -> void:
 	add_child(center)
 	panel = PanelContainer.new()
 	panel.custom_minimum_size = Vector2(1180, 720)
-	panel.add_theme_stylebox_override("panel", _box(Color("#0d1020"), GOLD, 2, 12, 22, 24))
+	panel.add_theme_stylebox_override("panel", _box(Color("#463226"), Color("#c69e68"), 4, 5, 22, 24))
 	center.add_child(panel)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 12)
@@ -58,20 +59,13 @@ func _ready() -> void:
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 12)
 	v.add_child(head)
-	_label("Ecos de la Ruina", head, 28, GOLD)
-	var gap := Control.new()
-	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(gap)
-	for pair in [["inv", "Inventario"], ["craft", "Crafteo"]]:  # Pesca, Magia, Estadísticas y Opciones se abren desde los botones del HUD
-		var b := Button.new()
-		b.text = pair[1]
-		b.focus_mode = Control.FOCUS_NONE
-		b.custom_minimum_size = Vector2(124, 40)
-		b.add_theme_font_size_override("font_size", 18)
-		b.pressed.connect(_set_tab.bind(pair[0]))
-		head.add_child(b)
-		tab_buttons[pair[0]] = b
-	_label("[I] cerrar", head, 16, MUTED)
+	heading = _label("", head, 30, Color("#f3d69a"))
+	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var close := Button.new()
+	close.text = "Volver   [Esc]"
+	style_button(close)
+	close.pressed.connect(_close_panel)
+	head.add_child(close)
 	v.add_child(HSeparator.new())
 	var bar_wrap := CenterContainer.new()
 	bar_wrap.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
@@ -103,7 +97,7 @@ func _ready() -> void:
 	book_items.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	book.add_child(book_items)
 
-func _box(bg: Color, border: Color, width := 2, radius := 8, margin := 8, shadow := 0) -> StyleBoxFlat:
+static func _box(bg: Color, border: Color, width := 2, radius := 8, margin := 8, shadow := 0) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = bg
 	sb.set_border_width_all(width)
@@ -115,10 +109,25 @@ func _box(bg: Color, border: Color, width := 2, radius := 8, margin := 8, shadow
 		sb.shadow_color = Color(0, 0, 0, 0.6)
 	return sb
 
+static func style_button(button: Button) -> void:
+	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
+		var leather := Color("#64432b") if state in ["hover", "focus"] else Color("#402d23")
+		button.add_theme_stylebox_override(state, _box(leather, Color("#b68c54"), 2, 3, 8))
+	button.add_theme_color_override("font_color", Color("#f4dfae"))
+
+func _close_panel() -> void:
+	visible = false
+	if tab == "opt" and options_closed.has_connections():
+		options_closed.emit()
+	else:
+		get_tree().paused = false
+
 func _label(text: String, parent: Node, size := 18, color := Color.WHITE) -> Label:
 	var l := Label.new()
 	l.text = text
 	l.add_theme_font_size_override("font_size", size)
+	if body and body.is_ancestor_of(parent):
+		color = {GOLD: Color("#65401e"), MUTED: Color("#64513c"), GOOD: Color("#36582e"), BAD: Color("#853f30"), Color.WHITE: INK}.get(color, color)
 	l.add_theme_color_override("font_color", color)
 	parent.add_child(l)
 	return l
@@ -133,9 +142,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		if k == KEY_I or k == KEY_TAB or (k == KEY_ESCAPE and visible):
 			if main.transitioning:
 				return
-			visible = not visible if k != KEY_ESCAPE else false
-			get_tree().paused = visible
 			if visible:
+				_close_panel()
+			elif not get_tree().paused:
+				tab = "inv"
+				visible = true
+				get_tree().paused = true
 				refresh()
 			get_viewport().set_input_as_handled()
 
@@ -155,12 +167,7 @@ func refresh() -> void:
 	var p = main.prog
 	if selected != "" and not _has(selected):
 		selected = ""
-	for k: String in tab_buttons:
-		var active: bool = k == tab
-		var b: Button = tab_buttons[k]
-		for st in ["normal", "hover", "pressed", "focus"]:
-			b.add_theme_stylebox_override(st, _box(Color(0.35, 0.27, 0.1) if active else Color(0.1, 0.12, 0.2), GOLD if active else Color(0.3, 0.34, 0.45), 2, 8, 6))
-		b.add_theme_color_override("font_color", Color.WHITE if active else MUTED)
+	heading.text = {"fish": "Pesca", "magic": "Magia", "stats": "Estadísticas", "opt": "Opciones"}.get(tab, "")
 	for c in body.get_children():
 		body.remove_child(c)
 		c.queue_free()
@@ -187,7 +194,13 @@ func refresh() -> void:
 		_build_options()
 	else:
 		_build_stats()
-	_build_bar()
+	bar_row.get_parent().visible = book.visible
+	if book.visible:
+		_build_bar()
+	else:
+		for button in body.find_children("*", "Button", true, false):
+			if button is Button and not button is CheckButton:
+				style_button(button)
 
 func _has(id: String) -> bool:  # equipo conseguido, arma base o material/consumible con existencias
 	return main.prog.owned.has(id) or main.WEAPONS.has(id) or (not main.prog.equipment.has(id) and main.crafting.count(id) > 0)
@@ -336,7 +349,7 @@ func _slot_button(id: String, size: float, equipped := false, count := 0, page_c
 func _card(parent: Node, min_size: Vector2) -> VBoxContainer:  # panel con fondo para una columna
 	var pc := PanelContainer.new()
 	pc.custom_minimum_size = min_size
-	pc.add_theme_stylebox_override("panel", _box(Color(0.065, 0.08, 0.14), Color(0.2, 0.24, 0.36), 1, 10, 14))
+	pc.add_theme_stylebox_override("panel", _box(Color("#ead4a7"), Color("#987347"), 2, 3, 14))
 	parent.add_child(pc)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 8)
@@ -709,6 +722,7 @@ func _build_options() -> void:
 	_slider_row(g1, "Temblor de cámara", "Sacudidas e impulso al golpear (0 % = cámara quieta)", st.shake, func(v: float) -> void: st.shake = v)
 	_slider_row(g1, "Destellos", "Flash blanco al golpear y luces de impacto (0 % = sin destellos)", st.flash, func(v: float) -> void: st.flash = v)
 	var hs := CheckButton.new()
+	hs.add_theme_color_override("font_color", INK)
 	hs.text = "Pausa de impacto en golpes pesados"
 	hs.button_pressed = st.hitstop
 	hs.focus_mode = Control.FOCUS_NONE

@@ -1,4 +1,4 @@
-# Traspaso a Claude Code: Ecos de la Ruina
+# Traspaso a Claude Code: Astral
 
 ## Pedido activo y autorización
 

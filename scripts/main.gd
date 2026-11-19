@@ -143,7 +143,7 @@ func _ready() -> void:
 	dragon_start = tile_to_ground(Vector2(mp["dragon"][0], mp["dragon"][1]))
 	pos = start_pos
 	world = Node2D.new()
-	world.set_script(load("res://scripts/world_map.gd"))
+	world.set_script(load("res://scripts/region.gd"))
 	world.main = self
 	add_child(world)
 	world.setup(mp)
@@ -221,9 +221,7 @@ func _ready() -> void:
 	social = load("res://scripts/social.gd").new()
 	social.main = self
 	add_child(social)
-	call_deferred("_build_lamps")
 	call_deferred("_build_links")
-	call_deferred("_build_farm")
 	angler = load("res://scripts/angler.gd").new(self, _read_json("res://data/fishing.json"))
 	traps = load("res://scripts/traps.gd").new()
 	traps.main = self
@@ -238,7 +236,11 @@ func _ready() -> void:
 		music.main = self
 		add_child(music)
 	_spawn_dragon()
+	dragon.alive = false
+	dragon.hide()
 	_spawn_fauna()
+	var plaza := tile_to_ground(Vector2(23.5, 28.5))
+	villagers.append(_actor("res://scripts/villager.gd", {"work": plaza, "rest": start_pos, "stroll": tile_to_ground(Vector2(25, 36))}))
 	_load_inventory()
 	combat.mark_spec = items["grimorio_ignis"].get("mark", combat.mark_spec)
 	_build_prompt()
@@ -249,40 +251,32 @@ func _ready() -> void:
 	if not testing:
 		fresh = get_tree().get_meta("new_game", false)
 		if not fresh:
-			fresh = not load_game()
+			fresh = not load_game(true)
 		if get_tree().has_meta("new_game"):
 			get_tree().remove_meta("new_game")
 	_apply_stats()
-	var village_houses := 0
-	for o: Dictionary in mp["objects"]:
-		if o["sprite"] == "castle":  # la puerta de madera está en la cara frontal derecha del sprite del castillo
-			var door_g := tile_to_ground(Vector2(o["tile"][0], o["tile"][1])) + Vector2(65, -8)
-			_add_door(ground_to_tile(door_g), "Entrar a la dungeon", enter_dungeon, false)
-		elif o["sprite"] == "stall":  # el mercader está de pie junto al puesto (tras el mostrador lo taparía el toldo)
-			var m := Node2D.new()
-			m.set_script(load("res://scripts/merchant.gd"))
-			m.main = self
-			m.pos = tile_to_ground(Vector2(o["tile"][0] - 1.75, o["tile"][1] + 0.3))  # del lado que mira al camino: delante del puesto en pantalla
-			add_child(m)
-			merchants.append(m)
-		elif o["sprite"] == "house" and o["tile"][1] > 30.0 and not merchants.any(func(x: Node) -> bool: return x.role == "smith"):  # el herrero vive en la primera casa del pueblo; está frente a su puerta
-			var s := Node2D.new()
-			s.set_script(load("res://scripts/merchant.gd"))
-			s.main = self
-			s.role = "smith"
-			s.pos = tile_to_ground(Vector2(o["tile"][0], o["tile"][1] - 2.2))
-			add_child(s)
-			merchants.append(s)
-		if o["sprite"] == "house" and o["tile"][1] > 30.0 and village_houses < INTERIOR_IDS.size():  # las casas del pueblo se pueden visitar
-			var iid: String = INTERIOR_IDS[village_houses]
-			village_houses += 1
-			var dd := _add_door(Vector2(o["tile"][0], o["rect"][3] + 0.6), "Entrar: " + interiors_data[iid]["title"], enter_interior.bind(iid), false)
-			dd.reach = 1.8
+	for building: Dictionary in mp["objects"]:
+		if building.has("interior"):
+			var id := str(building["interior"])
+			var entrance: Array = building["entrance"]
+			_add_door(Vector2(entrance[0], entrance[1]), "Entrar: " + interiors_data[id]["title"], enter_interior.bind(id), false)
+		elif building["sprite"] == "portal":
+			var threshold: Array = building["entrance"]
+			_add_door(Vector2(threshold[0], threshold[1]), "Entrar a la dungeon", enter_dungeon, false)
+	for trader: Dictionary in mp["traders"]:
+		var npc := Node2D.new()
+		npc.set_script(load("res://scripts/merchant.gd"))
+		npc.main = self
+		npc.role = trader["role"]
+		npc.pos = tile_to_ground(Vector2(trader["tile"][0], trader["tile"][1]))
+		add_child(npc)
+		merchants.append(npc)
+	_build_world_props()
+	_build_farm()
 	station_ui = CanvasLayer.new()
 	station_ui.set_script(load("res://scripts/station_ui.gd"))
 	station_ui.main = self
 	add_child(station_ui)
-	_build_world_props()
 	shop = CanvasLayer.new()
 	shop.set_script(load("res://scripts/shop.gd"))
 	shop.main = self
@@ -296,14 +290,22 @@ func _ready() -> void:
 		var start_menu: CanvasLayer = load("res://scripts/start_menu.gd").new()
 		start_menu.main = self
 		add_child(start_menu)
-		save_game()
 		if fresh:  # diferido: zones_cfg se llena en _build_links, también diferido y encolado antes
-			(func() -> void: if zones_cfg.has("bosque"): _enter_zone("bosque")).call_deferred()
+			_start_fresh.call_deferred()
+		elif not pending_player.is_empty():
+			_restore_player.call_deferred()
+
+func _start_fresh() -> void:
+	if zones_cfg.has("bosque"):
+		_enter_zone("bosque")
+	dialogue.open("Jugador", quests.awakening)
+	save_game()
 
 # --- pueblo: misiones, mercader y guardado
 var quests: RefCounted
 var testing := false
 var save_path := "user://save.json"
+var pending_player := {}
 var autosave_t := 0.0
 var quest_label: Label
 var merchants: Array = []
@@ -325,21 +327,50 @@ func _near_merchant() -> Node2D:
 	return null
 
 func quest_event(event: String, target: String) -> void:  # muertes y pisos completados avanzan la misión activa
+	var previous: int = quests.progress
 	if quests.notify(event, target):
 		say("¡Misión cumplida! Vuelve con %s" % quests.giver, 3.0)
+	if quests.progress != previous:
 		save_game()
 
 func save_game() -> void:
 	if testing and save_path == "user://save.json":
 		return
-	var d := {"version": 1, "level": prog.level, "xp": prog.xp, "points": prog.points, "spent": prog.spent,
+	var d := {"version": 2, "level": prog.level, "xp": prog.xp, "points": prog.points, "spent": prog.spent,
 		"coins": prog.coins, "potions": prog.potions, "materials": prog.materials, "owned": prog.owned,
 		"equipped": prog.equipped, "blueprints": prog.blueprints, "slots": prog.slots, "dungeon_floor": dungeon_floor, "quests": quests.to_dict(), "clock": clock.to_dict(), "stars": prog.stars, "angler": angler.to_dict(), "bait": bait, "rod_parts": prog.rod_parts, "farm": farm.to_dict() if farm else pending_farm, "skills": prog.skills, "skill_points": prog.skill_points, "social": social.to_dict(), "zones_done": zones_done, "tool_up": prog.tool_up, "pets": pets, "books": prog.books}
-	var f := FileAccess.open(save_path, FileAccess.WRITE)
+	if not pending_player.is_empty():
+		return
+	var area := "outdoors"
+	var exterior := pos
+	if in_interior or (in_dungeon and zone_id == ""):
+		area = "house" if in_interior else ("mine" if in_mine else "dungeon")
+		exterior = overworld["pos"]
+	var player := {"area": area, "region": zone_id, "house": current_interior,
+		"x": pos.x, "y": pos.y, "outside_x": exterior.x, "outside_y": exterior.y,
+		"buffs": prog.buffs, "hp": hero_hp, "mana": mana, "stamina": stamina, "ult": ult,
+		"facing": facing, "selected": selected, "zoom": cam.zoom.x}
+	if area == "dungeon" and is_instance_valid(floors):
+		player["floor"] = floors.floor_no
+		player["floor_seed"] = str(floors.layout_state)
+		player["opened"] = floors.cleared and not is_instance_valid(floors.chest_door)
+	if area in ["mine", "dungeon"] or zone_id != "":
+		var survivors := []
+		for e in enemies:
+			if e != dragon and e.alive:
+				survivors.append([e.id, e.pos.x, e.pos.y, e.hp])
+		player["enemies"] = survivors
+	d["player"] = player
+	var f := FileAccess.open(save_path + ".tmp", FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(d, "\t"))
+		f.flush()
+		if f.get_error() == OK:
+			f.close()
+			if DirAccess.rename_absolute(save_path + ".tmp", save_path) != OK:
+				push_error("No se pudo reemplazar la partida guardada")
 
-func load_game() -> bool:  # valida cada campo: el archivo puede estar editado o ser de otra versión
+func load_game(resume_session := false) -> bool:  # valida cada campo: el archivo puede estar editado o ser de otra versión
 	if not FileAccess.file_exists(save_path):
 		return false
 	var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(save_path))
@@ -452,14 +483,72 @@ func load_game() -> bool:  # valida cada campo: el archivo puede estar editado o
 		else:
 			pending_farm = d["farm"]
 	bait = str(d.get("bait", "")) if angler.cfg["baits"].has(str(d.get("bait", ""))) else ""
+	if resume_session and d.get("player") is Dictionary:
+		pending_player = d.player
 	return true
+
+func _restore_player() -> void:
+	var saved := pending_player
+	var region_id := str(saved.get("region", ""))
+	if zone_nodes.has(region_id):
+		_switch_region(region_id)
+	pos = Vector2(float(saved.get("outside_x", pos.x)), float(saved.get("outside_y", pos.y)))
+	match saved.get("area", "outdoors"):
+		"house":
+			if interiors_data.has(saved.get("house", "")):
+				_enter_interior(saved.house)
+		"mine":
+			_enter_mine()
+		"dungeon":
+			_enter_dungeon()
+			floors.rng.state = int(saved.get("floor_seed", str(floors.layout_state)))
+			floors.start(clampi(int(saved.get("floor", dungeon_floor)), 1, 99999))
+	if saved.get("enemies") is Array:
+		var remaining: Array = saved.enemies.duplicate()
+		for e in enemies.duplicate():
+			if e == dragon:
+				continue
+			var index := remaining.find_custom(func(row: Variant) -> bool: return row is Array and row.size() == 4 and row[0] == e.id)
+			if index < 0:
+				enemies.erase(e)
+				e.queue_free()
+			else:
+				var row: Array = remaining.pop_at(index)
+				e.pos = Vector2(float(row[1]), float(row[2]))
+				e.hp = maxi(1, int(row[3]))
+		if saved.get("area") == "dungeon" and remaining.is_empty() and enemies.all(func(e: Node) -> bool: return e == dragon):
+			floors._clear(false)
+			if saved.get("opened", false):
+				floors.chest.open()
+				doors.erase(floors.chest_door)
+				floors.chest_door.queue_free()
+				floors.chest_door = null
+	pos = Vector2(float(saved.get("x", pos.x)), float(saved.get("y", pos.y)))
+	prog.buffs.clear()
+	if saved.get("buffs") is Array:
+		for buff in saved.buffs:
+			if buff is Dictionary and buff.has_all(["stat", "amount", "t"]) and float(buff.t) > 0:
+				prog.add_buff(str(buff.stat), float(buff.amount), float(buff.t))
+	_apply_stats()
+	hero_hp = clampi(int(saved.get("hp", hero_hp)), 1, hero_max_hp)
+	mana = clampf(float(saved.get("mana", mana)), 0, hero_data.mana)
+	stamina = clampf(float(saved.get("stamina", stamina)), 0, hero_data.stamina)
+	ult = clampf(float(saved.get("ult", ult)), 0, hero_data.ult_max)
+	if saved.get("facing") in DIRS:
+		facing = saved.facing
+	var hand := clampi(int(saved.get("selected", selected)), 0, HOTBAR_MAX - 1)
+	_select(hand)
+	cam.zoom = Vector2.ONE * clampf(float(saved.get("zoom", cam.zoom.x)), ZOOM_MIN, ZOOM_MAX)
+	cam.position = (pos - Vector2(0, 40)) * SCALE
+	_place()
+	pending_player = {}
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		save_game()
 
 # --- puertas, avisos y dungeon
-const DUNGEON_TILES := 25
+const DUNGEON_TILES := preload("res://scripts/dungeon_gen.gd").N
 var in_dungeon := false
 var overworld := {}              # estado del mapa exterior mientras estás en la dungeon
 var doors: Array = []            # puertas del mapa actual
@@ -495,7 +584,7 @@ func _build_prompt() -> void:
 	quest_label.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	quest_label.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	quest_label.offset_right = -18.0
-	quest_label.offset_top = 14.0
+	quest_label.offset_top = 70.0
 	quest_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	quest_label.add_theme_font_size_override("font_size", 20)
 	quest_label.add_theme_color_override("font_color", Color(1.0, 0.88, 0.55))
@@ -582,7 +671,7 @@ func _interact() -> void:
 			line = quests.talk(self)
 			save_game()
 		var who: String = quests.giver if v == villagers[0] else "Aldeano"
-		dialogue.open(who, line.replace(who + ": ", "").split("\n"))
+		dialogue.open(who, line.split("\n"))
 		return
 	var nd := _near_npc()
 	if nd != null:
@@ -781,7 +870,7 @@ func _exit_dungeon() -> void:
 	E2 = overworld["E2"]
 	TILES = overworld["tiles"]
 	pos = overworld["pos"]
-	dragon.visible = true
+	dragon.visible = false
 	dragon.alive = overworld["dragon_alive"]
 	refresh_world_levels()
 	RenderingServer.set_default_clear_color(Color("#1c4462"))
@@ -789,7 +878,6 @@ func _exit_dungeon() -> void:
 	cam.position = (pos - Vector2(0, 40)) * SCALE
 
 # --- interiores de las casas del pueblo (data/interiors.json) y conversaciones (data/dialogue.json)
-const INTERIOR_IDS := ["forge", "den"]   # primera y segunda casa del pueblo, por orden en map.json
 var interiors_data := {}
 var dialogue_data := {}
 var dialogue: CanvasLayer
@@ -864,7 +952,7 @@ func _exit_interior() -> void:
 	E2 = overworld["E2"]
 	TILES = overworld["tiles"]
 	pos = overworld["pos"]
-	dragon.visible = true
+	dragon.visible = false
 	dragon.alive = overworld["dragon_alive"]
 	RenderingServer.set_default_clear_color(Color("#1c4462"))
 	combat.set_zone(false)
@@ -1022,6 +1110,10 @@ func _scaled(base: Dictionary) -> Dictionary:
 		var key: String = path[-1]
 		if node.has(key):
 			node[key] = roundi(node[key] * floor_dmg * float(floor_extra.get("dmg_mult", 1.0)))
+	for a: Dictionary in d.get("attacks", []):  # repertorio de los monstruos "pattern"
+		for node: Dictionary in [a, a.get("projectile", {})]:
+			if node.has("damage"):
+				node["damage"] = roundi(node["damage"] * floor_dmg * float(floor_extra.get("dmg_mult", 1.0)))
 	return d
 
 func popup(ground: Vector2, text: String, color := Color(1.0, 0.9, 0.5)) -> void:  # texto flotante sobre un punto del suelo
@@ -1088,41 +1180,19 @@ func _use_potion() -> void:  # atajo de pruebas y del botón táctil: bebe una p
 func _read_json(path: String) -> Dictionary:
 	return JSON.parse_string(FileAccess.get_file_as_string(path))
 
-func _make_bar(parent: Node, y: float, color: Color) -> ProgressBar:
-	var b := ProgressBar.new()
-	b.position = Vector2(16, y)
-	b.custom_minimum_size = Vector2(260, 20)
-	b.size = Vector2(260, 20)
-	b.show_percentage = false
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = color
-	fill.set_corner_radius_all(4)
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = Color(0.1, 0.1, 0.14, 0.8)
-	bg.set_corner_radius_all(4)
-	b.add_theme_stylebox_override("fill", fill)
-	b.add_theme_stylebox_override("background", bg)
-	var l := Label.new()
-	l.name = "Label"
-	l.position = Vector2(8, -2)
-	l.add_theme_font_size_override("font_size", 19)
-	b.add_child(l)
-	parent.add_child(b)
-	return b
-
 func _set_bar(key: String, value: float, max_value: float, text: String) -> void:
-	var b: ProgressBar = bars[key]
+	var b: Range = bars[key]
 	b.max_value = max_value
 	b.value = value
 	b.get_node("Label").text = text
 
 func _update_bars() -> void:
 	_update_counts()
-	_set_bar("hp", hero_hp, hero_max_hp, "Vida %d / %d" % [hero_hp, hero_max_hp])
-	_set_bar("mana", mana, hero_data["mana"], "Maná %d" % roundi(mana))
-	_set_bar("stamina", stamina, hero_data["stamina"], "Estamina %d" % roundi(stamina) + ("  (agotada)" if exhausted else ""))
+	_set_bar("hp", hero_hp, hero_max_hp, "%d / %d" % [hero_hp, hero_max_hp])
+	_set_bar("mana", mana, hero_data["mana"], str(roundi(mana)))
+	_set_bar("stamina", stamina, hero_data["stamina"], str(roundi(stamina)) + ("  (agotada)" if exhausted else ""))
 	var full: bool = ult >= hero_data["ult_max"]
-	_set_bar("ult", ult, hero_data["ult_max"], "ULTIMATE LISTA  [R]" if full else "Ultimate %d%%" % roundi(ult))
+	_set_bar("ult", ult, hero_data["ult_max"], "ULTIMATE LISTA  [R]" if full else "Ultimate %d%%" % floori(100.0 * ult / hero_data["ult_max"]))
 	_set_bar("xp", prog.xp, prog.xp_needed(), "Nivel %d  ·  XP %d / %d" % [prog.level, prog.xp, prog.xp_needed()])
 	info_label.text = "Monedas %d  ·  Menú [I]%s  ·  %s" % [prog.coins, ("  ·  ¡%d puntos!" % prog.points) if prog.points > 0 else "", clock.text()]
 	burn_label.text = "Espada en llamas  %.1f s" % burn_t if burn_t > 0.0 else ""
@@ -1135,14 +1205,20 @@ func _load_inventory() -> void:
 	selected = int(inv["selected"])
 	var ui := CanvasLayer.new()
 	add_child(ui)
-	bars["hp"] = _make_bar(ui, 16, Color(0.8, 0.2, 0.2))
-	bars["mana"] = _make_bar(ui, 40, Color(0.25, 0.5, 0.95))
-	bars["stamina"] = _make_bar(ui, 64, Color(0.35, 0.8, 0.35))
-	bars["ult"] = _make_bar(ui, 88, Color(1.0, 0.6, 0.15))
-	bars["xp"] = _make_bar(ui, 112, Color(0.6, 0.4, 0.9))
+	const ResourceBar = preload("res://scripts/health_bar.gd")
+	bars["hp"] = ResourceBar.new()
+	ui.add_child(bars["hp"])
+	bars["mana"] = ResourceBar.new(ResourceBar.Kind.MANA)
+	ui.add_child(bars["mana"])
+	bars["stamina"] = ResourceBar.new(ResourceBar.Kind.STAMINA)
+	ui.add_child(bars["stamina"])
+	bars["ult"] = preload("res://scripts/ultimate_flask.gd").new()
+	ui.add_child(bars["ult"])
+	bars["xp"] = ResourceBar.new(ResourceBar.Kind.XP)
+	ui.add_child(bars["xp"])
 	info_label = Label.new()
 	info_label.add_theme_font_size_override("font_size", 20)
-	info_label.position = Vector2(16, 136)
+	info_label.position = Vector2(16, 141)
 	ui.add_child(info_label)
 	# lo que no está en el inventario-libro de PixelLab se abre desde aquí (por ahora): Pesca, Magia, Estadísticas y Opciones
 	var hud_tabs := HBoxContainer.new()
@@ -1150,23 +1226,24 @@ func _load_inventory() -> void:
 	hud_tabs.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 16)
 	hud_tabs.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	ui.add_child(hud_tabs)
-	for pair in [["fish", "Pesca"], ["magic", "Magia"], ["stats", "Estadísticas"], ["opt", "Opciones"]]:
+	for pair in [["fish", "Pesca"], ["magic", "Magia"], ["stats", "Estadísticas"]]:
 		var b := Button.new()
 		b.text = pair[1]
 		b.focus_mode = Control.FOCUS_NONE
+		preload("res://scripts/menu.gd").style_button(b)
 		b.custom_minimum_size = Vector2(0, 38)
 		b.add_theme_font_size_override("font_size", 17)
 		b.pressed.connect(func() -> void: menu.open_tab(pair[0]))
 		hud_tabs.add_child(b)
 	buff_label = Label.new()
-	buff_label.position = Vector2(16, 188)
+	buff_label.position = Vector2(16, 209)
 	buff_label.add_theme_font_size_override("font_size", 18)
 	buff_label.add_theme_color_override("font_color", Color(0.6, 0.95, 0.7))
 	buff_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	buff_label.add_theme_constant_override("outline_size", 5)
 	ui.add_child(buff_label)
 	burn_label = Label.new()
-	burn_label.position = Vector2(16, 162)
+	burn_label.position = Vector2(16, 183)
 	burn_label.add_theme_color_override("font_color", Color(1.0, 0.6, 0.2))
 	ui.add_child(burn_label)
 	_update_bars()
@@ -1228,6 +1305,19 @@ func _build_fx() -> void:
 	fx_frames.set_animation_loop("impact", false)
 	for i in 6:
 		fx_frames.add_frame("impact", load("res://art/grimorio/impact_%02d.png" % i))
+
+	var atlas := preload("res://art/grimorio/ignis_fx.png")
+	var spells := ["ignis_light", "ignis_heavy", "ignis_meteor", "ignis_impact"]
+	for row in spells.size():
+		var anim: String = spells[row]
+		fx_frames.add_animation(anim)
+		fx_frames.set_animation_loop(anim, anim != "ignis_impact")
+		fx_frames.set_animation_speed(anim, [22, 16, 20, 24][row])
+		for frame in 12:
+			var texture := AtlasTexture.new()
+			texture.atlas = atlas
+			texture.region = Rect2(frame * 64, row * 64, 64, 64)
+			fx_frames.add_frame(anim, texture)
 
 # chispas y llamas alrededor del héroe mientras la katana arde o hace el mega dash
 func _build_burn_fx() -> void:
@@ -1296,16 +1386,14 @@ func _actor(script: String, props: Dictionary) -> Node2D:
 func _spawn_fauna() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
+	var home := tile_to_ground(Vector2(24.0, 34.0))  # plaza del valle (el inicio del juego puede estar en otra zona)
 	for i in 3:
-		fauna.append(_actor("res://scripts/critter.gd", {"home": _free_spot(rng, start_pos, 4.0, 9.0)}))
-	var work := _free_spot(rng, start_pos, 3.0, 6.0)
-	var rest := _free_spot(rng, work, 3.0, 5.0)
-	villagers.append(_actor("res://scripts/villager.gd", {"work": work, "rest": rest, "stroll": _free_spot(rng, rest, 6.0, 9.0)}))
+		fauna.append(_actor("res://scripts/critter.gd", {"home": _free_spot(rng, home, 4.0, 9.0)}))
 	# guarida cerca de algún conejo (caza a la vista) pero con el inicio y el refugio del civil fuera de su alcance
 	var den := Vector2.ZERO
 	for i in 60:
 		den = _free_spot(rng, fauna[i % 3].home, 6.0, 11.0)
-		if den.distance_to(start_pos) > 220.0 and den.distance_to(rest) > 220.0:
+		if den.distance_to(home) > 220.0:
 			break
 	predators.append(_actor("res://scripts/predator.gd", {"den": den}))
 
@@ -1384,8 +1472,6 @@ func _respawn() -> void:
 	elif in_dungeon:  # despierta en el pueblo; el piso alcanzado y la misión se conservan
 		_exit_dungeon()
 		say("Despiertas en el pueblo", 2.5)
-	else:
-		dragon.reset(dragon_start)
 	pos = start_pos
 	cam.position = (pos - Vector2(0, 40)) * SCALE
 	save_game()
@@ -1441,6 +1527,7 @@ func spawn_projectile(source: String, ground: Vector2, dir: Vector2, spec: Dicti
 	p.height = spec["muzzle_height"]
 	p.scale_mult = spec.get("scale", 1.0)
 	p.effect = str(spec.get("effect", "fire")) if source == "hero" else "fire"
+	p.visual = str(spec.get("visual", ""))
 	p.aoe = float(spec.get("aoe", 0.0)) * (1.0 + (prog.skill_sum("aoe_pct") if source == "hero" else 0.0))
 	p.ground = ground
 	p.tint = Color.html(spec["tint"]) if spec.has("tint") else tint
@@ -1590,7 +1677,15 @@ func _try_buffer() -> void:
 # arranca un ataque o ultimate: orienta al héroe y reproduce su animación (o dispara al instante si no tiene)
 func _begin(spec: Dictionary, mode: String) -> void:
 	current = spec
+	if spec.type == "ice_spike":
+		aim_cell = ground_to_tile(_mouse() / SCALE).round()
 	current_mode = mode
+	if spec.type == "fissure":
+		var rest := hero.offset
+		var stomp := hero.create_tween()
+		var windup: float = float(spec.strike_frame) / (float(spec.fps) * prog.attack_speed())
+		stomp.tween_property(hero, "offset", rest - Vector2(0, 9), windup * 0.7)
+		stomp.tween_property(hero, "offset", rest, windup * 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	var cd_skill: float = minf(0.5, prog.skill_sum("cd_pct")) if current.get("type", "") == "projectile" else 0.0  # chispa veloz
 	cooldown = current["cooldown"] / prog.attack_speed() * (1.0 - cd_skill)
 	swing_mana = 0.0
@@ -1632,6 +1727,8 @@ func _strike() -> void:
 			m.cell = aim_cell
 			m.spec = current
 			add_child(m)
+		"ice_spike", "stone_fist", "freeze", "fissure":
+			preload("res://scripts/elemental_magic.gd").cast(self, current)
 		"consume":
 			var m: String = crafting.use(self, current["id"])
 			if m != "":
@@ -1707,6 +1804,9 @@ func _ultimate() -> void:
 		aim_marker.main = self
 		aim_marker.z_index = -3000
 		add_child(aim_marker)
+	elif u["type"] in ["freeze", "fissure"]:
+		ult = 0.0
+		_begin(u, "ultimate")
 	elif u["type"] == "flame_dash":
 		_mega_dash(u)
 
@@ -1854,7 +1954,7 @@ func _process(delta: float) -> void:
 		if l.enabled != on:
 			l.enabled = on
 	fade.visible = fade.color.a > 0.0  # el fundido transparente ocupa toda la pantalla: oculto no se pinta
-	var casting: bool = attacking and current.get("type", "") in ["projectile", "meteor"]
+	var casting: bool = attacking and current.get("anim", "") == "cast"
 	var light_target := 0.45 if (casting or burn_t > 0.0 or mega_active) and not dying else 0.0
 	spell_light.energy = lerpf(spell_light.energy, light_target, 1.0 - exp(-12.0 * delta))
 	spell_light.position = (pos - Vector2(0, 24)) * SCALE
@@ -1997,7 +2097,7 @@ func _physics_process(delta: float) -> void:
 	_place()
 
 func _move_while_attacking(dir: Vector2, delta: float) -> void:  # caminar lento durante un ataque; no cambia hacia dónde mira ni su animación
-	var kind := "cast" if current.get("type", "") in ["projectile", "meteor"] else current_mode
+	var kind := "cast" if current.get("anim", "") == "cast" else current_mode
 	var mult: float = ATTACK_MOVE.get(kind, 0.3)
 	var target: Vector2 = dir.normalized() * WALK_SPEED * prog.move_mult() * mult
 	move_vel = move_vel.move_toward(target, (ACCEL if dir != Vector2.ZERO else BRAKE) * delta)
@@ -2155,7 +2255,7 @@ func _gather_hit() -> void:
 
 # --- barra de objetos: 6 casillas (prog.slots) que se colocan arrastrando desde el inventario; las herramientas nuevas entran solas
 const HOTBAR_MAX := 6
-const WEAPONS := ["katana_ceniza", "grimorio_ignis", "grimorio_escarcha", "grimorio_tormenta"]
+const WEAPONS := ["katana_ceniza", "grimorio_ignis", "grimorio_escarcha", "grimorio_tormenta", "grimorio_tierra"]
 var hotbar_row: HBoxContainer
 var clock: Node        # clock.gd: hora, día y lluvia
 var angler: RefCounted # angler.gd: libro de capturas, acuario, encargos y nasas
@@ -2441,14 +2541,8 @@ func _build_links() -> void:
 	var w: Dictionary = _read_json("res://data/world.json")
 	links = w["links"]
 	world_names = w["names"]
-	var bridges := Node2D.new()
-	bridges.set_script(load("res://scripts/bridges.gd"))
-	bridges.main = self
-	world.add_child(bridges)  # cuelga del valle: se oculta con él
-	for l: Dictionary in links:
-		if l["a"] == "valle":
-			bridges.add_link(str(l["side_a"]), l["rows_a"], Color(zones_cfg[l["b"]]["ground"][0]), "%s →" % world_names[l["b"]])
 	_build_regions()
+	_build_forest_backdrop()
 
 # Un solo mapa (como en Pokémon): cada zona se arma al iniciar, pegada a su lado del valle según data/world.json, y todas se ven a la vez.
 # Cada región conserva sus casillas propias (su "marco": C1, E1, E2, TILES); al cruzar caminando solo cambia cuál es la región actual.
@@ -2456,7 +2550,7 @@ var frames := {}               # nodo de región -> {id, C1, E1, E2, tiles}
 var zone_nodes := {}           # id de zona -> nodo
 var region_doors := {}         # id de región -> sus puertas
 var valley_world: Node2D
-var valley_dragon_alive := true
+var valley_dragon_alive := false
 
 func _build_regions() -> void:
 	frames[world] = {"id": "valle", "C1": C1, "E1": E1, "E2": E2, "tiles": TILES}
@@ -2501,10 +2595,68 @@ func _use_frame(f: Dictionary) -> void:
 func _tile_in(f: Dictionary, g: Vector2) -> Vector2:  # punto de suelo -> casilla en el marco de una región
 	return Transform2D(f["E1"] / f["tiles"], f["E2"] / f["tiles"], f["C1"]).affine_inverse() * g
 
-func _tiles_away(f: Dictionary, g: Vector2) -> float:  # casillas desde un punto de suelo hasta el borde de una región (0 = dentro)
-	var t := _tile_in(f, g)
-	var n: float = f["tiles"]
-	return maxf(maxf(-t.x, t.x - n), maxf(-t.y, t.y - n))
+func _region_on_screen(node: Node2D) -> bool:
+	if node == world:
+		return true
+	var f: Dictionary = frames[node]
+	var origin: Vector2 = f["C1"]
+	var u: Vector2 = f["E1"]
+	var v: Vector2 = f["E2"]
+	var canvas := get_viewport().get_canvas_transform()
+	var bounds := Rect2(canvas * (origin * SCALE), Vector2.ZERO)
+	for corner: Vector2 in [origin + u, origin + v, origin + u + v]:
+		bounds = bounds.expand(canvas * (corner * SCALE))
+	return bounds.grow(150.0 * SCALE * cam.zoom.x).intersects(get_viewport_rect())
+
+func _build_forest_backdrop() -> void:
+	# Una sola textura por lote. Los árboles exteriores decoran el horizonte sin agregar colisiones.
+	var backdrop := Node2D.new()
+	backdrop.z_index = -4050
+	valley_world.add_child(backdrop)
+	var floor_quad := Polygon2D.new()
+	floor_quad.material = GrassTile.floor_material()
+	var extent := 25000.0 * SCALE
+	floor_quad.polygon = PackedVector2Array([Vector2(-extent,-extent), Vector2(extent,-extent), Vector2(extent,extent), Vector2(-extent,extent)])
+	backdrop.add_child(floor_quad)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 2137
+	var groves := FastNoiseLite.new()
+	groves.seed = 2137
+	groves.frequency = 0.13
+	var crowns: Array[Vector2] = []
+	for i in range(-65, 115, 2):
+		for j in range(-65, 166, 2):
+			var tile := Vector2(i + rng.randf_range(-0.5, 1.5), j + rng.randf_range(-0.5, 1.5))
+			var point := tile_to_ground(tile)
+			var distance := INF
+			for f: Dictionary in frames.values():
+				var local := _tile_in(f, point)
+				var bounds := Rect2(Vector2.ZERO, Vector2.ONE * float(f["tiles"]))
+				distance = minf(distance, local.distance_to(local.clamp(bounds.position, bounds.end)))
+			if distance <= 0.001:
+				continue
+			var grove := groves.get_noise_2dv(tile)
+			var density := lerpf(0.28, 0.92, smoothstep(0.0, 8.0, distance + grove * 7.0))
+			if rng.randf() < density + grove * 0.4:
+				crowns.append(point)
+	crowns.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.y < b.y)
+	var batch := MultiMeshInstance2D.new()
+	batch.texture = preload("res://art/arbol1/south/frame_000.png")
+	var quad := QuadMesh.new()
+	quad.size = Vector2(batch.texture.get_size())
+	var mesh := MultiMesh.new()
+	mesh.transform_format = MultiMesh.TRANSFORM_2D
+	mesh.mesh = quad
+	mesh.instance_count = crowns.size()
+	for k in crowns.size():
+		var size := rng.randf_range(0.85, 1.15)
+		var transform := Transform2D.IDENTITY.scaled(Vector2(1, -1) * SCALE * size)
+		transform.origin = (crowns[k] - Vector2(0, 52) * size) * SCALE
+		mesh.set_instance_transform_2d(k, transform)
+	batch.z_as_relative = false
+	batch.z_index = -3900  # Las copas pasan por delante del pasto en la unión con el terreno.
+	batch.multimesh = mesh
+	backdrop.add_child(batch)
 
 func _inside(f: Dictionary, g: Vector2) -> bool:
 	var t := _tile_in(f, g)
@@ -2523,7 +2675,7 @@ func walkable_elsewhere(from: Node, i: int, j: int) -> bool:  # casilla fuera de
 
 func _zones_visible(v: bool) -> void:  # las zonas se ven junto al valle, salvo dentro de casas, mina o mazmorra
 	for node: Node2D in zone_nodes.values():
-		node.visible = v and (node == world or _tiles_away(frames[node], pos) < 16.0)
+		node.visible = v and (_region_on_screen(node))
 		node.process_mode = Node.PROCESS_MODE_INHERIT if node.visible else Node.PROCESS_MODE_DISABLED
 
 func _switch_region(id: String) -> void:  # cruzar caminando de una región a otra: sin fundido ni salto
@@ -2550,10 +2702,11 @@ func _switch_region(id: String) -> void:  # cruzar caminando de una región a ot
 		in_dungeon = false
 		in_mine = false
 		zone_id = ""
-		dragon.visible = true
+		dragon.visible = false
 		dragon.alive = valley_dragon_alive
 		RenderingServer.set_default_clear_color(Color("#1c4462"))
-		say(str(world_names.get("valle", "El valle")), 2.5)
+		say(str(world_names["valle"]), 2.5)
+		quest_event("visit", "valle")
 		return
 	var cfg: Dictionary = zones_cfg[id]
 	if zone_id == "":
@@ -2721,7 +2874,7 @@ func _check_edges(delta: float) -> void:
 	if transitioning or dying or frames.is_empty() or region() == "" or (in_mine and zone_id == ""):
 		return
 	for node: Node2D in zone_nodes.values():  # solo se dibujan y procesan las zonas cercanas (luces, suelo y árboles cuestan aunque no se vean)
-		var near := node == world or _tiles_away(frames[node], pos) < 16.0
+		var near := _region_on_screen(node)
 		if node.visible != near:
 			node.visible = near
 			node.process_mode = Node.PROCESS_MODE_INHERIT if near else Node.PROCESS_MODE_DISABLED
@@ -2812,7 +2965,7 @@ func _exit_mine() -> void:
 	E2 = overworld["E2"]
 	TILES = overworld["tiles"]
 	pos = overworld["pos"]
-	dragon.visible = true
+	dragon.visible = false
 	dragon.alive = overworld["dragon_alive"]
 	RenderingServer.set_default_clear_color(Color("#1c4462"))
 	combat.set_zone(false)

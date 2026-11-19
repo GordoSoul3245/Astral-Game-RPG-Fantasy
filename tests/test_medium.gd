@@ -106,10 +106,11 @@ func run_checks() -> void:
 	assert(not main.can_hotbar("grimorio_escarcha") and not main.hotbar.has("grimorio_escarcha"), "no se tiene hasta comprarlo")
 	assert(main.shop.stock().any(func(x: Dictionary) -> bool: return x["id"] == "grimorio_escarcha"), "Tomás lo vende")
 	p.coins = 400
-	assert(main.shop.buy("grimorio_escarcha").begins_with("¡") and p.books.has("grimorio_escarcha") and main.hotbar.has("grimorio_escarcha") and p.coins < 100, "se compra y va a la barra")
+	assert(main.shop.buy("grimorio_escarcha").begins_with("¡") and p.books.has("grimorio_escarcha") and main.menu._backpack().has("grimorio_escarcha") and p.coins == 200, "se compra y va a la mochila")
 	assert(not main.shop.stock().any(func(x: Dictionary) -> bool: return x["id"] == "grimorio_escarcha"), "ya no se vende")
 	main.mana = main.hero_data["mana"]
-	main._select(main.hotbar.find("grimorio_escarcha"))
+	assert(main.hotbar_drop("grimorio_escarcha", 1))
+	main._select(1)
 	main.cooldown = 0.0
 	assert(main._attack("light") and main.current["effect"] == "slow", "el hechizo de hielo se lanza")
 	main.pos = main.tile_to_ground(Vector2(18.5, 30.5))

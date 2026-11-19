@@ -17,7 +17,7 @@ func run_checks() -> void:
 
 	# puertas a las dos casas del pueblo
 	var enter_doors: Array = main.doors.filter(func(d: Node2D) -> bool: return d.label.begins_with("Entrar: "))
-	assert(enter_doors.size() == 2, "dos casas visitables (%d)" % enter_doors.size())
+	assert(enter_doors.size() == 5, "cinco casas visitables (%d)" % enter_doors.size())
 	var outside_pos: Vector2 = main.pos
 	var tiles0: float = main.TILES
 	var world0: Node = main.world
@@ -42,6 +42,7 @@ func run_checks() -> void:
 
 	# conversaciones: dependen del estado del mundo y rotan
 	var mara: Node2D = main.npcs[0]
+	main.overworld["dragon_alive"] = true
 	mara.talks = 0
 	var l0: Array = main.npc_lines(mara)
 	assert(l0[0].find("dragón") >= 0 and l0[0].find("Mataste") < 0, "con el dragón vivo habla de él")
@@ -66,10 +67,11 @@ func run_checks() -> void:
 	assert(not dlg.is_open() and not main.get_tree().paused, "al terminar, cierra y reanuda")
 
 	# salir: todo se restaura
+	main.overworld["dragon_alive"] = dragon_alive0
 	main._exit_interior()
 	assert(not main.in_interior and not main.in_dungeon and main.npcs.is_empty())
 	assert(main.TILES == tiles0 and main.world == world0 and world0.visible and main.pos == outside_pos, "vuelve al exterior donde estaba")
-	assert(main.dragon.alive == dragon_alive0 and main.dragon.visible, "el dragón vuelve a su estado")
+	assert(main.dragon.alive == dragon_alive0 and not main.dragon.visible, "el dragón vuelve a su estado")
 
 	# la segunda casa y morir dentro: despierta fuera
 	main._enter_interior("den")

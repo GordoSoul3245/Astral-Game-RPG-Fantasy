@@ -14,47 +14,24 @@ func setup(m: Node) -> void:
 	z_index = -3500  # a ras de suelo: nunca tapa al héroe ni a los vecinos
 	last_total = main.clock.total
 	_locate()
+	var earth := ShaderMaterial.new()
+	earth.shader = preload("res://shaders/tierra_arada.gdshader")
+	for plot: Dictionary in plots:
+		var patch := Sprite2D.new()
+		patch.texture = SOIL
+		patch.material = earth
+		patch.show_behind_parent = true
+		patch.position = main.tile_to_ground(plot["tile"]) * main.SCALE
+		patch.scale = Vector2(75.0 / 96.0, 37.0 / 48.0) * main.SCALE
+		patch.flip_h = get_child_count() % 3 == 1
+		add_child(patch)
 
 func _locate() -> void:  # busca cerca del inicio un hueco libre de tierra firme para la cuadrícula de parcelas
 	var g: Dictionary = cfg["plots"]
 	var sp: float = float(g["spacing"])
 	var cols := int(g["cols"])
 	var rows := int(g["rows"])
-	var s: Vector2 = main.ground_to_tile(main.start_pos)
-	var avoid: Array[Vector2] = []  # puestos, mesas, fogata y puertas: el huerto no debe estorbar el paso hacia ellos
-	for st: Dictionary in main.stations:
-		avoid.append(st["tile"])
-	for m: Node2D in main.merchants:
-		avoid.append(main.ground_to_tile(m.pos))
-	for dr: Node2D in main.doors:
-		avoid.append(dr.tile)
-	var best := Vector2(-1, -1)
-	var best_d := 1e9
-	for dx in range(-24, 25):
-		for dy in range(-24, 25):
-			var o := Vector2(floorf(s.x) + dx, floorf(s.y) + dy)
-			var d := o.distance_to(s)
-			if d < float(g.get("min_dist", 9.0)) or d >= best_d:
-				continue
-			if o.x < 1.0 or o.y < 1.0 or o.x + cols * sp > main.TILES - 1.0 or o.y + rows * sp > main.TILES - 1.0:
-				continue  # el huerto va dentro del valle (en el mapa único el suelo vecino también se pisa)
-			var ok := true
-			var centre := o + Vector2(float(cols) * sp, float(rows) * sp) * 0.5
-			for a: Vector2 in avoid:
-				if a.distance_to(centre) < 9.0:
-					ok = false
-			if not ok:
-				continue
-			for c in cols:
-				for r in rows:
-					var t := o + Vector2(float(c) * sp, float(r) * sp) + Vector2(0.5, 0.5)
-					if main.world.is_water(t) or main.world.blocked(t, 1.2):
-						ok = false
-			if ok:
-				best = o
-				best_d = d
-	if best.x < 0:
-		return
+	var best := Vector2(g["origin"][0], g["origin"][1])
 	for c in cols:
 		for r in rows:
 			plots.append({"tile": best + Vector2(float(c) * sp, float(r) * sp) + Vector2(0.5, 0.5), "seed": "", "growth": 0.0, "wet": 0.0})
@@ -203,22 +180,16 @@ func from_dict(d: Dictionary) -> void:  # validado: datos de disco
 			plots[i]["wet"] = 0.0
 
 # --- dibujo: tierra labrada y la planta según su fase
-func _quad(c: Vector2, half: float) -> PackedVector2Array:
-	var pts := PackedVector2Array()
-	for k: Vector2 in [Vector2(-half, -half), Vector2(half, -half), Vector2(half, half), Vector2(-half, half)]:
-		pts.append(main.tile_to_ground(c + k) * main.SCALE)
-	return pts
+const SOIL := preload("res://art/map/tierra_arada.png")
 
 func _draw() -> void:
 	if main == null or not _outside():
 		return
 	var sc: float = main.SCALE
-	for p: Dictionary in plots:
+	for i in plots.size():
+		var p: Dictionary = plots[i]
 		var wet: bool = float(p["wet"]) > 0.0 or main.clock.rain
-		draw_colored_polygon(_quad(p["tile"], 0.46), Color(0.24, 0.15, 0.09) if wet else Color(0.42, 0.29, 0.17))
-		var q := _quad(p["tile"], 0.46)
-		q.append(q[0])
-		draw_polyline(q, Color(0.16, 0.1, 0.06), 2.0)
+		get_child(i).modulate = Color("#b3a59a") if wet else Color.WHITE
 		if p["seed"] == "":
 			continue
 		var s: Dictionary = cfg["seeds"][p["seed"]]

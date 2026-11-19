@@ -66,18 +66,15 @@ func _draw() -> void:
 	fl.append(fc + Vector2(-14, -r * 0.8))
 	var level := lerpf(0.12, 0.92, p) if (running or done_age >= 0.0) else 0.12
 	var surf := fc.y + (r - 3.0) * (1.0 - 2.0 * level)  # y de la superficie
-	var liq2 := PackedVector2Array()
+	var wob := sin(idle_t * 7.0) * (1.5 + (3.0 if running else 0.0))
+	var angle := asin(clampf((surf + wob - fc.y) / (r - 3.0), -0.99, 0.99))
+	var liquid := PackedVector2Array()
 	for i in 41:
-		var a := float(i) / 40.0 * TAU
-		var pt := fc + Vector2(cos(a), sin(a)) * (r - 3.0)
-		if pt.y >= surf:
-			liq2.append(pt)
-	if liq2.size() > 2:
-		var lc := color
-		lc.a = 0.85
-		var wob := sin(idle_t * 7.0) * (1.5 + (3.0 if running else 0.0))
-		liq2.append(Vector2(fc.x - r + 3.0, surf + wob))
-		draw_colored_polygon(liq2, lc)
+		var a := lerpf(angle, PI - angle, i / 40.0)
+		liquid.append(fc + Vector2(cos(a), sin(a)) * (r - 3.0))
+	var lc := color
+	lc.a = 0.85
+	draw_colored_polygon(liquid, lc)
 	draw_polyline(fl + PackedVector2Array([fl[0]]), Color(0.85, 0.95, 1.0, 0.9), 3.0)
 	draw_line(fc + Vector2(-18, -r * 1.35), fc + Vector2(18, -r * 1.35), Color(0.85, 0.95, 1.0), 4.0)
 	draw_arc(fc + Vector2(-r * 0.5, -r * 0.1), r * 0.55, PI * 1.15, PI * 1.6, 8, Color(1, 1, 1, 0.5), 3.0)

@@ -22,7 +22,18 @@
 		"archer_from": 2,
 		"mini_from": 3,
 		"mini_every": 4,
-		"mini_max": 3
+		"mini_max": 3,
+		"mini_pool": [
+			"cyclops",
+			"lobo_espectral",
+			"golem_cristal"
+		],
+		"melee_pool": [
+			"slime",
+			"slime",
+			"escarabajo_brasa",
+			"hongo_espora"
+		]
 	},
 	"bosses": [
 		{
@@ -44,6 +55,22 @@
 			"escort": {
 				"skeleton_archer": 4,
 				"slime": 4
+			}
+		},
+		{
+			"id": "rey_osario",
+			"title": "El trono de huesos",
+			"escort": {
+				"skeleton_archer": 3,
+				"hongo_espora": 2
+			}
+		},
+		{
+			"id": "reina_arana",
+			"title": "El nido de la reina",
+			"escort": {
+				"escarabajo_brasa": 4,
+				"lobo_espectral": 1
 			}
 		}
 	],

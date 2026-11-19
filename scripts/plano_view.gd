@@ -61,7 +61,7 @@ func _draw() -> void:
 		var a := float(i) / 24.0 * PI
 		liquid.append(body + Vector2(cos(a), sin(a)) * (r - 3.0))
 	var wave := sin(Time.get_ticks_msec() / 220.0) * 1.5 * (1.0 + glow * 3.0)
-	liquid.append(body + Vector2(-(r - 3.0), wave))
+	liquid[0].y += wave * 0.4
 	var fill := col
 	fill.a = 0.75 + glow * 0.25
 	draw_colored_polygon(liquid, fill)

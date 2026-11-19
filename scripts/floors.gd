@@ -11,6 +11,7 @@ var floor_no := 1
 var cleared := false
 var is_boss := false
 var title := ""
+var layout_state := 0
 var layout := {}
 var next_door: Node2D
 var chest: Node2D
@@ -58,9 +59,10 @@ func composition(n: int) -> Array:
 		out.append({"id": def["id"], "level": lv, "extra": def})
 		var tier := n / every() - 1
 		for id: String in def["escort"]:
-			var cnt: int = int(def["escort"][id]) + (tier / 2 if id != "cyclops" else tier / 3)
+			var is_mini: bool = id in e.get("mini_pool", ["cyclops"])
+			var cnt: int = int(def["escort"][id]) + (tier / 3 if is_mini else tier / 2)
 			for i in mini(cnt, 8):
-				out.append({"id": id, "level": level_for(n, true) if id == "cyclops" else lv, "extra": {}})
+				out.append({"id": id, "level": level_for(n, true) if is_mini else lv, "extra": {}})
 		return out
 	var budget := mini(int(e["base"]) + int(float(n - 1) * float(e["per_floor"])), int(e["max"]))
 	var minis := 0
@@ -70,12 +72,14 @@ func composition(n: int) -> Array:
 	var archers := 0
 	if n >= int(e["archer_from"]):
 		archers = int(float(rest) * minf(0.25 + 0.03 * float(n), 0.5))
-	for i in minis:
-		out.append({"id": "cyclops", "level": level_for(n, true), "extra": {}})
+	var mpool: Array = e.get("mini_pool", ["cyclops"])
+	var npool: Array = e.get("melee_pool", ["slime"])
+	for i in minis:  # el primer semijefe de cada piso es siempre el cíclope; los demás salen del grupo
+		out.append({"id": mpool[0] if i == 0 else mpool[rng.randi() % mpool.size()], "level": level_for(n, true), "extra": {}})
 	for i in archers:
 		out.append({"id": "skeleton_archer", "level": lv, "extra": {}})
 	for i in rest - archers:
-		out.append({"id": "slime", "level": lv, "extra": {}})
+		out.append({"id": npool[rng.randi() % npool.size()] if n >= 2 else "slime", "level": lv, "extra": {}})
 	return out
 
 func reward_mult(n: int) -> float:  # lo que se multiplica la recompensa del cofre
@@ -100,6 +104,7 @@ func start(n: int) -> void:
 	chest_door = null
 	chest = null
 	is_boss = is_boss_floor(n)
+	layout_state = rng.state
 	layout = Gen.generate(n, rng, is_boss, str(cfg.get("layout", "open")) == "rooms")
 	main.dungeon_node.setup({"tiles": Gen.N, "walk": layout["walk"]})
 	title = "Piso %d" % n if not is_boss else "Piso %d · JEFE · %s" % [n, boss_def(n)["title"]]
@@ -112,7 +117,7 @@ func start(n: int) -> void:
 		main.set_enemy_level(int(m["level"]), m["extra"], floor_no)
 		main.spawn_enemy(m["id"], main.tile_to_ground(t))
 	main.set_enemy_level(0)
-	next_door = main._add_door(Vector2(12.5, 24.75), "Bajar al piso %d" % (n + 1), next_floor)
+	next_door = main._add_door(Vector2(Gen.CENTER.x, Gen.N - 0.25), "Bajar al piso %d" % (n + 1), next_floor)
 	next_door.locked = true
 	main.say(title, 2.5)
 
@@ -125,7 +130,7 @@ func _free_tile(placed: Array[Vector2], spawn: Vector2) -> Vector2:  # casilla d
 				continue
 			if placed.all(func(p: Vector2) -> bool: return t.distance_to(p) >= gap):
 				return t
-	return Vector2(12.5, 12.5)
+	return Gen.CENTER
 
 func _process(_delta: float) -> void:
 	if cleared:
@@ -140,7 +145,7 @@ func _process(_delta: float) -> void:
 	if left == 0:
 		_clear()
 
-func _clear() -> void:
+func _clear(notify := true) -> void:
 	cleared = true
 	label.text = "%s  ·  ¡Completo!" % title
 	if next_door:
@@ -154,7 +159,8 @@ func _clear() -> void:
 	chest_door = main._add_door(spot, "Abrir cofre", open_chest, false)
 	chest_door.reach = 1.6
 	main.say("¡Piso completo! Abre el cofre" + (" (el siguiente piso será tu punto de reanudación)" if is_boss else ""), 3.0)
-	main.quest_event("floor", str(floor_no))
+	if notify:
+		main.quest_event("floor", str(floor_no))
 
 func next_floor() -> void:
 	main._transition(func() -> void:

@@ -1,2825 +1,1146 @@
 {
- "tiles": 50,
- "image": "res://art/map/ground.png",
- "size": [
-  3360,
-  1480
- ],
- "c1": [
-  84.6411582827568,
-  926.9395363330841
- ],
- "e1": [
-  1191.7141225934029,
-  -826.7487871646881
- ],
- "e2": [
-  1999.0036609768867,
-  492.86963552236557
- ],
- "walk": [
-  "00000000000000000000000000000000000000000000000000",
-  "00000000000000000000000000111000000000000000000000",
-  "00000000000000001111111111111110000000000000000000",
-  "00000000000000111111111111111111000000000000000000",
-  "00000000000001111111111111111111100000000000000000",
-  "00000000000111111111111111111111110000000000000000",
-  "00000000001111111111111111111111110000000000000000",
-  "00000000011111111111111111111111110000000000000000",
-  "00000000111111111111111111111111111000000000000000",
-  "00000001111111111111111111111111111000000000000000",
-  "00000011111111111111111111111111111000000000000000",
-  "00000111111111111111111111111111111100000000000000",
-  "00001111111111111111111111111111111110000000000000",
-  "00001111111111111111111111111111111111100000000000",
-  "00001111111111111111111111111111111111111000000000",
-  "00001111111111111111111111111111111111111110000000",
-  "00001111111111111111111111111111111111111111000000",
-  "00001111111111111111111111111111111111111111100000",
-  "00000111111111111111111111111111111111111111110000",
-  "00000111111111111111111111111111111111111111111000",
-  "00000111111111111111111111111111111111111111111100",
-  "00000011111111111111111111111111111111111111111110",
-  "00000011111111111111111111111111111111111111111111",
-  "00000001111111111111111111111111111111111111111111",
-  "00000001111111111111111111111111111111111111111111",
-  "00000011111111111111111111111111111111111111111111",
-  "00000011111111111111111111111111111111111111111111",
-  "00000011111111111111111111111111111111111111111111",
-  "00000111111111111111111111111111111111111111111111",
-  "00000111111111111111111111111111111111111111111111",
-  "00000111111111111111111111111111111111111111111111",
-  "00000111111111111111111111111111111111111111111110",
-  "00000111111111111111111111111111111111111111111100",
-  "00000111111111111111111111111111111111111111111000",
-  "00000111111111111111111111111111111111111111100000",
-  "00000111111111111111111111111111111111111111000000",
-  "00000111111111111111100000000000001111111111000000",
-  "00000011111111111110000000000000000011111110000000",
-  "00000011111111111000000000000000000000111110000000",
-  "00000011111111110000000000000000000000011100000000",
-  "00000011111111100000000000000000000000001100000000",
-  "00000001111111100000000000000000000000001000000000",
-  "00000001111111000000000000000000000000000000000000",
-  "00000000111111000000000000000000000000000000000000",
-  "00000000011111000000000000000000000000000000000000",
-  "00000000000000000000000000000000000000000000000000",
-  "00000000000000000000000000000000000000000000000000",
-  "00000000000000000000000000000000000000000000000000",
-  "00000000000000000000000000000000000000000000000000",
-  "00000000000000000000000000000000000000000000000000"
- ],
- "sprites": {
-  "tree_a": {
-   "path": "res://art/map/tree_a.png",
-   "frame": [
-    192,
-    192
-   ],
-   "feet": [
-    100.0,
-    145.7
-   ]
-  },
-  "tree_b": {
-   "path": "res://art/map/tree_b.png",
-   "frame": [
-    192,
-    192
-   ],
-   "feet": [
-    100.0,
-    145.7
-   ]
-  },
-  "tree_c": {
-   "path": "res://art/map/tree_c.png",
-   "frame": [
-    192,
-    192
-   ],
-   "feet": [
-    100.0,
-    145.7
-   ]
-  },
-  "rock_a": {
-   "path": "res://art/map/rock_a.png",
-   "frame": [
-    96,
-    96
-   ],
-   "feet": [
-    52.0,
-    97.7
-   ]
-  },
-  "rock_b": {
-   "path": "res://art/map/rock_b.png",
-   "frame": [
-    96,
-    96
-   ],
-   "feet": [
-    52.0,
-    97.7
-   ]
-  },
-  "house": {
-   "path": "res://art/map/house.png",
-   "frame": [
-    320,
-    320
-   ],
-   "feet": [
-    164.0,
-    209.7
-   ]
-  },
-  "castle": {
-   "path": "res://art/map/castle.png",
-   "frame": [
-    576,
-    576
-   ],
-   "feet": [
-    292.0,
-    337.7
-   ]
-  },
-  "stall": {
-   "path": "res://art/map/stall.png",
-   "frame": [
-    192,
-    192
-   ],
-   "feet": [
-    100.0,
-    145.7
-   ]
-  }
- },
- "objects": [
-  {
-   "sprite": "tree_b",
-   "tile": [
-    1.652,
-    26.608
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    1.216,
-    28.701
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    2.229,
-    18.683
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    2.724,
-    20.267
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    2.636,
-    25.601
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    2.647,
-    27.641
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    2.4,
-    29.298
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    2.487,
-    30.77
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    3.128,
-    14.299
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    3.302,
-    16.867
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    3.862,
-    17.82
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    3.361,
-    21.3
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    3.457,
-    23.213
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    3.531,
-    24.359
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    3.843,
-    28.41
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    3.871,
-    29.584
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    3.558,
-    31.536
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    4.152,
-    14.626
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    4.597,
-    16.116
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    4.289,
-    19.408
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    4.238,
-    20.398
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    4.833,
-    24.409
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    4.24,
-    26.518
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    4.861,
-    30.358
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    4.291,
-    32.651
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    5.633,
-    11.636
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    5.38,
-    12.604
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    5.106,
-    14.536
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    5.557,
-    15.83
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    5.742,
-    17.775
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    5.148,
-    20.752
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    5.643,
-    21.641
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    5.154,
-    23.509
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    5.731,
-    25.42
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    5.653,
-    26.682
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    5.395,
-    29.483
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    5.722,
-    31.822
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    5.657,
-    33.394
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    6.699,
-    10.246
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    6.579,
-    13.382
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    6.229,
-    18.63
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    6.444,
-    20.402
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    6.731,
-    21.369
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    6.415,
-    24.103
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    6.346,
-    30.607
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    6.649,
-    33.368
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    7.897,
-    10.286
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    7.53,
-    11.539
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    7.377,
-    12.704
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    7.286,
-    14.782
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    7.224,
-    16.111
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    7.363,
-    17.272
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    7.222,
-    18.541
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    8.831,
-    11.44
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    8.719,
-    12.78
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    8.384,
-    13.777
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    8.7,
-    15.657
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    9.444,
-    7.631
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    9.139,
-    8.67
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    9.714,
-    11.861
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    9.6,
-    13.35
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    9.376,
-    14.849
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    10.713,
-    7.89
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    10.861,
-    8.872
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    10.426,
-    9.887
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    10.842,
-    11.214
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    10.696,
-    13.395
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    10.163,
-    14.262
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    10.855,
-    22.248
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    10.792,
-    23.615
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    10.716,
-    25.505
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    10.594,
-    27.244
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    10.333,
-    28.401
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    11.576,
-    6.677
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    11.865,
-    7.778
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    11.729,
-    9.885
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    12.579,
-    4.578
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    12.665,
-    10.668
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    13.639,
-    4.154
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    13.756,
-    6.278
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    13.237,
-    8.383
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    14.594,
-    5.531
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    14.863,
-    7.456
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    14.255,
-    9.615
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    14.103,
-    10.896
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    15.526,
-    4.573
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    15.644,
-    6.738
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    15.493,
-    8.848
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    16.746,
-    5.403
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    16.714,
-    7.591
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    16.375,
-    42.129
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    16.181,
-    43.367
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    17.65,
-    4.812
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    17.709,
-    6.427
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    17.793,
-    12.685
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    18.423,
-    5.798
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    18.194,
-    42.179
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    18.898,
-    43.432
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    18.156,
-    44.783
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    19.487,
-    5.753
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    19.536,
-    7.113
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    19.824,
-    8.408
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    19.886,
-    11.237
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    19.723,
-    42.654
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    19.214,
-    44.717
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    19.477,
-    46.232
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    20.697,
-    5.284
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    20.704,
-    6.503
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    20.749,
-    9.271
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    20.269,
-    41.738
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    20.721,
-    44.816
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    20.619,
-    47.557
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    21.873,
-    7.494
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    21.327,
-    41.368
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    21.223,
-    42.872
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    21.687,
-    44.405
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    21.894,
-    47.278
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    21.871,
-    48.296
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    22.23,
-    6.508
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    22.828,
-    7.605
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    22.398,
-    9.801
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    22.844,
-    44.24
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    22.859,
-    46.217
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    22.571,
-    49.448
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    23.71,
-    10.8
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    23.398,
-    41.738
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    23.621,
-    45.561
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    23.872,
-    46.738
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    24.544,
-    9.5
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    24.481,
-    42.798
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    24.287,
-    44.275
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    24.19,
-    49.609
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    25.409,
-    7.604
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    25.817,
-    39.685
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    25.863,
-    42.238
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    25.731,
-    43.554
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    25.224,
-    45.443
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    25.445,
-    46.42
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    25.506,
-    47.614
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    25.477,
-    49.35
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    26.355,
-    8.23
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    26.202,
-    9.498
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    26.75,
-    41.291
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    27.505,
-    7.114
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    27.254,
-    8.66
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    27.77,
-    9.46
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    27.65,
-    10.47
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    27.643,
-    42.725
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    27.231,
-    43.805
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    27.245,
-    45.85
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    27.856,
-    46.73
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    27.826,
-    48.679
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    27.169,
-    49.602
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    28.82,
-    40.179
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    28.878,
-    41.351
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    28.78,
-    42.792
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    28.421,
-    45.237
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    28.829,
-    48.184
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    28.403,
-    49.49
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    29.739,
-    38.461
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    29.584,
-    39.396
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    29.279,
-    43.773
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    29.685,
-    46.456
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    29.892,
-    47.421
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    29.447,
-    49.567
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    30.545,
-    39.369
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    30.642,
-    40.801
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    30.118,
-    45.184
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    30.763,
-    46.69
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    30.718,
-    48.18
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    30.485,
-    49.839
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    31.402,
-    5.155
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    31.84,
-    37.705
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    31.576,
-    38.606
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    31.36,
-    42.409
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    31.795,
-    43.821
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    31.312,
-    45.525
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    31.467,
-    48.808
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    32.368,
-    5.124
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    32.305,
-    7.368
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    32.841,
-    39.218
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    32.796,
-    40.642
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    32.663,
-    44.278
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    32.611,
-    45.495
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    32.25,
-    47.747
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    33.387,
-    5.462
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    33.459,
-    6.481
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    33.334,
-    8.548
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    33.523,
-    38.361
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    33.505,
-    42.66
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    33.649,
-    45.859
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    33.22,
-    46.804
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    34.529,
-    7.777
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    34.9,
-    8.813
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    34.11,
-    37.46
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    34.598,
-    38.505
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    34.776,
-    39.607
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    34.452,
-    41.611
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    34.319,
-    44.797
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    35.117,
-    6.61
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    35.847,
-    9.308
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    35.598,
-    13.61
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    35.347,
-    15.324
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    35.158,
-    35.725
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    35.611,
-    37.818
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    35.255,
-    40.808
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    35.66,
-    43.407
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    36.613,
-    5.401
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    36.841,
-    6.52
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    36.167,
-    7.803
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    36.75,
-    8.755
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    36.703,
-    10.783
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    36.115,
-    11.738
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    36.574,
-    13.785
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    36.787,
-    16.751
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    36.545,
-    37.542
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    36.453,
-    38.564
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    36.852,
-    40.528
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    36.369,
-    41.768
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    37.588,
-    8.313
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    37.269,
-    9.738
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    37.54,
-    11.35
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    37.556,
-    12.741
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    37.363,
-    42.652
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    38.367,
-    6.819
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    38.17,
-    10.38
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    38.785,
-    12.341
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    38.267,
-    14.114
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    38.779,
-    40.227
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    38.14,
-    41.296
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    38.382,
-    42.202
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    39.711,
-    7.688
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    39.349,
-    9.102
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    39.565,
-    41.849
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    40.616,
-    6.84
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    40.687,
-    8.764
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    40.517,
-    10.499
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    40.486,
-    12.38
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    40.196,
-    13.809
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    40.886,
-    41.672
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    41.572,
-    8.424
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    41.556,
-    10.416
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    41.315,
-    11.335
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    41.753,
-    12.876
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    42.633,
-    7.808
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    42.731,
-    8.891
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    42.236,
-    9.703
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_c",
-   "tile": [
-    43.843,
-    9.212
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    43.177,
-    10.238
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    43.46,
-    11.273
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_a",
-   "tile": [
-    44.754,
-    9.726
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "tree_b",
-   "tile": [
-    44.466,
-    11.692
-   ],
-   "circle": 0.3,
-   "pcircle": 0.55
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    32.5,
-    17.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_b",
-   "tile": [
-    19.5,
-    22.5
-   ],
-   "circle": 0.5
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    24.5,
-    35.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    27.5,
-    32.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_b",
-   "tile": [
-    33.5,
-    16.5
-   ],
-   "circle": 0.5
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    35.5,
-    12.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_b",
-   "tile": [
-    25.5,
-    38.5
-   ],
-   "circle": 0.5
-  },
-  {
-   "sprite": "rock_b",
-   "tile": [
-    29.5,
-    19.5
-   ],
-   "circle": 0.5
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    25.5,
-    11.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    27.5,
-    33.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    12.5,
-    22.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    33.5,
-    35.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_b",
-   "tile": [
-    11.5,
-    24.5
-   ],
-   "circle": 0.5
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    30.5,
-    34.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    19.5,
-    24.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_b",
-   "tile": [
-    21.5,
-    34.5
-   ],
-   "circle": 0.5
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    25.5,
-    21.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_b",
-   "tile": [
-    27.5,
-    40.5
-   ],
-   "circle": 0.5
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    31.5,
-    23.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    17.5,
-    35.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_b",
-   "tile": [
-    21.5,
-    20.5
-   ],
-   "circle": 0.5
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    21.5,
-    35.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    9.5,
-    10.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_b",
-   "tile": [
-    21.5,
-    24.5
-   ],
-   "circle": 0.5
-  },
-  {
-   "sprite": "rock_b",
-   "tile": [
-    27.5,
-    20.5
-   ],
-   "circle": 0.5
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    15.5,
-    5.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    26.5,
-    18.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    24.5,
-    8.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    2.5,
-    17.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    33.5,
-    25.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_b",
-   "tile": [
-    22.5,
-    42.5
-   ],
-   "circle": 0.5
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    20.5,
-    13.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    32.5,
-    28.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_b",
-   "tile": [
-    19.5,
-    35.5
-   ],
-   "circle": 0.5
-  },
-  {
-   "sprite": "rock_b",
-   "tile": [
-    22.5,
-    35.5
-   ],
-   "circle": 0.5
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    19.5,
-    15.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_b",
-   "tile": [
-    6.5,
-    15.5
-   ],
-   "circle": 0.5
-  },
-  {
-   "sprite": "rock_b",
-   "tile": [
-    29.5,
-    17.5
-   ],
-   "circle": 0.5
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    16.5,
-    4.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "rock_a",
-   "tile": [
-    20.5,
-    24.5
-   ],
-   "circle": 0.6
-  },
-  {
-   "sprite": "house",
-   "tile": [
-    32.0,
-    12.0
-   ],
-   "rect": [
-    29.85,
-    10.35,
-    34.15,
-    13.65
-   ]
-  },
-  {
-   "sprite": "castle",
-   "tile": [
-    25.0,
-    25.0
-   ],
-   "rect": [
-    22.73,
-    22.73,
-    27.27,
-    27.27
-   ]
-  },
-  {
-   "sprite": "house",
-   "tile": [
-    16.0,
-    39.0
-   ],
-   "rect": [
-    13.85,
-    37.35,
-    18.15,
-    40.65
-   ]
-  },
-  {
-   "sprite": "house",
-   "tile": [
-    20.8,
-    38.0
-   ],
-   "rect": [
-    18.650000000000002,
-    36.35,
-    22.95,
-    39.65
-   ]
-  },
-  {
-   "sprite": "stall",
-   "tile": [
-    13.2,
-    31.8
-   ],
-   "rect": [
-    11.95,
-    30.95,
-    14.450000000000001,
-    32.65
-   ]
-  }
- ],
- "start": [
-  10.5,
-  34.5
- ],
- "dragon": [
-  34.0,
-  21.0
- ]
+	"tiles": 50,
+	"size": [
+		3360,
+		1480
+	],
+	"c1": [
+		84.6411582827568,
+		926.9395363330841
+	],
+	"e1": [
+		1191.7141225934029,
+		-826.7487871646881
+	],
+	"e2": [
+		1999.0036609768867,
+		492.86963552236557
+	],
+	"walk": [
+		"00000000000000000000000000000000000000000000000000",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111111",
+		"01111111111111111111111111111111111111111111111111",
+		"01111111111111111111111111111111111111111111111111",
+		"01111111111111111111111111111111111111111111111111",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111111111111111111111111111111110",
+		"01111111111111111111100000000000001111111111111110",
+		"01111111111111111110000000000000000011111111111110",
+		"01111111111111111000000000000000000000111111111110",
+		"01111111111111110000000000000000000000011111111110",
+		"01111111111111100000000000000000000000001111111110",
+		"01111111111111100000000000000000000000001111111110",
+		"01111111111111000000000000000000000000000111111110",
+		"01111111111111000000000000000000000000000111111110",
+		"01111111111111000000000000000000000000000111111110",
+		"01111111111111000000000000000000000000001111111110",
+		"01111111111111000000000000000000000000011111111110",
+		"01111111111111100000000000000000000001111111111110",
+		"01111111111111100000000000000000000111111111111110",
+		"00000000000000000000000000000000000000000000000000"
+	],
+	"sprites": {
+		"tree_a": {
+			"path": "res://art/map/tree_a.png",
+			"frame": [
+				192,
+				192
+			],
+			"feet": [
+				100.0,
+				145.7
+			]
+		},
+		"tree_b": {
+			"path": "res://art/map/tree_b.png",
+			"frame": [
+				192,
+				192
+			],
+			"feet": [
+				100.0,
+				145.7
+			]
+		},
+		"tree_c": {
+			"path": "res://art/map/tree_c.png",
+			"frame": [
+				192,
+				192
+			],
+			"feet": [
+				100.0,
+				145.7
+			]
+		},
+		"rock_a": {
+			"path": "res://art/map/rock_a.png",
+			"frame": [
+				96,
+				96
+			],
+			"feet": [
+				52.0,
+				97.7
+			]
+		},
+		"rock_b": {
+			"path": "res://art/map/rock_b.png",
+			"frame": [
+				96,
+				96
+			],
+			"feet": [
+				52.0,
+				97.7
+			]
+		},
+		"house": {
+			"path": "res://art/map/house.png",
+			"frame": [
+				320,
+				320
+			],
+			"feet": [
+				164.0,
+				209.7
+			]
+		},
+		"castle": {
+			"path": "res://art/map/castle.png",
+			"frame": [
+				576,
+				576
+			],
+			"feet": [
+				292.0,
+				337.7
+			]
+		},
+		"stall": {
+			"path": "res://art/map/stall.png",
+			"frame": [
+				192,
+				192
+			],
+			"feet": [
+				100.0,
+				145.7
+			]
+		},
+		"pueblo_pastizal": {
+			"path": "res://art/map/pueblo_pastizal.png",
+			"feet": [
+				24.0,
+				42.24
+			],
+			"frame": [
+				48,
+				48
+			]
+		},
+		"pueblo_piedras": {
+			"path": "res://art/map/pueblo_piedras.png",
+			"feet": [
+				24.0,
+				42.24
+			],
+			"frame": [
+				48,
+				48
+			]
+		},
+		"portal": {
+			"path": "res://art/map/portal_cripta.png",
+			"frame": [
+				160,
+				196
+			],
+			"feet": [
+				80,
+				183
+			]
+		}
+	},
+	"objects": [
+		{
+			"sprite": "house",
+			"tile": [
+				18,
+				34
+			],
+			"rect": [
+				16.35,
+				31.85,
+				19.65,
+				36.15
+			],
+			"interior": "forge",
+			"texture": "res://art/map/east_house.png",
+			"entrance": [
+				20.3,
+				34
+			]
+		},
+		{
+			"sprite": "house",
+			"tile": [
+				29,
+				34
+			],
+			"rect": [
+				27.35,
+				31.85,
+				30.65,
+				36.15
+			],
+			"interior": "den",
+			"texture": "res://art/map/west_house.png",
+			"entrance": [
+				26.7,
+				34
+			]
+		},
+		{
+			"sprite": "house",
+			"tile": [
+				17,
+				25
+			],
+			"rect": [
+				15.35,
+				22.85,
+				18.65,
+				27.15
+			],
+			"interior": "home",
+			"texture": "res://art/map/east_house.png",
+			"entrance": [
+				19.3,
+				25
+			]
+		},
+		{
+			"sprite": "house",
+			"tile": [
+				30,
+				24
+			],
+			"rect": [
+				28.35,
+				21.85,
+				31.65,
+				26.15
+			],
+			"interior": "home",
+			"texture": "res://art/map/west_house.png",
+			"entrance": [
+				27.7,
+				24
+			]
+		},
+		{
+			"sprite": "house",
+			"tile": [
+				24,
+				16
+			],
+			"rect": [
+				21.85,
+				14.35,
+				26.15,
+				17.65
+			],
+			"interior": "home",
+			"entrance": [
+				24,
+				18.3
+			]
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				35.5,
+				34.5
+			],
+			"size": 0.77
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				3.5,
+				19.5
+			],
+			"size": 0.76
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				10.5,
+				21.5
+			],
+			"size": 0.78
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				4.5,
+				47.5
+			],
+			"size": 0.73
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				5.5,
+				12.5
+			],
+			"size": 0.81
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				41.5,
+				13.5
+			],
+			"size": 0.8
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				11.5,
+				19.5
+			],
+			"size": 0.96
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				2.5,
+				45.5
+			],
+			"size": 0.84
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				9.5,
+				12.5
+			],
+			"size": 0.88
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				11.5,
+				28.5
+			],
+			"size": 0.89
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				28.5,
+				45.5
+			],
+			"size": 0.74
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				12.5,
+				42.5
+			],
+			"size": 0.68
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				4.5,
+				42.5
+			],
+			"size": 0.74
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				40.5,
+				46.5
+			],
+			"size": 0.68
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				38.5,
+				47.5
+			],
+			"size": 0.73
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				20.5,
+				5.5
+			],
+			"size": 0.84
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				13.5,
+				7.5
+			],
+			"size": 0.94
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				13.5,
+				31.5
+			],
+			"size": 0.96
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				17.5,
+				43.5
+			],
+			"size": 0.75
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				31.5,
+				40.5
+			],
+			"size": 0.99
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				33.5,
+				6.5
+			],
+			"size": 0.83
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				7.5,
+				41.5
+			],
+			"size": 0.87
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				34.5,
+				36.5
+			],
+			"size": 0.69
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				11.5,
+				24.5
+			],
+			"size": 0.94
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				32.5,
+				46.5
+			],
+			"size": 0.84
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				9.5,
+				46.5
+			],
+			"size": 0.89
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				8.5,
+				29.5
+			],
+			"size": 0.82
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				30.5,
+				12.5
+			],
+			"size": 0.81
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				6.5,
+				10.5
+			],
+			"size": 0.72
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				31.5,
+				5.5
+			],
+			"size": 0.76
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				35.5,
+				38.5
+			],
+			"size": 0.71
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				34.5,
+				25.5
+			],
+			"size": 0.76
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				18.5,
+				40.5
+			],
+			"size": 0.79
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				36.5,
+				46.5
+			],
+			"size": 0.66
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				35.5,
+				28.5
+			],
+			"size": 0.7
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				8.5,
+				21.5
+			],
+			"size": 0.99
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				30.5,
+				9.5
+			],
+			"size": 0.87
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				42.5,
+				46.5
+			],
+			"size": 0.89
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				19.5,
+				11.5
+			],
+			"size": 0.89
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				16.5,
+				21.5
+			],
+			"size": 0.79
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				29.5,
+				47.5
+			],
+			"size": 0.75
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				32.5,
+				16.5
+			],
+			"size": 0.95
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				4.5,
+				44.5
+			],
+			"size": 0.74
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				10.5,
+				30.5
+			],
+			"size": 0.72
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				35.5,
+				5.5
+			],
+			"size": 0.87
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				33.5,
+				39.5
+			],
+			"size": 0.78
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				17.5,
+				12.5
+			],
+			"size": 1.0
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				4.5,
+				16.5
+			],
+			"size": 0.83
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				8.5,
+				33.5
+			],
+			"size": 0.65
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				4.5,
+				28.5
+			],
+			"size": 0.71
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				34.5,
+				45.5
+			],
+			"size": 0.83
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				12.5,
+				21.5
+			],
+			"size": 0.87
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				22.5,
+				9.5
+			],
+			"size": 0.69
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				28.5,
+				41.5
+			],
+			"size": 0.84
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				30.5,
+				45.5
+			],
+			"size": 0.88
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				38.5,
+				7.5
+			],
+			"size": 0.71
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				16.5,
+				4.5
+			],
+			"size": 0.91
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				33.5,
+				34.5
+			],
+			"size": 0.97
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				39.5,
+				39.5
+			],
+			"size": 0.75
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				17.5,
+				17.5
+			],
+			"size": 0.94
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				2.5,
+				30.5
+			],
+			"size": 0.72
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				28.5,
+				20.5
+			],
+			"size": 0.96
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				34.5,
+				47.5
+			],
+			"size": 0.8
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				33.5,
+				41.5
+			],
+			"size": 0.67
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				30.5,
+				17.5
+			],
+			"size": 0.87
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				28.5,
+				9.5
+			],
+			"size": 0.99
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				34.5,
+				8.5
+			],
+			"size": 0.69
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				2.5,
+				21.5
+			],
+			"size": 0.87
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				32.5,
+				20.5
+			],
+			"size": 0.74
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				16.5,
+				45.5
+			],
+			"size": 0.97
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				10.5,
+				38.5
+			],
+			"size": 0.87
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				13.5,
+				24.5
+			],
+			"size": 0.74
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				18.5,
+				6.5
+			],
+			"size": 0.78
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				6.5,
+				27.5
+			],
+			"size": 0.96
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				36.5,
+				36.5
+			],
+			"size": 0.68
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				15.5,
+				11.5
+			],
+			"size": 0.65
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				6.5,
+				29.5
+			],
+			"size": 0.82
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				33.5,
+				28.5
+			],
+			"size": 0.96
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				19.5,
+				17.5
+			],
+			"size": 0.93
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				4.5,
+				21.5
+			],
+			"size": 0.97
+		},
+		{
+			"sprite": "pueblo_pastizal",
+			"tile": [
+				10.5,
+				36.5
+			],
+			"size": 0.98
+		},
+		{
+			"sprite": "pueblo_piedras",
+			"tile": [
+				14.5,
+				15.5
+			],
+			"size": 0.82,
+			"circle": 0.4
+		},
+		{
+			"sprite": "pueblo_piedras",
+			"tile": [
+				7.5,
+				47.5
+			],
+			"size": 0.66,
+			"circle": 0.4
+		},
+		{
+			"sprite": "pueblo_piedras",
+			"tile": [
+				44.5,
+				9.5
+			],
+			"size": 0.98,
+			"circle": 0.4
+		},
+		{
+			"sprite": "pueblo_piedras",
+			"tile": [
+				9.5,
+				40.5
+			],
+			"size": 0.94,
+			"circle": 0.4
+		},
+		{
+			"sprite": "pueblo_piedras",
+			"tile": [
+				24.5,
+				7.5
+			],
+			"size": 0.99,
+			"circle": 0.4
+		},
+		{
+			"sprite": "pueblo_piedras",
+			"tile": [
+				36.5,
+				7.5
+			],
+			"size": 0.72,
+			"circle": 0.4
+		},
+		{
+			"sprite": "pueblo_piedras",
+			"tile": [
+				10.5,
+				26.5
+			],
+			"size": 0.68,
+			"circle": 0.4
+		},
+		{
+			"sprite": "pueblo_piedras",
+			"tile": [
+				7.5,
+				13.5
+			],
+			"size": 0.96,
+			"circle": 0.4
+		},
+		{
+			"sprite": "pueblo_piedras",
+			"tile": [
+				33.5,
+				32.5
+			],
+			"size": 0.75,
+			"circle": 0.4
+		},
+		{
+			"sprite": "portal",
+			"tile": [
+				38,
+				10
+			],
+			"entrance": [
+				38,
+				11.65
+			],
+			"rect": [
+				36.5,
+				9.325,
+				39.5,
+				10.675
+			],
+			"size": 1.17
+		},
+		{
+			"sprite": "stall",
+			"tile": [
+				30,
+				29
+			],
+			"rect": [
+				28.75,
+				28.15,
+				31.25,
+				29.85
+			]
+		}
+	],
+	"start": [
+		23.5,
+		32.5
+	],
+	"dragon": [
+		34.0,
+		21.0
+	],
+	"layout": [
+		"T.T.....T.T...T.T...T.....T.T...T.T.T.T...T.T.T.T.",
+		".T...T.T.T.T.T...T.T.T.T.T.T.T.T.T.T.T.....T.T.T.T",
+		"........T.T.T.T...T.T.....T.T.T...T.T...T.T.T.T.T.",
+		".T.T.T.T.....T...T.T.T.T.......T.T.T.T.T...T.T.T.T",
+		"..T.T.....T...T...T.T.T.T.T.T.T...T...T.....T.T.T.",
+		".T.T.T...T.............T.T...........T...T.T.T....",
+		"T.T.T.T.T.......T.......T.T.T...........T.T.T.T...",
+		".T...T....T...................T............T.T...T",
+		"T.T.T.....................T.....T.........T.T.T.T.",
+		"...T.T.........T.T......T....................T.T.T",
+		"T.T.T...T............................==.......T.T.",
+		".T.T........T............T...........==....T.T...T",
+		"..T.T.................T.............===.......T...",
+		"...T.......T.......T..........===...===.....TT.T.T",
+		"..T.T.......................==========....~~~~~.T.",
+		".T....T.........T..T.......===========..~~~~~~~~~T",
+		"T..........................===...====..~~~~~~~~~~.",
+		".TT...T.......T...........===......===~~~~~~~~~~~T",
+		"T.....................=======........=~~~~~~~~~~~~",
+		".............T..T.....====....T....T.~~~~~~~~~~~~~",
+		"T.....T...........T...====...........~~~~~~~~~~~~~",
+		"..............T.......====.........T~~~~~~~~~~~~~~",
+		"T.....................====..........~~~~~~~~~~~~~~",
+		".T......T.............=======.....T.~~~~~~~~~~~~~~",
+		"T..................==========.......~~~~~~~~~~~~~~",
+		".T.T.T..T..........=======..........~~~~~~~~~~~~~~",
+		"T................==============.....~~~~~~~~~~~~~~",
+		"........T........==============.....~~~~~~~~~~~~~~",
+		"T.....................====..........~~~~~~~~~~~~~~",
+		".............T........====..........~~~~~~~~~~~~~~",
+		"T...T..............T..====........T.~~~~~~~~~~~~~~",
+		".T......T.............====..........~~~~~~~~~~~~~~",
+		"..T...T...............====.........T~~~~~~~~~~~~~.",
+		"...T................========........~~~~~~~~~~~~~.",
+		"..T.T.T.............========.........~~~~~~~~~~~~.",
+		"...T.T.T.T............====...........~~~~~~~~~~~.T",
+		"T.T.T.T.T........==============.......~~~~~~~~~~..",
+		".T.T.T.T.........==============.......~~~~~~~~~T.T",
+		"T.T.T.T..............====..............~~~~~~~~.T.",
+		".T...T..............=====...............~~~~~~.T.T",
+		"T...T......T........====..................~~~.T.T.",
+		".T.T................====...........T.......T...T.T",
+		"T.T.......T.........=====......T..............T.T.",
+		".T.....T.......T...T.====.........T.T......T.T....",
+		"T.........T..........====...................T.T.T.",
+		"......T..............=====.................T...T.T",
+		"......................====..................T...T.",
+		"...........T..........====...................T.T.T",
+		"......................====..................T.T.T.",
+		"......................====.......................T"
+	],
+	"ground": [
+		"#5f9b3a",
+		"#5a9437"
+	],
+	"path": "#7b613f",
+	"water": "#5aa2c8",
+	"water2": "#6fb3d6",
+	"clear": "#1c4462",
+	"trees": [],
+	"tree_lines": [],
+	"water_rects": [],
+	"path_rects": [],
+	"nodes": [],
+	"seamless": true,
+	"gates": {
+		"s": [
+			22,
+			25
+		]
+	},
+	"traders": [
+		{
+			"role": "merchant",
+			"tile": [
+				28.2,
+				29
+			]
+		},
+		{
+			"role": "smith",
+			"tile": [
+				34,
+				11.5
+			]
+		}
+	]
 }

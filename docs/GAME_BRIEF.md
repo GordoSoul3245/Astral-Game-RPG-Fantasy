@@ -1,4 +1,4 @@
-# Game Brief: Ecos de la Ruina
+# Game Brief: Astral
 
 **Pitch:** Un RPG de acción isométrico de fantasía donde cada golpe pesa, y donde explorás un mundo luminoso y peligroso construido sobre las ruinas de una civilización perdida.
 
@@ -41,7 +41,7 @@
 7. Pasar armas, criaturas y misiones a datos externos.
 
 ## Dirección de arte y audio
-Se mantiene la historia y el contexto de Ecos de la Ruina. El apartado gráfico es el del proyecto actual: personajes y escenarios renderizados desde Blender con sombreado cel y texturas pintadas en Krita, con la cámara y paleta de `art/`. La música acompaña el contraste entre zonas luminosas y sombrías.
+Se mantiene la historia y el contexto de Astral. El apartado gráfico es el del proyecto actual: personajes y escenarios renderizados desde Blender con sombreado cel y texturas pintadas en Krita, con la cámara y paleta de `art/`. La música acompaña el contraste entre zonas luminosas y sombrías.
 
 **Quién lo juega:** jugadores de soulslike y ARPG que disfrutan aprender a un enemigo y sentir que cada golpe cuenta.
 

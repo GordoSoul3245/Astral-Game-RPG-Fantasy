@@ -4,6 +4,11 @@ extends CanvasLayer
 
 const SPEED := 60.0   # caracteres por segundo
 
+const PORTRAITS := {"Elda": "elda", "Mara": "mara", "Teo": "teo", "El viejo": "gaucho",
+	"Tomás": "tomas", "Bram": "bram", "Aldeano": "aldeano"}
+var cast: Control
+var conversation_name := ""
+
 var main: Node
 var lines: Array = []
 var idx := 0
@@ -18,18 +23,37 @@ func _ready() -> void:
 	layer = 55
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
+	var shade := ColorRect.new()
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.color = Color(0.055, 0.045, 0.07, 0.65)
+	add_child(shade)
+	var hero := _portrait("heroe")
+	hero.anchor_right = 0.32
+	hero.anchor_top = 0.24
+	hero.anchor_bottom = 1
+	hero.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	add_child(hero)
+	cast = Control.new()
+	cast.anchor_left = 0.68
+	cast.anchor_right = 1
+	cast.anchor_top = 0.24
+	cast.anchor_bottom = 1
+	cast.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(cast)
 	panel = PanelContainer.new()
-	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	panel.anchor_left = 0.29
+	panel.anchor_right = 0.71
+	panel.anchor_top = 1
+	panel.anchor_bottom = 1
+	panel.offset_top = -236
+	panel.offset_bottom = -44
 	panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	panel.offset_bottom = -120.0
-	panel.custom_minimum_size = Vector2(900, 0)
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.05, 0.06, 0.11, 0.95)
+	style.bg_color = Color("#30241ff5")
 	style.border_color = Color(0.85, 0.65, 0.25)
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(8)
-	style.set_content_margin_all(16)
+	style.set_content_margin_all(24)
 	panel.add_theme_stylebox_override("panel", style)
 	add_child(panel)
 	var v := VBoxContainer.new()
@@ -42,7 +66,7 @@ func _ready() -> void:
 	text_label = Label.new()
 	text_label.add_theme_font_size_override("font_size", 22)
 	text_label.autowrap_mode = TextServer.AUTOWRAP_WORD
-	text_label.custom_minimum_size = Vector2(860, 66)
+	text_label.custom_minimum_size = Vector2(0, 78)
 	v.add_child(text_label)
 	hint = Label.new()
 	hint.add_theme_font_size_override("font_size", 15)
@@ -53,9 +77,43 @@ func _ready() -> void:
 func is_open() -> bool:
 	return visible
 
-func open(who: String, text_lines: Array) -> void:
+func _portrait(id: String) -> TextureRect:
+	var portrait := TextureRect.new()
+	portrait.texture = load("res://art/dialogue/" + id + ".png")
+	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return portrait
+
+func open(who: String, text_lines: Array, participants: Array = []) -> void:
 	if text_lines.is_empty():
 		return
+	for previous in cast.get_children():
+		cast.remove_child(previous)
+		previous.queue_free()
+	var speakers := participants.duplicate()
+	if speakers.is_empty():
+		if PORTRAITS.has(who):
+			speakers.append(who)
+		for line in text_lines:
+			var speaker := str(line).get_slice(":", 0)
+			if PORTRAITS.has(speaker) and not speakers.has(speaker):
+				speakers.append(speaker)
+	if speakers.is_empty() and who != "Jugador":
+		speakers.append(who)
+	var width := minf(1.0, 1.55 / maxi(1, speakers.size()))
+	for i in speakers.size():
+		var portrait := _portrait(PORTRAITS.get(speakers[i], "aldeano"))
+		cast.add_child(portrait)
+		portrait.anchor_left = (1.0 - width) * i / maxi(1, speakers.size() - 1)
+		portrait.anchor_right = portrait.anchor_left + width
+		portrait.anchor_bottom = 1
+		portrait.offset_left = 0
+		portrait.offset_right = 0
+		portrait.offset_bottom = 0
+	conversation_name = who
 	lines = text_lines
 	idx = 0
 	name_label.text = who
@@ -72,7 +130,11 @@ func close() -> void:
 		cb.call()
 
 func _show_line() -> void:
-	text_label.text = str(lines[idx])
+	var line := str(lines[idx])
+	var speaker := line.get_slice(":", 0)
+	var named := line.contains(":") and (speaker == "Jugador" or PORTRAITS.has(speaker))
+	name_label.text = speaker if named else conversation_name
+	text_label.text = line.substr(speaker.length() + 1).strip_edges() if named else line
 	text_label.visible_characters = 0
 	shown = 0.0
 	hint.text = "[E] siguiente   ·   [Esc] cerrar" if idx < lines.size() - 1 else "[E] cerrar"

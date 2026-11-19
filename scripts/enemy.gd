@@ -218,6 +218,7 @@ func _physics_process(delta: float) -> void:
 			"archer": _archer(to, dist, delta)
 			"brute": _brute(to, dist, delta)
 			"mage": _mage(to, dist, delta)
+			"pattern": _pattern(to, dist, delta)
 	_separate()
 	_place()
 	queue_redraw()
@@ -313,20 +314,23 @@ func _archer(to: Vector2, dist: float, delta: float) -> void:
 		aim = to.normalized()
 		_play_attack(to, 4, t)  # la flecha sale en el fotograma 4
 
+func _charge_step(delta: float, dmg: int) -> void:  # carrera recta en la dirección avisada: no persigue
+	t -= delta
+	_move(aim, CHARGE_SPEED, delta)
+	if not charge_hit and pos.distance_to(main.pos) < radius + main.HERO_RADIUS + 8.0:
+		charge_hit = true
+		main.damage_hero(dmg)
+		main.shake(8.0)
+	if t <= 0.0:
+		state = "recover"
+		t = data.get("recover", 0.7) * 1.6  # embestir deja abierto mucho tiempo
+		charging = false
+		charge_cd = 7.0
+		_anim("idle")
+
 func _brute(to: Vector2, dist: float, delta: float) -> void:
-	if state == "charge":  # carrera recta en la dirección avisada: no persigue
-		t -= delta
-		_move(aim, CHARGE_SPEED, delta)
-		if not charge_hit and pos.distance_to(main.pos) < radius + main.HERO_RADIUS + 8.0:
-			charge_hit = true
-			main.damage_hero(roundi(data["slam_damage"] * 0.8))
-			main.shake(8.0)
-		if t <= 0.0:
-			state = "recover"
-			t = data.get("recover", 0.7) * 1.6  # embestir deja abierto mucho tiempo
-			charging = false
-			charge_cd = 7.0
-			_anim("idle")
+	if state == "charge":
+		_charge_step(delta, roundi(data["slam_damage"] * 0.8))
 		return
 	if state == "windup":
 		t -= delta
@@ -360,6 +364,93 @@ func _brute(to: Vector2, dist: float, delta: float) -> void:
 		_spawn_zone(pos + to.normalized() * 32.0, data["slam_radius"], data["windup"], data["slam_damage"], false, Color(1.0, 0.35, 0.2))
 	else:
 		_anim("idle")
+
+# --- monstruos con repertorio propio (data["attacks"]): usa sus ataques en orden y se acerca hasta el alcance del siguiente.
+# Tipos: charge (embestida en línea), leap (salta a donde estaba el héroe), zone_hero (golpes sobre el héroe),
+# zone_line (fila de golpes hacia el héroe), zone_ring (golpes alrededor de sí), shot (abanico de proyectiles), ring (corona de proyectiles).
+var atk_i := 0
+var cur := {}                # ataque en curso
+var leap_to := Vector2.ZERO
+
+func _pattern(to: Vector2, dist: float, delta: float) -> void:
+	if state == "charge":
+		_charge_step(delta, int(cur["damage"]))
+		return
+	if state == "windup":
+		t -= delta
+		if t <= 0.0:
+			_strike_pattern()
+		return
+	var atks: Array = data["attacks"]
+	var a: Dictionary = atks[atk_i % atks.size()]
+	var reach: float = a.get("range", 40.0)
+	var keep: float = data.get("keep_distance", 0.0)
+	if keep > 0.0 and dist < keep - 30.0:
+		_move(-to.normalized(), 1.0, delta)
+		_anim("walk")
+	elif dist > (keep + 20.0 if keep > 0.0 else reach * 0.8):
+		_move(to.normalized(), 1.0, delta)
+		_anim("walk")
+	else:
+		_anim("idle")
+	if cd == 0.0 and dist <= reach and main.can_prepare(self):
+		_begin_pattern(a, to)
+
+func _begin_pattern(a: Dictionary, to: Vector2) -> void:
+	cur = a
+	atk_i += 1
+	state = "windup"
+	t = a.get("windup", data.get("windup", 0.7))
+	aim = to.normalized()
+	var enraged: bool = data.get("boss", false) and hp < data["hp"] * 0.5
+	cd = data["attack_cooldown"] * (0.7 if enraged else 1.0)
+	var r: float = a.get("radius", 24.0)
+	var dmg: int = a.get("damage", 0)
+	var col := Color(str(a.get("color", "#ff5a33")))
+	match str(a["type"]):
+		"charge":
+			charging = true
+			t = CHARGE_WINDUP
+			aim = Vector2(to.x, to.y / 0.6).normalized()  # en el espacio de movimiento, como el cíclope
+		"leap":
+			leap_to = main.pos
+			_spawn_zone(leap_to, r, t, dmg, false, col)
+		"zone_hero":
+			for i in int(a.get("count", 1)):
+				var off := Vector2.ZERO if i == 0 else Vector2.from_angle(randf() * TAU) * float(a.get("spread", 50.0))
+				_spawn_zone(main.pos + off, r, t + 0.15 * i, dmg, bool(a.get("bolt", false)), col)
+		"zone_line":
+			for i in int(a.get("count", 5)):
+				_spawn_zone(pos + aim * float(a.get("step", 26.0)) * (i + 1), r, t + 0.1 * i, dmg, false, col)
+		"zone_ring":
+			var n := int(a.get("count", 1))
+			for i in n:
+				_spawn_zone(pos + Vector2.from_angle(i * TAU / n) * float(a.get("dist", 0.0)), r, t, dmg, false, col)
+	_play_attack(to, 5, t)
+
+func _strike_pattern() -> void:
+	match str(cur["type"]):
+		"charge":
+			state = "charge"
+			t = CHARGE_TIME
+			charge_hit = false
+			return
+		"leap":  # cae donde se avisó (las paredes lo frenan)
+			pos = main.world.move_collide(pos, leap_to, data["r_t"])
+			main.shake(6.0)
+		"shot":
+			var n := int(cur.get("n", 1))
+			for i in n:
+				var d := aim.rotated((i - (n - 1) / 2.0) * float(cur.get("spread", 0.25)))
+				main.spawn_projectile("enemy", pos + d * 12.0, d, cur["projectile"])
+		"ring":
+			var n := int(cur.get("n", 8))
+			var ph := randf() * TAU
+			for i in n:
+				var d := Vector2.from_angle(ph + i * TAU / n)
+				main.spawn_projectile("enemy", pos + d * 12.0, d, cur["projectile"])
+	state = "recover"
+	t = data.get("recover", 0.5)
 
 func _mage(to: Vector2, dist: float, delta: float) -> void:
 	if state == "windup":
@@ -474,8 +565,10 @@ func _draw() -> void:
 			body_h = HERO_H * data["size"]
 			if spr == null:
 				_draw_mage(S)
+		"pattern":
+			body_h = HERO_H * data.get("size", 1.0)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE * S)
-	if state == "windup" and data["kind"] in ["archer", "mage"]:  # línea de tiro fijada: el héroe puede salirse
+	if state == "windup" and (data["kind"] in ["archer", "mage"] or str(cur.get("type", "")) == "shot"):  # línea de tiro fijada: el héroe puede salirse
 		var k := 1.0 - clampf(t / data.get("windup", 0.7), 0.0, 1.0)
 		for a: float in (FAN_ANGLES if fan_shot and data["kind"] == "archer" else [0.0]):  # el abanico avisa sus tres líneas
 			var d := aim.rotated(a)

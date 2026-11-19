@@ -17,9 +17,9 @@ func run_checks() -> void:
 		for k in 6:
 			var boss: bool = n % 4 == 0
 			var lay: Dictionary = Gen.generate(n, rng, boss)
-			var seen: Dictionary = Gen.reachable(lay["walk"], Vector2i(12, 2))
-			assert(seen.has(Vector2i(12, 24)), "piso %d: de la entrada se llega a la salida" % n)
-			assert(seen.has(Vector2i(12, 0)), "la puerta de salida está en suelo")
+			var seen: Dictionary = Gen.reachable(lay["walk"], Vector2i(15, 2))
+			assert(seen.has(Vector2i(15, 29)), "piso %d: de la entrada se llega a la salida" % n)
+			assert(seen.has(Vector2i(15, 0)), "la puerta de salida está en suelo")
 			assert(lay["spots"].size() >= 12, "piso %d: hay sitio para los monstruos" % n)
 			for t: Vector2 in lay["spots"]:
 				assert(seen.has(Vector2i(int(t.x), int(t.y))), "todo puesto de monstruo es alcanzable")
@@ -34,7 +34,7 @@ func run_checks() -> void:
 
 	var open_lay: Dictionary = Gen.generate(3, rng, false, false)
 	assert(open_lay["walk"].all(func(r: String) -> bool: return not r.contains("0")), "el modo abierto es un salón sin muros")
-	assert(Gen.reachable(open_lay["walk"], Vector2i(12, 2)).size() == 625 and open_lay["spots"].size() >= 12, "y todo es alcanzable")
+	assert(Gen.reachable(open_lay["walk"], Vector2i(15, 2)).size() == 900 and open_lay["spots"].size() >= 12, "y todo es alcanzable")
 
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
@@ -42,15 +42,23 @@ func run_checks() -> void:
 	main.save_path = "user://test_dungeon_save.json"
 	main.testing = true
 	await process_frame
-	main._enter_dungeon()
+	var gate: Node = main.doors.filter(func(d): return d.label == "Entrar a la dungeon").front()
+	assert(not main.world.blocked(gate.tile, main.HERO_R_T))
+	main.pos = main.tile_to_ground(gate.tile)
+	main._interact()
+	await create_timer(0.8, true, false, true).timeout
 	await create_timer(0.8, true, false, true).timeout
 	var fl: Node = main.floors
+	assert(main.TILES == 30 and main.world.walk.size() == 30)
+	for x in 30:
+		for y in 30:
+			assert(not main.world.blocked(Vector2(x + 0.5, y + 0.5), main.HERO_R_T))
 	assert(main.in_dungeon and fl.floor_no == 1 and not fl.is_boss, "se entra al piso 1")
 
 	# jefe cada 4 pisos, con jefes que rotan
 	for n in range(1, 13):
 		assert(fl.is_boss_floor(n) == (n % 4 == 0), "el piso %d %s jefe" % [n, "es" if n % 4 == 0 else "no es"])
-	assert(fl.boss_def(4)["id"] == "storm_mage" and fl.boss_def(8)["id"] == "cyclops" and fl.boss_def(12)["id"] == "storm_mage", "los jefes rotan")
+	assert(fl.boss_def(4)["id"] == "storm_mage" and fl.boss_def(8)["id"] == "cyclops" and fl.boss_def(12)["id"] == "rey_osario" and fl.boss_def(16)["id"] == "reina_arana" and fl.boss_def(20)["id"] == "storm_mage", "los jefes rotan")
 
 	# niveles: empiezan por debajo del héroe, el jefe va a su nivel y cada tramo sube
 	main.prog.level = 10
@@ -86,8 +94,16 @@ func run_checks() -> void:
 	assert(mage_hp > base_hp * 2, "el jefe está escalado a su nivel (%d contra %d)" % [mage_hp, base_hp])
 	fl.start(5)
 	await process_frame
-	var slimes: Array = main.enemies.filter(func(e: Node) -> bool: return e != main.dragon and e.id == "slime")
-	assert(not slimes.is_empty() and slimes[0].data["hp"] < mage_hp, "los slimes del piso 5 son más flojos que el jefe")
+	var pool: Array = fl.cfg["enemies"]["melee_pool"]
+	var slimes: Array = main.enemies.filter(func(e: Node) -> bool: return e != main.dragon and e.id in pool)
+	assert(not slimes.is_empty() and slimes[0].data["hp"] < mage_hp, "los monstruos normales del piso 5 son más flojos que el jefe")
+	for id: String in ["escarabajo_brasa", "hongo_espora", "lobo_espectral", "golem_cristal", "rey_osario", "reina_arana"]:  # los seis nuevos: aparecen, tienen sprites y su repertorio escala
+		var nm: Node = main.spawn_enemy(id, main.pos + Vector2(200, 0))
+		assert(nm.spr != null and nm.data["kind"] == "pattern" and not nm.data["attacks"].is_empty(), "%s se crea con sprites y ataques" % id)
+		nm.alive = false  # se retira sin matarlo: la XP subiría al héroe de nivel y cambiaría los chequeos siguientes
+		main.enemies.erase(nm)
+		nm.queue_free()
+	assert(int(main.creatures["storm_mage"]["hp"]) == 800 and is_equal_approx(float(main.creatures["cyclops"]["attack_cooldown"]), 0.96), "jefes y semijefes: 2,5 veces más vida y velocidad de ataque")
 	assert(main.dungeon_floor == 5, "tras el jefe el piso 5 es el punto de reanudación")
 	fl.start(7)
 	assert(main.dungeon_floor == 5, "mitad de tramo: el punto no cambia")
@@ -104,12 +120,17 @@ func run_checks() -> void:
 
 	# el exterior: un par de niveles por debajo del héroe, jefes a su nivel
 	main.prog.level = 12
-	var fox: Node = main.predators[0]
+	for enemy in main.enemies:
+		if enemy != main.dragon:
+			enemy.alive = false
+	fl._process(0.1)
+	assert(fl.cleared and fl.chest_door != null)
+	var coins: int = main.prog.coins
+	fl.open_chest()
+	assert(main.prog.coins > coins and fl.chest_door == null)
 	main._exit_dungeon()
 	main.refresh_world_levels()
 	assert(main.world_level(false) == 10 and main.world_level(true) == 12, "monstruos P-2, jefes P")
-	assert(fox.data["hp"] > main.creatures["fox"]["hp"] and main.dragon.data["hp"] > main.creatures["dragon"]["hp"], "el zorro y el dragón se adaptan al nivel")
-	assert(float(main.dragon.data["hp"]) / float(main.creatures["dragon"]["hp"]) > float(fox.data["hp"]) / float(main.creatures["fox"]["hp"]), "el jefe se escala más que el monstruo normal")
 	main.prog.level = 1
 	main.refresh_world_levels()
 	assert(main.dragon.data["hp"] == main.creatures["dragon"]["hp"], "a nivel 1 todo está como en los datos")

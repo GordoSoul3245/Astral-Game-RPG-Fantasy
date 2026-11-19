@@ -1,135 +1,22 @@
 {
 	"giver": "Elda",
-	"quests": [
-		{
-			"id": "dragon",
-			"name": "La bestia del castillo",
-			"goal": "Mata al dragón que ronda el castillo",
-			"offer": "Un dragón ronda el castillo y nadie se atreve a salir. ¿Podrás con él?",
-			"event": "kill",
-			"target": "dragon",
-			"count": 1,
-			"reward": {
-				"coins": 40,
-				"xp": 60
-			}
-		},
-		{
-			"id": "fox",
-			"name": "Zorro ladrón",
-			"goal": "Caza al zorro que acecha a los conejos",
-			"offer": "Ese zorro se come los conejos del pueblo. Ahuyéntalo para siempre.",
-			"event": "kill",
-			"target": "fox",
-			"count": 1,
-			"reward": {
-				"coins": 20,
-				"potions": 1
-			}
-		},
-		{
-			"id": "floor1",
-			"name": "Bajo el castillo",
-			"goal": "Completa el primer piso de la dungeon",
-			"offer": "Bajo el castillo hay ruinas llenas de monstruos. Limpia el primer piso.",
-			"event": "floor",
-			"target": "1",
-			"count": 1,
-			"reward": {
-				"coins": 50,
-				"xp": 80
-			}
-		},
-		{
-			"id": "slimes",
-			"name": "Plaga de limo",
-			"goal": "Elimina slimes en la dungeon",
-			"offer": "Los slimes de las ruinas ensucian los pozos. Acaba con cinco.",
-			"event": "kill",
-			"target": "slime",
-			"count": 5,
-			"reward": {
-				"coins": 40,
-				"potions": 1
-			}
-		},
-		{
-			"id": "gel",
-			"name": "Gel para la herrería",
-			"goal": "Reúne gel de slime para Bram (en el pueblo)",
-			"offer": "Bram necesita gel de slime para sus fraguas. Tráeme tres porciones y él te lo pagará bien.",
-			"event": "loot",
-			"target": "gel_slime",
-			"count": 3,
-			"reward": {
-				"coins": 30,
-				"xp": 40
-			}
-		},
-		{
-			"id": "archers",
-			"name": "Lluvia de flechas",
-			"goal": "Derrota esqueletos arqueros",
-			"offer": "Los esqueletos arqueros no dejan pasar a nadie. Derrota a cuatro.",
-			"event": "kill",
-			"target": "skeleton_archer",
-			"count": 4,
-			"reward": {
-				"coins": 60,
-				"xp": 90
-			}
-		},
-		{
-			"id": "floor2",
-			"name": "Más hondo",
-			"goal": "Completa el segundo piso de la dungeon",
-			"offer": "Las ruinas siguen hacia abajo. Limpia el segundo piso.",
-			"event": "floor",
-			"target": "2",
-			"count": 1,
-			"reward": {
-				"coins": 90,
-				"xp": 140
-			}
-		},
-		{
-			"id": "cyclops",
-			"name": "Gigantes de piedra",
-			"goal": "Derrota cíclopes",
-			"offer": "Unos gigantes de un solo ojo custodian el fondo. Derrota a dos.",
-			"event": "kill",
-			"target": "cyclops",
-			"count": 2,
-			"reward": {
-				"coins": 120,
-				"xp": 180
-			}
-		},
-		{
-			"id": "boss",
-			"name": "El mago de la tormenta",
-			"goal": "Derrota al mago de la tormenta, el jefe del piso 4",
-			"offer": "En lo más hondo vive el mago de la tormenta. Si cae, el pueblo será libre.",
-			"event": "kill",
-			"target": "storm_mage",
-			"count": 1,
-			"reward": {
-				"coins": 150,
-				"xp": 200
-			}
-		},
-		{
-			"id": "trial",
-			"name": "El gigante de piedra",
-			"goal": "Supera el piso 8 de la dungeon (jefe: el gigante)",
-			"offer": "Dicen que tras la tormenta aguarda un gigante de piedra aún peor. Solo los mejores bajan hasta el piso 8.",
-			"event": "floor",
-			"target": "8",
-			"count": 1,
-			"reward": {
-				"coins": 300,
-				"xp": 400
-			}
-		}
-	]
+	"awakening": ["¡Ashh! Me duele la cabeza. Siento que dormí muchísimo tiempo…", "Pero… ¿dónde estoy?"],
+	"payada": [
+		"Jugador: Disculpe, ¿hace mucho que estoy acá? Lo último que recuerdo es… nada.",
+		"El viejo: Yo lo vi llegar anoche,\ncuando avivé la candela;\npero hay años en sus ojos\nque su cara no revela.",
+		"El viejo: Si habrá vivido otros siglos,\nno se lo puedo jurar;\nmas donde usted puso el pie\nvolvió mi guitarra a hablar.",
+		"El viejo: Siga el humo de los techos,\npor el pueblo ha de pasar;\nsi alguien guarda su memoria,\ncon Elda la ha de hallar.",
+		"Jugador: Gracias, viejo. Me alcanza con saber por dónde empezar. Le debo una vuelta al fogón."
+	],
+	"quests": [{
+		"id": "pulso_ignis",
+		"name": "El pulso de Ignis",
+		"goal": "Despejá tres pisos distintos de la mazmorra",
+		"offer": "Jugador: El viejo del fogón me mandó a verte. ¿Qué lugar es este?\nElda: Ignis. Pueblo chico, y cada invierno más chico. ¿Ves esa hilera de casas? De noche ya solo encendemos dos faroles.\nJugador: ¿Se fueron los demás?\nElda: Los que pudieron. Anoche mi hermana tuvo que sentarse a mitad de amasar el pan. A esa misma hora empezó el zumbido de la mazmorra. Cada vez que despierta, nos quita un poco de fuerza.\nJugador: ¿Y los caballeros?\nElda: Juntamos lo que pudimos. Su capitán ni se bajó del caballo cuando vio la bolsa. A nosotros nos llevó un año llenarla.\nElda: La entrada está junto al lago. Si despejás al menos tres pisos, la tierra va a aflojar y podremos respirar. Volvé a verme después.\nJugador: Guardá la bolsa hasta que vuelva. Mostrame el camino al lago.",
+		"turn_in": "Elda: Esta mañana me despertó un golpe en la mesa. Era mi hermana, amasando con las dos manos. Hacía meses que no la oía trabajar así.\nJugador: Entonces valió la pena bajar.\nElda: Tomá. Son las seiscientas monedas que juntamos, y esta vez sabemos a quién se las damos. Cuando quieras hablar de lo que te trajo hasta acá, hay un lugar en nuestra mesa.",
+		"event": "floor",
+		"count": 3,
+		"reward": {"coins": 600, "xp": 1000}
+	}]
 }
+

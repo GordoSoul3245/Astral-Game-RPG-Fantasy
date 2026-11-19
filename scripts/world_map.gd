@@ -24,7 +24,11 @@ func setup(data: Dictionary) -> void:
 		var tile := Vector2(o["tile"][0], o["tile"][1])
 		var g: Vector2 = main.tile_to_ground(tile)
 		var s := Sprite2D.new()
-		s.texture = load(sp["path"])
+		s.texture = load(o.get("texture", sp["path"]))
+		if o["sprite"] == "portal":
+			var flame := ShaderMaterial.new()
+			flame.shader = preload("res://shaders/portal_cripta.gdshader")
+			s.material = flame
 		s.centered = false
 		var sz := float(o.get("size", 1.0))  # tamaño del objeto (árboles variados o un árbol hito)
 		s.scale = Vector2.ONE * main.SCALE * sz
@@ -57,9 +61,9 @@ func setup(data: Dictionary) -> void:
 		add_child(s)
 		if o["sprite"].begins_with("tree_") and not sp.has("anim"):
 			_living_tree(s, sp, tile)
-		if not o["sprite"].begins_with("rock"):  # las rocas son bajas: no tapan
+		if not o["sprite"].begins_with("rock") and o["sprite"] != "pueblo_piedras":  # las rocas son bajas: no tapan
 			occluders.append(s)
-		if o["sprite"].begins_with("tree_") or o["sprite"].begins_with("rock_"):  # se pueden talar y picar
+		if o["sprite"].begins_with("tree_") or o["sprite"].begins_with("rock_") or o["sprite"] == "pueblo_piedras":  # se pueden talar y picar
 			_register_node("tree" if o["sprite"].begins_with("tree_") else "rock", tile, s, circles[-1] if o.has("circle") else null)
 
 # Rendimiento: un sprite se recorta a su parte no transparente (region_rect) y se desplaza lo mismo (offset), así se dibuja
@@ -396,7 +400,7 @@ func hit_node(n: Dictionary, power: int) -> bool:  # true si este golpe lo agota
 	n["hp"] -= power
 	var s: Sprite2D = n["spr"]
 	var tw := create_tween()  # sacudida del golpe
-	var lt: Node2D = s.get_meta("living", null)
+	var lt: Node2D = s.get_meta("living") if s.has_meta("living") else null
 	if lt != null:  # el árbol vivo se sacude él (el sprite no se ve)
 		var p0 := lt.position.x
 		tw.tween_property(lt, "position:x", p0 + 5.0 / main.SCALE * 3.0, 0.04)
@@ -437,7 +441,7 @@ func _tick_respawns(delta: float) -> void:
 		var s: Sprite2D = n["spr"]
 		s.offset = s.get_meta("base_off", Vector2.ZERO)
 		s.visible = true
-		var lt: Node2D = s.get_meta("living", null)
+		var lt: Node2D = s.get_meta("living") if s.has_meta("living") else null
 		if lt != null:  # vuelve a crecer el árbol vivo; el sprite sigue sin dibujarse
 			lt.modulate.a = 0.0
 			create_tween().tween_property(lt, "modulate:a", 1.0, 0.6)

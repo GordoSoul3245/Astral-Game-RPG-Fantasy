@@ -1,4 +1,4 @@
-# Ecos de la Ruina: notas de diseño (para continuar en un chat nuevo)
+# Astral: notas de diseño (para continuar en un chat nuevo)
 
 ## Actualización de animación — 9 de noviembre de 2026
 
@@ -45,7 +45,7 @@ Lee este archivo y sigue desde "Pendiente". Lo que está escrito aquí es la fue
 - Animaciones nuevas (procedurales, no de Blender): la bola de fuego usa la anim `cast` y el dragón se aplasta y se desvanece al morir.
 
 ## 2. Brief del juego (resumen)
-"Ecos de la Ruina": RPG de acción isométrico de fantasía. Bucle: aceptar misión en el pueblo → explorar y pelear → dungeon y jefe → volver con botín y mejorar equipo. Fallo: vida a 0 → reaparece en el pueblo y la misión sigue. MVP completo en `docs/GAME_BRIEF.md`.
+"Astral": RPG de acción isométrico de fantasía. Bucle: aceptar misión en el pueblo → explorar y pelear → dungeon y jefe → volver con botín y mejorar equipo. Fallo: vida a 0 → reaparece en el pueblo y la misión sigue. MVP completo en `docs/GAME_BRIEF.md`.
 
 ## 3. Decisiones de diseño (valores fijos)
 - **Cámara:** ortográfica de los sprites, 2.75 m de encuadre a 128 px; pitch ~65°, yaw ~31° (no es 2:1 clásica). Todos los sprites de personajes y objetos usan esta cámara; hay que renderizarlos con ella.

@@ -16,6 +16,9 @@ var scale_mult := 1.0       # tamaño del sprite (la esfera pesada es más grand
 var effect := "fire"        # fire (marca de Ignis), slow (hielo: ralentiza) o chain (rayo: salta a otros enemigos)
 var aoe := 0.0              # radio de explosión en px de suelo; 0 = daño solo por impacto directo
 var sprite: AnimatedSprite2D
+var visual := ""
+var elemental_sprite: Sprite2D
+var ignis := false
 var dead := false
 var trail_points: Array[Vector2] = []
 var trail_distance := 0.0
@@ -39,7 +42,7 @@ func _burn(e: Node) -> void:  # golpe del héroe: daña y, según el hechizo, ma
 					main.combat.hit(o, roundi(float(damage) * 0.6), "magic", e.pos, false)
 					main.fx_bolt(e.pos, o.pos, Color(0.85, 0.75, 1.0))
 					n += 1
-		_:
+		"fire":
 			main.combat.mark(e)
 
 func _ready() -> void:
@@ -49,7 +52,19 @@ func _ready() -> void:
 	sprite.rotation = dir.angle()
 	sprite.modulate = tint
 	add_child(sprite)
-	sprite.play("fly")
+	ignis = source == "hero" and effect == "fire"
+	if visual in ["ice_shard", "boulder"]:
+		sprite.hide()
+		elemental_sprite = Sprite2D.new()
+		elemental_sprite.texture = load("res://art/grimorio/" + visual + ".png")
+		elemental_sprite.rotation = dir.angle()
+		elemental_sprite.scale = Vector2.ONE * main.SCALE * (0.8 if visual == "ice_shard" else 1.25)
+		add_child(elemental_sprite)
+	elif ignis:
+		sprite.modulate = Color.WHITE
+		sprite.play("ignis_heavy" if aoe > 0.0 else "ignis_light")
+	else:
+		sprite.play("fly")
 	glow = main.combat.light(tint if tint != Color.WHITE else Color(1.0, 0.6, 0.25), 0.5 * scale_mult, 0.9 * scale_mult)
 	glow.position = Vector2(0, height * 0.6) * main.SCALE  # ilumina el suelo bajo la bola
 	add_child(glow)
@@ -64,6 +79,8 @@ func _physics_process(delta: float) -> void:
 		return
 	trail_distance += speed * delta
 	t += delta
+	if visual == "boulder":
+		elemental_sprite.rotation += delta * 5.0
 	if trail_distance >= 5.0:
 		trail_distance = 0.0
 		trail_points.push_front((ground - Vector2(0, height)) * main.SCALE)
@@ -98,16 +115,24 @@ func _explode() -> void:
 		for e in main.targets():  # explosión en área: alcanza a los enemigos cercanos aunque no sean impacto directo
 			if e.alive and HB.foot_dist(e, ground) < aoe:
 				_burn(e)
+	if elemental_sprite:
+		if visual == "ice_shard":
+			main.fx_ice(ground)
+		else:
+			main.combat.ground_impact(ground, 1.8)
+		hit.emit(ground)
+		queue_free()
+		return
 	sprite.rotation = 0.0
 	sprite.scale = Vector2.ONE * main.SCALE * maxf(1.5, aoe / 20.0)
-	sprite.play("impact")
+	sprite.play("ignis_impact" if ignis else "impact")
 	glow.create_tween().tween_property(glow, "energy", 0.0, 0.3)
 	sprite.animation_finished.connect(queue_free)
 	hit.emit(ground)
 	_sync()
 
 func _draw() -> void:
-	if dead:
+	if dead or ignis or elemental_sprite:
 		return
 	for i in trail_points.size():
 		var strength := 1.0 - float(i) / 7.0

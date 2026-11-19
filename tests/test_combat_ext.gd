@@ -107,7 +107,7 @@ func run_checks() -> void:
 	assert(t.hp == 1000 - 15, "abierto recibe x1.5 (%d)" % (1000 - t.hp))
 	for i in 30:
 		t._physics_process(0.1)
-	assert(not t.staggered and t.state == "chase", "tras STAGGER_TIME se recupera")
+	assert(not t.staggered and t.state in ["chase", "windup"], "tras STAGGER_TIME se recupera (con 2,5× de velocidad de ataque puede empezar otro golpe enseguida)")
 	t.hp = 1000
 	t.take_damage(10, false)
 	assert(t.hp == 990, "recuperado vuelve al daño normal")

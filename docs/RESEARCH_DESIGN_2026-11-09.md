@@ -1,4 +1,4 @@
-# Ecos de la Ruina: investigación y propuesta de evolución
+# Astral: investigación y propuesta de evolución
 
 Fecha: 9 de noviembre de 2026. Este informe propone opciones; no modifica las decisiones de DESIGN_NOTES.md ni autoriza implementar todas las mecánicas.
 

@@ -22,7 +22,7 @@ func setup(data: Dictionary) -> void:
 	cfg = data
 	frame_tf = Transform2D(main.E1 / main.TILES, main.E2 / main.TILES, main.C1)
 	var n := int(data["tiles"])
-	var forest: Array = []
+	var forest: Array = data.get("objects", []).duplicate()
 	if data.has("layout"):  # mapa dibujado como texto: T bosque, . pasto, = camino, ~ agua (fila = j, columna = i)
 		var lay: Array = data["layout"]
 		for j in lay.size():
@@ -32,6 +32,8 @@ func setup(data: Dictionary) -> void:
 					"~": water[Vector2i(i, j)] = true
 					"=": paths[Vector2i(i, j)] = true
 					"T":  # un árbol por casilla T (el generador ya decide bosquetes y claros), corrido, girado y de tamaño variado
+						if _in_gate_gap(Vector2(i + 0.5, j + 0.5)):
+							continue
 						var h := float((i * 73 + j * 37) % 100) / 100.0
 						var o := _object("tree_arbol1", i + 0.2 + h * 0.6, j + 0.2 + fmod(h * 7.0, 1.0) * 0.6)
 						o["dir"] = ARBOL1_DIRS[(i * 5 + j * 3) % 8]  # cada árbol mira a un lado: el bosque no se ve clonado
@@ -45,9 +47,8 @@ func setup(data: Dictionary) -> void:
 	for i in n:
 		var row := ""
 		for j in n:
-			var b := int(cfg.get("border", 1))  # franja de borde que no se pisa (con bosque denso encima, así nunca se ve el vacío del mapa)
-			var edge := i < b or j < b or i >= n - b or j >= n - b  # el borde es el límite del mapa, salvo en los claros que llevan a otra región
-			row += "0" if ((edge and not _gate(i, j) and not paths.has(Vector2i(i, j))) or water.has(Vector2i(i, j))) else "1"
+			var empty: bool = data.has("layout") and data["layout"][j][i] == " "
+			row += "0" if empty or water.has(Vector2i(i, j)) else "1"
 		rows.append(row)
 	var sprites: Dictionary = main._read_json("res://data/map.json")["sprites"]
 	sprites["tree_arbol1"] = {"path": "res://art/arbol1/south/frame_000.png", "frame": [124, 124], "feet": [62.0, 114.0], "anim": "res://art/arbol1/%s/frame_%03d.png"}  # árbol de PixelLab con reposo (9 cuadros, 8 direcciones)
@@ -77,7 +78,7 @@ func setup(data: Dictionary) -> void:
 		for i in n:
 			for j in n:
 				var c := Vector2i(i, j)
-				if not water.has(c) and not paths.has(c):
+				if data["layout"][j][i] != " " and not water.has(c) and not paths.has(c):
 					cells.append({"q": PackedVector2Array([_corner(i, j), _corner(i + 1, j), _corner(i + 1, j + 1), _corner(i, j + 1)]), "id": c})
 		for k in range(0, cells.size(), 100):  # bloques de 100 casillas: pocas llamadas de dibujo
 			var g := GrassTile.new()
@@ -152,22 +153,10 @@ func paint(ci: CanvasItem) -> void:  # suelo de losas de colores: mullido, camin
 	var cols := PackedColorArray()
 	var sc: float = main.SCALE
 	var base := Color(str(g[0]))
-	if cfg.has("border"):  # fuera del mapa: suelo de bosque que se oscurece hacia el fondo, así no se ve el vacío negro
-		var m := 14
-		var clear := Color(str(cfg["clear"]))
-		for i in range(-m, tiles + m):
-			for j in range(-m, tiles + m):
-				var d := maxi(maxi(-i, i - tiles + 1), maxi(-j, j - tiles + 1))
-				var gs: Dictionary = cfg.get("gates", {})
-				if d <= 0 or (gs.has("n") and j < 0) or (gs.has("s") and j >= tiles) or (gs.has("w") and i < 0) or (gs.has("e") and i >= tiles):
-					continue  # hacia el lado del valle no se pinta: ahí está el valle
-				var q := PackedVector2Array([_corner(i, j), _corner(i + 1, j), _corner(i + 1, j + 1), _corner(i, j + 1)])
-				var oc := Color(g[(i + j) % 2]).darkened(0.35).lerp(clear, clampf(float(d) / m, 0.0, 1.0))
-				verts.append_array([q[0], q[1], q[2], q[0], q[2], q[3]])
-				for k in 6:
-					cols.append(oc)
 	for i in tiles:
 		for j in tiles:
+			if cfg.has("layout") and cfg["layout"][j][i] == " ":
+				continue
 			var quad := PackedVector2Array([_corner(i, j), _corner(i + 1, j), _corner(i + 1, j + 1), _corner(i, j + 1)])
 			var col: Color
 			if water.has(Vector2i(i, j)):

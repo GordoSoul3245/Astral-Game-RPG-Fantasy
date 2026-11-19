@@ -90,6 +90,7 @@
 		"ultimate": {
 			"type": "meteor",
 			"name": "Meteoro",
+			"visual": "ignis_meteor",
 			"anim": "cast",
 			"fps": 12.0,
 			"strike_frame": 4,
@@ -117,38 +118,29 @@
 			"radius": 6.0,
 			"muzzle_height": 40.0,
 			"tint": "#9fe4ff",
-			"effect": "slow"
+			"effect": "slow",
+			"visual": "ice_shard"
 		},
 		"heavy": {
-			"type": "projectile",
-			"name": "Ventisca",
+			"type": "ice_spike",
+			"name": "Aguja glacial",
 			"anim": "cast",
-			"fps": 12.0,
-			"strike_frame": 4,
-			"speed": 130.0,
-			"cooldown": 1.6,
-			"damage": 28,
-			"mana": 28.0,
-			"radius": 12.0,
-			"muzzle_height": 40.0,
-			"scale": 2.2,
-			"aoe": 50.0,
-			"tint": "#b8ecff",
-			"effect": "slow"
+			"fps": 16,
+			"strike_frame": 3,
+			"cooldown": 1.5,
+			"damage": 32,
+			"mana": 26
 		},
 		"ultimate": {
-			"type": "meteor",
-			"name": "Cometa helado",
+			"type": "freeze",
+			"name": "Invierno inmóvil",
 			"anim": "cast",
-			"fps": 12.0,
-			"strike_frame": 4,
-			"cooldown": 1.0,
-			"range_tiles": 10.0,
-			"aoe_tiles": 3.0,
-			"fall_time": 0.7,
-			"damage": 80
+			"fps": 18,
+			"strike_frame": 3,
+			"cooldown": 1,
+			"duration": 5
 		},
-		"desc": "Hielo que ralentiza a lo que toca."
+		"desc": "Dispara picos, alza una aguja de hielo bajo el cursor y congela a todos los monstruos durante 5 segundos."
 	},
 	"grimorio_tormenta": {
 		"name": "Grimorio de tormenta",
@@ -199,5 +191,46 @@
 			"damage": 100
 		},
 		"desc": "Rayos que saltan de enemigo en enemigo."
+	},
+	"grimorio_tierra": {
+		"name": "Grimorio de tierra",
+		"slot": "grimoire",
+		"icon": "res://art/grimorio/grimorio_tierra.png",
+		"desc": "Golpea con puños de piedra, arroja un peñasco explosivo y abre una grieta de ocho casillas.",
+		"light": {
+			"type": "stone_fist",
+			"name": "Puño de piedra",
+			"anim": "cast",
+			"fps": 24,
+			"strike_frame": 3,
+			"cooldown": 0.45,
+			"damage": 17,
+			"mana": 5
+		},
+		"heavy": {
+			"type": "projectile",
+			"name": "Peñasco",
+			"anim": "cast",
+			"fps": 13,
+			"strike_frame": 3,
+			"cooldown": 1.5,
+			"damage": 38,
+			"mana": 24,
+			"speed": 170,
+			"radius": 13,
+			"muzzle_height": 40,
+			"aoe": 52,
+			"effect": "earth",
+			"visual": "boulder"
+		},
+		"ultimate": {
+			"type": "fissure",
+			"name": "Pisotón tectónico",
+			"anim": "cast",
+			"fps": 16,
+			"strike_frame": 3,
+			"cooldown": 1,
+			"damage": 110
+		}
 	}
 }

@@ -19,14 +19,30 @@ func run_checks() -> void:
 	await process_frame
 	var cr = main.crafting
 	assert(cr.knows("plano_pocion_vida"), "el plano inicial ya se conoce")
-	assert(main.stations.size() >= 3, "mesa, fogata y yunque registrados")
+	assert(main.stations.size() >= 2, "mesa y yunque registrados")
 
 	# la mesa y la fogata están junto al mercader y se usan con E
 	var table: Dictionary = {}
 	for s: Dictionary in main.stations:
 		if s["station"] == "alchemy":
 			table = s
-	assert(not table.is_empty() and table["tile"].distance_to(main.ground_to_tile(main.merchants.filter(func(m: Node2D) -> bool: return m.role == "merchant")[0].pos)) < 4.0, "la mesa está al lado del mercader")
+	assert(not table.is_empty())
+	for trader: Node in main.merchants:
+		main.pos = trader.pos
+		assert(main._near_merchant() == trader)
+		main._interact()
+		assert(main.shop.visible and main.shop.role == trader.role)
+		if trader.role == "merchant":
+			main.prog.coins = 100
+			var before: int = main.prog.potions
+			main.shop.buy("pocion_vida")
+			assert(main.prog.potions == before + 1)
+		else:
+			cr.add("gel_slime", 1)
+			var coins: int = main.prog.coins
+			main.shop.sell("gel_slime")
+			assert(main.prog.coins > coins)
+		main.shop.close()
 	main.pos = main.tile_to_ground(table["tile"] + Vector2(0, 1.2))
 	assert(main._near_station()["station"] == "alchemy", "cerca de la mesa se detecta la estación")
 	assert(main.world.rects.size() > 5, "la mesa bloquea el paso")
@@ -37,7 +53,6 @@ func run_checks() -> void:
 		if n["kind"] == "tree" and tree.is_empty():
 			tree = n
 	assert(not tree.is_empty(), "los árboles del mapa son recolectables")
-	assert(main.world.res_nodes.any(func(n: Dictionary) -> bool: return n["kind"] == "herb") and main.world.res_nodes.any(func(n: Dictionary) -> bool: return n["kind"] == "berry"), "hay hierbas y bayas en el valle")
 	main.pos = tree["g"] + Vector2(-26, 14)
 	assert(main._near_node()["kind"] != "", "al lado del árbol se puede talar")
 	var hits_bare := 0
@@ -79,7 +94,11 @@ func run_checks() -> void:
 	# mina: entrada con puerta, cueva con vetas y monstruos, y salida que restaura el pueblo
 	assert(main.doors.any(func(d: Node2D) -> bool: return d.label == "Entrar a la mina"), "la entrada de la mina existe")
 	var door_tiles: int = main.doors.size()
-	main._enter_mine()
+	var mine_gate: Node = main.doors.filter(func(d): return d.label == "Entrar a la mina").front()
+	assert(not main.world.blocked(mine_gate.tile, main.HERO_R_T))
+	main.pos = main.tile_to_ground(mine_gate.tile)
+	main._interact()
+	await _wait(1.2)
 	await process_frame
 	assert(main.in_mine and main.in_dungeon and main.world.has_method("free_tile"), "dentro de la mina")
 	var kinds := {}
@@ -177,8 +196,8 @@ func run_checks() -> void:
 	main.menu.visible = true
 	main.menu.refresh()
 	await process_frame
-	assert(main.menu.tab_buttons.has("craft") and main.menu.book.visible and main.menu.craft_sel != "", "pestaña de crafteo (libro)")
-	print("PASS crafting_world: mesa y fogata junto al mercader, recolección por herramienta, mina, forja, cocina, alquimia con planos y guardado")
+	assert(main.menu.tab == "craft" and main.menu.book.visible and main.menu.craft_sel != "", "pestaña de crafteo (libro)")
+	print("PASS crafting_world: compra, venta, mesa del pueblo, recolección por herramienta, mina, forja, cocina, alquimia con planos y guardado")
 	quit()
 
 class _FakeEnemy extends Node2D:

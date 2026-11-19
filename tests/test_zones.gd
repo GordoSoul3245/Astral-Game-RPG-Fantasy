@@ -29,108 +29,15 @@ func run_checks() -> void:
 	main.save_path = "user://test_zones_save.json"
 	main.testing = true
 	await _wait(0.5)
-	assert(main.zones_cfg.size() == 4 and main.zones_cfg.has("nieve") and main.zones_cfg.has("bosque"), "hay cuatro zonas (con el Bosque del Fogón)")
-	assert(main.links.size() == 4 and main.world.get_children().any(func(c: Node) -> bool: return c.get_script() != null and c.get_script().resource_path.ends_with("bridges.gd")), "el valle tiene puentes hacia las zonas")
-
-	for id: String in main.zones_cfg:
-		var cfg: Dictionary = main.zones_cfg[id]
-		if cfg.get("peaceful", false):  # el bosque del inicio no tiene monstruos, jefe ni cofre: se comprueba aparte
-			continue
-		main.prog.level = 6
-		main.pos = main.tile_to_ground(Vector2(10, 30))
-		main._enter_zone(id)
-		await _wait(0.4)
-		var z: Node2D = main.dungeon_node
-		assert(main.in_mine and main.zone_id == id and main._scene_id() == "zone:" + id, "%s: se entra a la zona" % id)
-		var start: Vector2 = z.spawn_tile()
-		var seen := _reachable(z.walk, Vector2i(int(start.x), int(start.y)))
-		for side: String in main.gates_of(id):
-			var rows: Array = main.gates_of(id)[side]
-			var n: int = int(cfg["tiles"])
-			var gate_cell: Vector2i = {"e": Vector2i(n - 1, int(rows[0])), "w": Vector2i(0, int(rows[0])), "s": Vector2i(int(rows[0]), n - 1), "n": Vector2i(int(rows[0]), 0)}[side]
-			assert(seen.has(gate_cell), "%s: el claro del lado %s es alcanzable desde la entrada" % [id, side])
-		assert(seen.size() > 300, "%s: hay mucho suelo transitable (%d casillas)" % [id, seen.size()])
-		for e: Dictionary in cfg["enemies"]:
-			assert(seen.has(Vector2i(int(e["t"][0]), int(e["t"][1]))), "%s: %s aparece en suelo alcanzable" % [id, e["id"]])
-		for nd: Dictionary in cfg["nodes"]:
-			assert(seen.has(Vector2i(int(nd["t"][0]), int(nd["t"][1]))), "%s: el recurso %s es alcanzable" % [id, nd["kind"]])
-		var ch: Vector2 = Vector2(cfg["chest"]["t"][0], cfg["chest"]["t"][1])
-		assert(seen.has(Vector2i(int(ch.x), int(ch.y))), "%s: el cofre es alcanzable" % id)
-		# monstruos a nivel del héroe - 2 (el cíclope, un nivel más) y con recompensa escalada
-		var mine_enemies: Array = main.enemies.filter(func(e: Node) -> bool: return e != main.dragon)
-		assert(mine_enemies.size() == cfg["enemies"].size(), "%s: salen todos los monstruos" % id)
-		var slime: Node = mine_enemies.filter(func(e: Node) -> bool: return e.data.get("counts_as", e.id) == "slime")[0]
-		var base: Dictionary = main.creatures["slime"]
-		assert(slime.data["hp"] > base["hp"], "%s: los monstruos van al nivel del héroe (%d contra %d)" % [id, slime.data["hp"], base["hp"]])
-		var cycs: Array = mine_enemies.filter(func(e: Node) -> bool: return e.data.get("counts_as", e.id) == "cyclops" and not e.data.get("boss", false))
-		assert(cycs.is_empty() or cycs[0].data["hp"] > main.creatures["cyclops"]["hp"], "%s: los cíclopes también están escalados" % id)
-		# recursos hay
-		assert(z.node_near(main.tile_to_ground(Vector2(cfg["nodes"][0]["t"][0], cfg["nodes"][0]["t"][1])), 2.0).size() > 0 or true)
-		# cofre: una sola vez
-		assert(not main.zones_done.has(id) and main.zone_chest == null and main.zone_boss != null, "%s: el cofre no aparece hasta matar al jefe de la zona (%s)" % [id, main.zone_boss.data["name"] if main.zone_boss else "?"])
-		assert(main.zone_boss.data["hp"] > slime.data["hp"] * 3, "%s: el jefe es mucho más fuerte que un monstruo normal" % id)
-		main.zone_boss.alive = false
-		main._tick_schedule(0.1)
-		assert(main.zone_chest != null, "%s: al caer el jefe aparece el cofre" % id)
-		var coins0: int = main.prog.coins
-		main._open_zone_chest()
-		if cfg["chest"].has("book"):
-			assert(main.prog.books.has(str(cfg["chest"]["book"])), "%s: el cofre del jefe da un grimorio nuevo" % id)
-		assert(main.zones_done.has(id) and main.prog.coins > coins0, "%s: el cofre da su botín" % id)
-		for item: String in cfg["chest"]["items"]:
-			assert(main.crafting.count(item) >= int(cfg["chest"]["items"][item]), "%s: recibes %s" % [id, item])
-		main._exit_mine()
-		await _wait(0.3)
-		assert(not main.in_mine and main.zone_id == "" and main._scene_id() == "overworld", "%s: se vuelve al valle" % id)
-		assert(main.doors.size() >= 2, "las puertas del valle vuelven")
-		main._enter_zone(id)
-		await _wait(0.3)
-		assert(main.zone_chest == null, "%s: el cofre no vuelve a salir" % id)
-		main._exit_mine()
-		await _wait(0.3)
-
-	# mundo conectado: del valle a la marisma por el puente del oeste y de vuelta, sin puertas
-	main.prog.level = 4
-	main.pos = main.tile_to_ground(Vector2(-0.3, 21.5))
-	main.travel_cd = 0.0
-	main._check_edges(0.0)
-	await _wait(1.0)
-	assert(main.region() == "pantano" and main.ground_to_tile(main.pos).x > 24.0, "cruzar el puente oeste lleva a la marisma, por su lado este")
-	main.pos = main.tile_to_ground(Vector2(28.2, 13.5))
-	main.travel_cd = 0.0
-	main._check_edges(0.0)
-	await _wait(1.0)
-	assert(main.region() == "valle" and main.ground_to_tile(main.pos).x < 4.0, "y de vuelta al valle por el mismo puente")
-	main.pos = main.tile_to_ground(Vector2(50.2, 12.5))
-	main.travel_cd = 0.0
-	main._check_edges(0.0)
-	await _wait(1.0)
-	assert(main.region() == "desierto" and main.ground_to_tile(main.pos).x < 4.0, "el puente este lleva al desierto, por su lado oeste")
-	main._exit_mine()
-	await _wait(0.3)
-
-	# el puente norte lleva a las Cumbres Heladas por su lado sur
-	main.prog.level = 6
-	main.pos = main.tile_to_ground(Vector2(29.5, -0.3))
-	main.travel_cd = 0.0
-	main._check_edges(0.0)
-	await _wait(1.0)
-	assert(main.region() == "nieve" and main.ground_to_tile(main.pos).y > 24.0, "el puente norte lleva a las Cumbres Heladas por el sur")
-	main.pos = main.tile_to_ground(Vector2(14.0, 28.2))
-	main.travel_cd = 0.0
-	main._check_edges(0.0)
-	await _wait(1.0)
-	assert(main.region() == "valle" and main.ground_to_tile(main.pos).y < 4.0, "y de vuelta al valle por el norte")
-
-	# el desierto es más duro que la marisma
-	var weights: Dictionary = {}
-	for id: String in main.zones_cfg:
-		var t := 0
-		for e: Dictionary in main.zones_cfg[id]["enemies"]:
-			t += int(main.creatures[e["id"]]["hp"]) + int(e["off"]) * 100
-		weights[id] = t
-	assert(weights["desierto"] > weights["pantano"] and weights["nieve"] > weights["desierto"], "cada zona es más dura: marisma, desierto, cumbres")
-
+	assert(main.frames.size() == 2 and main.links.size() == 1)
+	var pueblo: Dictionary = main._read_json("res://data/map.json")
+	assert(pueblo.objects.filter(func(o): return o.sprite == "house").size() == 5)
+	for y in range(38, 50):
+		assert(pueblo.layout[y].count("=") >= 4)
+		for x in range(50):
+			if pueblo.layout[y][x] != "=":
+				continue
+			assert(not main.world.blocked(Vector2(x + 0.5, y + 0.5), 0.25))
 	# Bosque del Fogón: se llega a la fogata y al lago desde el inicio, el viejo está y se le puede hablar
 	main._enter_zone("bosque")
 	await _wait(0.4)
@@ -148,10 +55,27 @@ func run_checks() -> void:
 	await _wait(1.0)
 	assert(main.region() == "valle", "bosque: el camino del norte lleva al valle (el pueblo)")
 
-	# guardado de zonas abiertas
-	main.save_game()
-	main.zones_done.clear()
-	assert(main.load_game() and main.zones_done.has("pantano") and main.zones_done.has("desierto"), "se guardan los cofres abiertos")
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(main.save_path))
-	print("PASS zones: dos zonas escritas a mano, alcanzables, con monstruos a nivel, recursos, cofre único y guardado")
+	assert(main.quests.status == "none", "llegar al pueblo no completa el encargo de la mazmorra")
+	main.pos = main.tile_to_ground(Vector2(23.5, 50.2))
+	main._check_edges(0.0)
+	assert(main.region() == "bosque")
+	# Cruce a pie por el pasto a ambos lados del camino, con el radio real del héroe.
+	for band: Vector2i in [Vector2i(8, 24), Vector2i(33, 41)]:
+		var crossed := false
+		for x in range(band.x, band.y):
+			var inside: Vector2 = main.tile_to_ground(Vector2(x + 0.5, 0.65))
+			var across: Vector2 = main.tile_to_ground(Vector2(x + 0.5, -0.65))
+			var valley_tile: Vector2 = main._tile_in(main.frames[main.valley_world], across)
+			if b.blocked(main.ground_to_tile(inside), main.HERO_R_T) or main.valley_world.blocked(valley_tile, main.HERO_R_T):
+				continue
+			main.pos = b.move_collide(inside, across, main.HERO_R_T)
+			main._check_edges(0.0)
+			assert(main.region() == "valle")
+			main.pos = main.world.move_collide(main.pos, inside, main.HERO_R_T)
+			main._check_edges(0.0)
+			assert(main.region() == "bosque")
+			crossed = true
+			break
+		assert(crossed, "Debe haber paso fuera del camino en cada lado")
+	print("PASS: bosque, pueblo de cinco casas, camino libre de ida y vuelta y primera misión")
 	quit()

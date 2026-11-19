@@ -165,6 +165,25 @@ def outline(path):  # contorno exterior de 1 px: el borde transparente que toca 
     bpy.data.images.remove(img)
 
 
+if '--sentado' in __import__('sys').argv:
+    for obj in root.children:
+        if obj.location.z < 0.46:
+            obj.location.y -= 0.36
+        elif obj.active_material == TROUSER and obj.location.z < 0.8:
+            obj.location.y -= 0.18
+            obj.location.z = 0.48
+            obj.scale.y = 0.32
+            obj.scale.z = 0.16
+        else:
+            obj.location.z -= 0.36
+    name, dx, dy = next(d for d in ns['DIRS'] if d[0] == 'S')
+    ns['_facing']((right * dx + toward * dy).normalized(), root)
+    bpy.context.view_layer.update()
+    r.filepath = OUT + 'gaucho_sentado.png'
+    bpy.ops.render.render(write_still=True)
+    outline(r.filepath)
+    raise SystemExit(0)
+
 for name, dx, dy in ns['DIRS']:
     ns['_facing']((right * dx + toward * dy).normalized(), root)
     bpy.context.view_layer.update()

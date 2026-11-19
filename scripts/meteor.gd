@@ -9,6 +9,7 @@ var spec := {}               # entrada "ultimate" del grimorio (data/items.json)
 var t := 0.0
 var target := Vector2.ZERO   # centro de la casilla, en px de suelo
 var fall: AnimatedSprite2D
+var ignis := false
 var marker: Node2D
 
 func _ready() -> void:
@@ -29,12 +30,17 @@ func _ready() -> void:
 	fall.modulate = Color(1.0, 0.75, 0.45)
 	fall.z_index = 3000
 	add_child(fall)
-	fall.play("fly")
+	ignis = spec.get("visual", "") == "ignis_meteor"
+	if ignis:
+		fall.modulate = Color.WHITE
+		fall.scale = Vector2.ONE * main.SCALE * 2.4
+		fall.rotation = Vector2(0.32, 1).angle()
+	fall.play("ignis_meteor" if ignis else "fly")
 	_place()
 
 func _place() -> void:
 	var p := clampf(t / spec["fall_time"], 0.0, 1.0)
-	fall.position = (target - Vector2(0, SKY * (1.0 - p * p))) * main.SCALE  # cae acelerando
+	fall.position = (target - Vector2(0.32 if ignis else 0.0, 1.0) * (SKY * (1.0 - p * p))) * main.SCALE  # cae acelerando
 
 func _process(delta: float) -> void:
 	t += delta
@@ -59,5 +65,5 @@ func _explode() -> void:
 	fall.rotation = 0.0
 	fall.scale = Vector2.ONE * main.SCALE * n
 	fall.position = (target - Vector2(0, 6)) * main.SCALE
-	fall.play("impact")
+	fall.play("ignis_impact" if ignis else "impact")
 	fall.animation_finished.connect(queue_free)
