@@ -21,6 +21,7 @@ var hopping := false
 var casts := 0
 var flash_tw: Tween
 var spr: AnimatedSprite2D    # sprites de Blender (si data["sprites"]); si no, se dibuja por código
+var spr_base := Vector2.ZERO
 var look := Vector2.DOWN
 var adir := "S"              # dirección fija durante el ataque
 var aim := Vector2.DOWN      # dirección del disparo, fijada al empezar el aviso (no persigue al héroe)
@@ -99,6 +100,9 @@ func _stagger() -> void:
 	staggered = true
 	poise = 0.0
 	state = "recover"
+	combo_left = 0
+	if spr:  # si lo abren en pleno salto, cae al suelo
+		spr.position = spr_base
 	t = STAGGER_TIME
 	kb = Vector2.ZERO
 	for z in zones:  # un golpe de zona preparado se cancela
@@ -158,6 +162,7 @@ func _build_sprite() -> void:  # <prefijo><DIR>_<idle|walk|attack>_<NN>.png, 8 d
 	spr.scale = Vector2.ONE * main.SCALE
 	var f: Array = data["sprites"]["feet"]
 	spr.position = -Vector2(f[0], f[1]) * main.SCALE
+	spr_base = spr.position
 	if data.has("tint"):  # variantes de zona: mismo cuerpo con otro color
 		spr.self_modulate = Color(str(data["tint"]))
 	add_child(spr)
@@ -200,6 +205,22 @@ func _physics_process(delta: float) -> void:
 	poise_t += delta
 	if poise > 0.0 and poise_t > 2.0 and not staggered:
 		poise = maxf(0.0, poise - POISE_REGEN * delta)
+	if state == "air":  # en el aire (salto de ataque o de reposición): arco hasta el destino
+		_air_step(delta)
+		_separate()
+		_place()
+		queue_redraw()
+		return
+	if _elite():
+		hop_cd -= delta
+		strafe_t -= delta
+		if strafe_t <= 0.0:
+			strafe_t = randf_range(1.6, 3.4)
+			strafe_side = -strafe_side
+		if state == "chase" and sees and hop_cd <= 0.0 and dist < 260.0 and not staggered:  # salto lateral para no quedarse quieto
+			hop_cd = randf_range(3.0, 5.5)
+			var side := Vector2(to.y, -to.x).normalized() * strafe_side
+			_jump(main.world.move_collide(pos, pos + (side * randf_range(55.0, 90.0) - to.normalized() * 20.0) * Vector2(1, 0.6), data["r_t"]), 0.42, 28.0, false)
 	if state == "recover":  # recuperación castigable: no se mueve ni ataca
 		t -= delta
 		if t <= 0.0:
@@ -368,13 +389,70 @@ func _brute(to: Vector2, dist: float, delta: float) -> void:
 # --- monstruos con repertorio propio (data["attacks"]): usa sus ataques en orden y se acerca hasta el alcance del siguiente.
 # Tipos: charge (embestida en línea), leap (salta a donde estaba el héroe), zone_hero (golpes sobre el héroe),
 # zone_line (fila de golpes hacia el héroe), zone_ring (golpes alrededor de sí), shot (abanico de proyectiles), ring (corona de proyectiles).
+# Más: multi_leap (saltos seguidos), dash_combo (ráfaga de embestidas), meteor_rain (lluvia escalonada sobre el héroe),
+# cross (cruz de golpes; "diag" añade diagonales), shockwave (anillos que se expanden), spiral (oleadas de proyectiles en espiral).
 var atk_i := 0
 var cur := {}                # ataque en curso
 var leap_to := Vector2.ZERO
+var combo_left := 0          # saltos o embestidas que quedan del combo
+var hop_cd := 2.5            # salto de reposición de jefes y semijefes
+var strafe_t := 0.0
+var strafe_side := 1.0
+var air_from := Vector2.ZERO
+var air_to := Vector2.ZERO
+var air_dur := 0.4
+var air_h := 40.0
+var air_hit := false         # el aterrizaje es un ataque o solo una reposición
+const AIR := 0.4             # lo que dura el salto de ataque
+
+func _elite() -> bool:
+	return data.get("boss", false) or data.get("mini", false)
+
+func _jump(to_pos: Vector2, dur: float, h: float, hit_: bool) -> void:
+	air_from = pos
+	air_to = to_pos
+	air_dur = dur
+	air_h = h
+	air_hit = hit_
+	t = 0.0
+	state = "air"
+	_anim("walk")
+
+func _air_step(delta: float) -> void:
+	t += delta
+	var k := clampf(t / air_dur, 0.0, 1.0)
+	pos = main.world.move_collide(pos, air_from.lerp(air_to, k), data["r_t"])
+	if spr:
+		spr.position = spr_base - Vector2(0, sin(k * PI) * air_h * main.SCALE)
+	if k < 1.0:
+		return
+	if spr:
+		spr.position = spr_base
+	if not air_hit:
+		state = "chase"
+		return
+	main.shake(6.0)
+	if combo_left > 0:  # combo de saltos: apunta de nuevo y vuelve a saltar enseguida
+		combo_left -= 1
+		leap_to = main.pos
+		state = "windup"
+		t = 0.3
+		_spawn_zone(leap_to, float(cur.get("radius", 30.0)), t + AIR, int(cur.get("damage", 0)), false, Color(str(cur.get("color", "#ff5a33"))))
+		_play_attack(main.pos - pos, 5, t)
+	else:
+		state = "recover"
+		t = data.get("recover", 0.5)
 
 func _pattern(to: Vector2, dist: float, delta: float) -> void:
 	if state == "charge":
 		_charge_step(delta, int(cur["damage"]))
+		if state == "recover" and combo_left > 0:  # ráfaga de embestidas: vuelve a apuntar y arremete otra vez
+			combo_left -= 1
+			state = "windup"
+			charging = true
+			t = 0.35
+			aim = Vector2(to.x, to.y / 0.6).normalized()
+			_play_attack(to, 5, t)
 		return
 	if state == "windup":
 		t -= delta
@@ -385,11 +463,16 @@ func _pattern(to: Vector2, dist: float, delta: float) -> void:
 	var a: Dictionary = atks[atk_i % atks.size()]
 	var reach: float = a.get("range", 40.0)
 	var keep: float = data.get("keep_distance", 0.0)
+	var side := Vector2(to.y, -to.x).normalized() * strafe_side
+	var lat := 0.45 if _elite() else 0.0  # los jefes rodean al héroe en curva, no van en línea recta
 	if keep > 0.0 and dist < keep - 30.0:
-		_move(-to.normalized(), 1.0, delta)
+		_move((-to.normalized() + side * lat).normalized(), 1.0, delta)
 		_anim("walk")
 	elif dist > (keep + 20.0 if keep > 0.0 else reach * 0.8):
-		_move(to.normalized(), 1.0, delta)
+		_move((to.normalized() + side * lat).normalized(), 1.0, delta)
+		_anim("walk")
+	elif _elite():
+		_move(side, 0.7, delta)  # a su distancia: lo rodea mientras espera el siguiente golpe
 		_anim("walk")
 	else:
 		_anim("idle")
@@ -412,9 +495,30 @@ func _begin_pattern(a: Dictionary, to: Vector2) -> void:
 			charging = true
 			t = CHARGE_WINDUP
 			aim = Vector2(to.x, to.y / 0.6).normalized()  # en el espacio de movimiento, como el cíclope
-		"leap":
+		"leap", "multi_leap":
 			leap_to = main.pos
-			_spawn_zone(leap_to, r, t, dmg, false, col)
+			combo_left = int(a.get("count", 3)) - 1 if str(a["type"]) == "multi_leap" else 0
+			_spawn_zone(leap_to, r, t + AIR, dmg, false, col)
+		"dash_combo":
+			charging = true
+			t = CHARGE_WINDUP * 0.8
+			combo_left = int(a.get("count", 3)) - 1
+			aim = Vector2(to.x, to.y / 0.6).normalized()
+		"meteor_rain":
+			for i in int(a.get("count", 6)):
+				var off := Vector2.from_angle(randf() * TAU) * randf_range(0.0, float(a.get("spread", 80.0)))
+				_spawn_zone(main.pos + off * Vector2(1, 0.6), r, t + 0.18 * i, dmg, bool(a.get("bolt", false)), col)
+		"cross":
+			var dirs := 8 if a.get("diag", false) else 4
+			for d in dirs:
+				var v := Vector2.from_angle(d * TAU / dirs + (aim.angle() if a.get("aimed", false) else 0.0)) * Vector2(1, 0.6)
+				for i in int(a.get("count", 4)):
+					_spawn_zone(pos + v * float(a.get("step", 26.0)) * (i + 1), r, t + 0.08 * i, dmg, false, col)
+		"shockwave":
+			for w in int(a.get("waves", 3)):
+				var n := 8 + 4 * w
+				for i in n:
+					_spawn_zone(pos + Vector2.from_angle(i * TAU / n + w * 0.3) * float(a.get("step", 34.0)) * (w + 1) * Vector2(1, 0.6), r, t + 0.25 * w, dmg, false, col)
 		"zone_hero":
 			for i in int(a.get("count", 1)):
 				var off := Vector2.ZERO if i == 0 else Vector2.from_angle(randf() * TAU) * float(a.get("spread", 50.0))
@@ -435,9 +539,26 @@ func _strike_pattern() -> void:
 			t = CHARGE_TIME
 			charge_hit = false
 			return
-		"leap":  # cae donde se avisó (las paredes lo frenan)
-			pos = main.world.move_collide(pos, leap_to, data["r_t"])
-			main.shake(6.0)
+		"leap", "multi_leap":  # salta en arco hasta donde se avisó (las paredes lo frenan); el golpe cae al aterrizar
+			_jump(leap_to, AIR, 48.0, true)
+			return
+		"dash_combo":
+			state = "charge"
+			t = CHARGE_TIME * 0.7
+			charge_hit = false
+			return
+		"spiral":  # oleadas giratorias: hay que moverse con el giro
+			var n := int(cur.get("n", 6))
+			var ph := randf() * TAU
+			var spec: Dictionary = cur["projectile"]
+			for w in int(cur.get("waves", 5)):
+				var wave := w
+				get_tree().create_timer(0.14 * w, false).timeout.connect(func() -> void:
+					if not alive:
+						return
+					for i in n:
+						var d := Vector2.from_angle(ph + i * TAU / n + wave * 0.32)
+						main.spawn_projectile("enemy", pos + d * 12.0, d, spec))
 		"shot":
 			var n := int(cur.get("n", 1))
 			for i in n:

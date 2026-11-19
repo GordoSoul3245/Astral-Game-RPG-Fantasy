@@ -40,6 +40,8 @@ def mats():
         'soul': r('soul', (0.0, 0.25, 0.15), (0.4, 1.0, 0.6)),
         'chitin': r('chitin', (0.01, 0.01, 0.02), (0.16, 0.12, 0.2)),
         'venom': r('venom', (0.25, 0.0, 0.2), (0.95, 0.2, 0.55)),
+        'jade': r('jade', (0.01, 0.1, 0.04), (0.3, 0.75, 0.35)),
+        'scale': r('scale', (0.01, 0.06, 0.05), (0.18, 0.5, 0.32)),
         'dark': r('dark', (0.0, 0.0, 0.0), (0.06, 0.05, 0.07)),
     }
 
@@ -221,8 +223,139 @@ def arana(K, m):  # reina araña: abdomen enorme con marcas de veneno, corona de
     return {'height': 3.3, 'res': 448, 'legs': legs, 'arms': arms}
 
 
+def murcielago(K, m):  # murciélago de ceniza: cuerpo pequeño flotando, alas membranosas grandes, orejas y ojos de brasa
+    body = K.pivot('mo_body', (0, 0, 1.4))
+    K.ell((0, 0, 1.5), (0.35, 0.3, 0.42), m['shell'], body)
+    head = K.pivot('mo_head', (0, -0.2, 1.85), body)
+    K.ell((0, -0.25, 1.95), (0.3, 0.28, 0.27), m['shell'], head)
+    for sx in (-1, 1):
+        K.beam((sx * 0.15, -0.25, 2.1), (sx * 0.3, -0.2, 2.55), 0.1, 0.0, m['shell'], head, 4)  # orejas
+        K.ell((sx * 0.11, -0.5, 1.98), (0.06, 0.03, 0.05), m['glow'], head)
+    K.beam((0, -0.5, 1.85), (0, -0.55, 1.75), 0.05, 0.0, m['bone'], head, 4)
+    arms = []
+    for n, sx in (('mo_armL', 1), ('mo_armR', -1)):
+        p = K.pivot(n, (sx * 0.3, 0, 1.7), body)
+        K.poly([(sx * 0.3, 0, 1.75), (sx * 1.6, 0.1, 2.2), (sx * 1.9, 0.15, 1.5), (sx * 1.3, 0.1, 1.15), (sx * 0.9, 0.05, 1.35), (sx * 0.5, 0, 1.2)], m['ember'], p)
+        K.beam((sx * 0.3, 0, 1.75), (sx * 1.6, 0.1, 2.2), 0.05, 0.03, m['shell'], p, 4)  # hueso del ala
+        arms.append((n, sx))
+    legs = []
+    for n, sx in (('mo_legL', 1), ('mo_legR', -1)):
+        p = K.pivot(n, (sx * 0.15, 0, 1.15), body)
+        K.beam((sx * 0.15, 0, 1.15), (sx * 0.18, 0.05, 0.85), 0.04, 0.02, m['shell'], p, 4)
+        legs.append((n, 0 if sx > 0 else math.pi, 'x', 0.2))
+    return {'height': 1.5, 'res': 128, 'legs': legs, 'arms': arms, 'float': True, 'flap': True}
+
+
+def mantis(K, m):  # mantis de jade: cuerpo largo y erguido, guadañas enormes, cabeza triangular
+    body = K.pivot('mo_body', (0, 0, 1.3))
+    K.ell((0, 0.7, 1.2), (0.45, 0.95, 0.4), m['jade'], body)             # abdomen
+    K.beam((0, 0, 1.2), (0, -0.35, 2.3), 0.28, 0.2, m['jade'], body, 8)    # tórax erguido
+    head = K.pivot('mo_head', (0, -0.4, 2.35), body)
+    K.poly([(-0.35, -0.45, 2.6), (0.35, -0.45, 2.6), (0, -0.6, 2.2)], m['jade'], head)
+    for sx in (-1, 1):
+        K.ell((sx * 0.3, -0.5, 2.55), (0.12, 0.1, 0.12), m['red_eye'], head)
+        K.beam((sx * 0.1, -0.45, 2.65), (sx * 0.4, -0.3, 3.2), 0.02, 0.01, m['jade'], head, 3)  # antenas
+    arms = []
+    for n, sx in (('mo_armL', 1), ('mo_armR', -1)):
+        p = K.pivot(n, (sx * 0.25, -0.35, 2.1), body)
+        K.beam((sx * 0.25, -0.35, 2.1), (sx * 0.45, -0.9, 2.5), 0.1, 0.08, m['jade'], p, 6)
+        K.beam((sx * 0.45, -0.9, 2.5), (sx * 0.5, -1.0, 1.4), 0.09, 0.0, m['bone'], p, 5)  # guadaña
+        arms.append((n, sx))
+    legs = []
+    for i, y in enumerate((-0.1, 0.4)):
+        for sx in (-1, 1):
+            n = f'mo_leg{i}{"L" if sx > 0 else "R"}'
+            p = K.pivot(n, (sx * 0.2, y, 1.15), body)
+            K.beam((sx * 0.2, y, 1.15), (sx * 0.8, y, 1.4), 0.06, 0.05, m['jade'], p, 5)
+            K.beam((sx * 0.8, y, 1.4), (sx * 1.0, y + 0.1, 0.0), 0.05, 0.02, m['jade'], p, 5)
+            legs.append((n, ((i + (sx > 0)) % 2) * math.pi, 'z', 0.3 * sx))
+    return {'height': 2.6, 'res': 256, 'legs': legs, 'arms': arms}
+
+
+def caballero(K, m):  # caballero hueco: armadura vacía con alma verde dentro del yelmo, espadón y escudo roto
+    body = K.pivot('mo_body', (0, 0, 1.6))
+    K.box((0, 0, 2.4), (1.0, 0.65, 1.1), m['rock'], body)                  # peto
+    K.box((0, 0, 1.65), (0.8, 0.55, 0.5), m['rock'], body)
+    K.poly([(-0.45, -0.3, 1.45), (0.45, -0.3, 1.45), (0.55, -0.35, 0.7), (-0.55, -0.35, 0.7)], m['robe'], body)  # faldar
+    K.ell((0, -0.33, 2.45), (0.15, 0.04, 0.15), m['soul'], body)
+    head = K.pivot('mo_head', (0, 0, 3.0), body)
+    K.box((0, 0, 3.3), (0.55, 0.55, 0.6), m['rock'], head)
+    K.box((0, -0.28, 3.3), (0.4, 0.04, 0.08), m['soul'], head)               # rendija con alma
+    K.beam((0, 0.1, 3.6), (0, 0.6, 3.9), 0.1, 0.0, m['venom'], head, 4)      # penacho
+    arms = []
+    for n, sx in (('mo_armL', 1), ('mo_armR', -1)):
+        p = K.pivot(n, (sx * 0.65, 0, 2.8), body)
+        K.ell((sx * 0.7, 0, 2.85), (0.3, 0.3, 0.25), m['rock'], p)
+        K.box((sx * 0.75, -0.05, 2.25), (0.25, 0.25, 0.8), m['rock'], p)
+        if sx < 0:
+            K.beam((sx * 0.8, -0.2, 1.85), (sx * 0.8, -1.4, 3.5), 0.1, 0.03, m['bone'], p, 4)  # espadón
+            K.box((sx * 0.8, -0.3, 2.0), (0.35, 0.1, 0.06), m['gold'], p)
+        else:
+            K.box((sx * 0.95, -0.2, 2.2), (0.08, 0.6, 0.8), m['dark'], p)       # escudo roto
+        arms.append((n, sx))
+    legs = []
+    for n, sx, ph in (('mo_legL', 1, 0), ('mo_legR', -1, math.pi)):
+        p = K.pivot(n, (sx * 0.25, 0, 1.4), body)
+        K.box((sx * 0.25, 0, 0.9), (0.3, 0.35, 1.0), m['rock'], p)
+        K.box((sx * 0.25, -0.1, 0.15), (0.35, 0.5, 0.3), m['rock'], p)
+        legs.append((n, ph, 'x', 0.4))
+    return {'height': 3.0, 'res': 256, 'legs': legs, 'arms': arms}
+
+
+def hidra(K, m):  # hidra del pantano: cuerpo de serpiente enroscado con tres cuellos y cabezas con colmillos
+    body = K.pivot('mo_body', (0, 0, 1.0))
+    K.ell((0, 0.3, 0.9), (1.4, 1.5, 0.85), m['scale'], body)
+    K.torus((0, 0.4, 0.3), 1.5, 0.35, m['scale'], body)
+    for i in range(5):
+        K.ell((0, -0.6 + i * 0.35, 1.7 - abs(i - 2) * 0.1), (0.5, 0.2, 0.12), m['stem'], body)  # vientre claro
+    arms = []
+    for k, x in enumerate((-0.8, 0.0, 0.8)):
+        n = f'mo_neck{k}'
+        p = K.pivot(n, (x, -0.3, 1.5), body)
+        top = (x * 1.6, -1.0, 3.3 - abs(x) * 0.4)
+        K.beam((x, -0.3, 1.5), top, 0.32, 0.22, m['scale'], p, 8)
+        K.ell((top[0], top[1] - 0.25, top[2]), (0.38, 0.55, 0.3), m['scale'], p)
+        for sx in (-1, 1):
+            K.ell((top[0] + sx * 0.18, top[1] - 0.45, top[2] + 0.12), (0.07, 0.05, 0.06), m['red_eye'], p)
+            K.beam((top[0] + sx * 0.12, top[1] - 0.75, top[2] - 0.1), (top[0] + sx * 0.1, top[1] - 0.8, top[2] - 0.35), 0.05, 0.0, m['bone'], p, 4)
+        arms.append((n, 1 if k == 2 else -1))
+    head = K.pivot('mo_head', (0, 1.6, 1.0), body)
+    K.beam((0, 1.6, 0.8), (0, 2.8, 0.4), 0.35, 0.05, m['scale'], head, 8)  # cola
+    return {'height': 3.6, 'res': 448, 'legs': [], 'arms': arms}
+
+
+def titan(K, m):  # titán volcánico: roca negra con grietas de lava, cuernos y puños de magma
+    body = K.pivot('mo_body', (0, 0, 2.2))
+    K.ell((0, 0, 3.2), (1.5, 1.0, 1.25), m['rock'], body)
+    K.ell((0, 0.1, 2.3), (1.0, 0.8, 0.7), m['rock'], body)
+    for x, z in ((-0.6, 3.5), (0.5, 3.0), (0.0, 2.5), (0.8, 3.7), (-0.4, 2.8)):
+        K.ell((x, -0.9, z), (0.18, 0.06, 0.35), m['glow'], body)          # grietas de lava
+    K.ell((0, -0.95, 3.2), (0.35, 0.08, 0.35), m['ember'], body)          # corazón de magma
+    head = K.pivot('mo_head', (0, -0.3, 4.3), body)
+    K.ell((0, -0.4, 4.55), (0.6, 0.55, 0.5), m['rock'], head)
+    for sx in (-1, 1):
+        K.ell((sx * 0.22, -0.88, 4.6), (0.1, 0.04, 0.07), m['glow'], head)
+        K.beam((sx * 0.45, -0.3, 4.8), (sx * 1.1, -0.2, 5.6), 0.18, 0.0, m['dark'], head, 6)   # cuernos
+    arms = []
+    for n, sx in (('mo_armL', 1), ('mo_armR', -1)):
+        p = K.pivot(n, (sx * 1.5, 0, 3.8), body)
+        K.ell((sx * 1.7, 0, 3.9), (0.65, 0.65, 0.55), m['rock'], p)
+        K.ell((sx * 1.85, -0.1, 2.9), (0.45, 0.45, 0.8), m['rock'], p)
+        K.ell((sx * 1.95, -0.25, 1.9), (0.6, 0.6, 0.55), m['ember'], p)    # puño de magma
+        arms.append((n, sx))
+    legs = []
+    for n, sx, ph in (('mo_legL', 1, 0), ('mo_legR', -1, math.pi)):
+        p = K.pivot(n, (sx * 0.7, 0, 2.0), body)
+        K.ell((sx * 0.7, 0, 1.3), (0.55, 0.55, 0.8), m['rock'], p)
+        K.ell((sx * 0.7, -0.2, 0.3), (0.6, 0.75, 0.3), m['rock'], p)
+        legs.append((n, ph, 'x', 0.35))
+    return {'height': 5.2, 'res': 448, 'legs': legs, 'arms': arms}
+
+
 MONSTERS = {'escarabajo_brasa': escarabajo, 'hongo_espora': hongo, 'lobo_espectral': lobo,
-            'golem_cristal': golem, 'rey_osario': rey, 'reina_arana': arana}
+            'golem_cristal': golem, 'rey_osario': rey, 'reina_arana': arana,
+            'murcielago_ceniza': murcielago, 'mantis_jade': mantis, 'caballero_hueco': caballero,
+            'hidra_pantano': hidra, 'titan_volcanico': titan}
 SPEC = {}
 
 
@@ -281,7 +414,11 @@ def pose(kind, k):
             else:
                 rot(n, arm, 0, 0.15 * sx)
         rot(spec.get('tail', ''), -lean * 2)
-    elif kind == 'hurt':
+    if spec.get('flap') and kind != 'hurt':  # alas: aletean en todas las poses (giro sobre el eje del cuerpo)
+        f = math.sin(2 * math.pi * k / 8) if kind != 'idle' else 0.3
+        for n, sx in spec['arms']:
+            rot(n, 0, sx * 0.7 * f, 0)
+    if kind == 'hurt':
         r = [1.0, 0.65, 0.3, 0.08][k]
         rot('mo_body', -0.16 * r)
         mv('mo_body', 0, 0.12 * r, fl - 0.04 * r)

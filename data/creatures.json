@@ -188,8 +188,8 @@
 		"speed": 38.0,
 		"detect_range": 370.0,
 		"attack_range": 48.0,
-		"windup": 0.8,
-		"attack_cooldown": 0.96,
+		"windup": 0.68,
+		"attack_cooldown": 0.72,
 		"slam_radius": 55.0,
 		"slam_damage": 28,
 		"poise": 70,
@@ -223,7 +223,8 @@
 				"item": "plano_frasco_ignis",
 				"chance": 0.3
 			}
-		]
+		],
+		"mini": true
 	},
 	"storm_mage": {
 		"kind": "mage",
@@ -232,7 +233,7 @@
 		"speed": 34.0,
 		"detect_range": 480.0,
 		"keep_distance": 150.0,
-		"attack_cooldown": 0.8,
+		"attack_cooldown": 0.6,
 		"size": 1.5,
 		"sprites": {
 			"prefix": "res://art/stormmage/stormmage_",
@@ -243,7 +244,7 @@
 		},
 		"radius": 14.0,
 		"r_t": 0.45,
-		"windup": 0.7,
+		"windup": 0.595,
 		"recover": 0.6,
 		"knock_resist": 0.9,
 		"poise": 90,
@@ -386,8 +387,8 @@
 		"speed": 38.0,
 		"detect_range": 370.0,
 		"attack_range": 48.0,
-		"windup": 0.8,
-		"attack_cooldown": 0.96,
+		"windup": 0.68,
+		"attack_cooldown": 0.72,
 		"slam_radius": 55.0,
 		"slam_damage": 34,
 		"poise": 70,
@@ -428,7 +429,8 @@
 		],
 		"name": "Cíclope de ceniza",
 		"tint": "#ff9a80",
-		"counts_as": "cyclops"
+		"counts_as": "cyclops",
+		"mini": true
 	},
 	"limo_nocturno": {
 		"kind": "slime",
@@ -484,7 +486,7 @@
 		"speed": 34.0,
 		"detect_range": 480.0,
 		"keep_distance": 150.0,
-		"attack_cooldown": 0.8,
+		"attack_cooldown": 0.6,
 		"size": 1.5,
 		"sprites": {
 			"prefix": "res://art/stormmage/stormmage_",
@@ -495,7 +497,7 @@
 		},
 		"radius": 14.0,
 		"r_t": 0.45,
-		"windup": 0.7,
+		"windup": 0.595,
 		"recover": 0.6,
 		"knock_resist": 0.9,
 		"poise": 90,
@@ -543,8 +545,8 @@
 		"speed": 38.0,
 		"detect_range": 370.0,
 		"attack_range": 48.0,
-		"windup": 0.8,
-		"attack_cooldown": 0.96,
+		"windup": 0.68,
+		"attack_cooldown": 0.72,
 		"slam_radius": 55.0,
 		"slam_damage": 40,
 		"poise": 70,
@@ -694,8 +696,8 @@
 		"speed": 38.0,
 		"detect_range": 370.0,
 		"attack_range": 48.0,
-		"windup": 0.8,
-		"attack_cooldown": 0.96,
+		"windup": 0.68,
+		"attack_cooldown": 0.72,
 		"slam_radius": 55.0,
 		"slam_damage": 38,
 		"poise": 70,
@@ -732,7 +734,8 @@
 		],
 		"name": "Cíclope helado",
 		"tint": "#cfe8ff",
-		"counts_as": "cyclops"
+		"counts_as": "cyclops",
+		"mini": true
 	},
 	"gigante_escarcha": {
 		"kind": "brute",
@@ -741,8 +744,8 @@
 		"speed": 38.0,
 		"detect_range": 370.0,
 		"attack_range": 48.0,
-		"windup": 0.8,
-		"attack_cooldown": 0.96,
+		"windup": 0.68,
+		"attack_cooldown": 0.72,
 		"slam_radius": 55.0,
 		"slam_damage": 46,
 		"poise": 70,
@@ -922,9 +925,9 @@
 				177.7
 			]
 		},
-		"windup": 0.55,
+		"windup": 0.468,
 		"recover": 0.6,
-		"attack_cooldown": 0.9,
+		"attack_cooldown": 0.675,
 		"attacks": [
 			{
 				"type": "leap",
@@ -947,6 +950,15 @@
 				"type": "charge",
 				"damage": 22,
 				"range": 220.0
+			},
+			{
+				"type": "multi_leap",
+				"count": 3,
+				"radius": 26.0,
+				"damage": 20,
+				"range": 220.0,
+				"windup": 0.5,
+				"color": "#9fd0ff"
 			}
 		],
 		"xp": 130,
@@ -985,9 +997,9 @@
 				273.7
 			]
 		},
-		"windup": 0.85,
+		"windup": 0.722,
 		"recover": 0.9,
-		"attack_cooldown": 1.0,
+		"attack_cooldown": 0.75,
 		"attacks": [
 			{
 				"type": "zone_line",
@@ -1018,6 +1030,15 @@
 				"radius": 60.0,
 				"damage": 34,
 				"range": 55.0,
+				"color": "#c58cff"
+			},
+			{
+				"type": "cross",
+				"count": 4,
+				"step": 26.0,
+				"radius": 20.0,
+				"damage": 28,
+				"range": 120.0,
 				"color": "#c58cff"
 			}
 		],
@@ -1062,9 +1083,9 @@
 				273.7
 			]
 		},
-		"windup": 0.8,
+		"windup": 0.68,
 		"recover": 0.6,
-		"attack_cooldown": 0.8,
+		"attack_cooldown": 0.6,
 		"attacks": [
 			{
 				"type": "zone_line",
@@ -1112,6 +1133,31 @@
 					"scale": 1.2,
 					"tint": "#7dffb0"
 				}
+			},
+			{
+				"type": "spiral",
+				"n": 7,
+				"waves": 6,
+				"range": 300.0,
+				"projectile": {
+					"speed": 105.0,
+					"radius": 8.0,
+					"damage": 16,
+					"muzzle_height": 70.0,
+					"scale": 1.2,
+					"tint": "#7dffb0"
+				}
+			},
+			{
+				"type": "meteor_rain",
+				"count": 7,
+				"spread": 90.0,
+				"radius": 24.0,
+				"damage": 32,
+				"range": 320.0,
+				"bolt": true,
+				"windup": 0.9,
+				"color": "#7dffb0"
 			}
 		],
 		"xp": 450,
@@ -1154,9 +1200,9 @@
 				273.7
 			]
 		},
-		"windup": 0.7,
+		"windup": 0.595,
 		"recover": 0.7,
-		"attack_cooldown": 0.8,
+		"attack_cooldown": 0.6,
 		"attacks": [
 			{
 				"type": "leap",
@@ -1193,6 +1239,24 @@
 				"type": "charge",
 				"damage": 36,
 				"range": 240.0
+			},
+			{
+				"type": "multi_leap",
+				"count": 3,
+				"radius": 40.0,
+				"damage": 36,
+				"range": 280.0,
+				"windup": 0.6,
+				"color": "#ff5ab0"
+			},
+			{
+				"type": "shockwave",
+				"waves": 2,
+				"step": 40.0,
+				"radius": 20.0,
+				"damage": 26,
+				"range": 110.0,
+				"color": "#ff5ab0"
 			}
 		],
 		"xp": 480,
@@ -1212,6 +1276,419 @@
 			{
 				"item": "lingote_acero",
 				"chance": 0.8
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 1.0
+			}
+		]
+	},
+	"murcielago_ceniza": {
+		"kind": "pattern",
+		"name": "Murciélago de ceniza",
+		"blood": "#ff7a2a",
+		"hp": 26,
+		"speed": 70.0,
+		"detect_range": 300.0,
+		"keep_distance": 90.0,
+		"radius": 9.0,
+		"r_t": 0.3,
+		"size": 0.75,
+		"staggerable": true,
+		"sprites": {
+			"prefix": "res://art/monstruos/murcielago_ceniza/murcielago_ceniza_",
+			"feet": [
+				68.0,
+				113.7
+			]
+		},
+		"windup": 0.5,
+		"recover": 0.5,
+		"attack_cooldown": 2.0,
+		"attacks": [
+			{
+				"type": "charge",
+				"damage": 9,
+				"range": 140.0
+			},
+			{
+				"type": "shot",
+				"n": 2,
+				"spread": 0.35,
+				"range": 200.0,
+				"projectile": {
+					"speed": 150.0,
+					"radius": 5.0,
+					"damage": 7,
+					"muzzle_height": 30.0,
+					"scale": 0.7,
+					"tint": "#ff9a3a"
+				}
+			}
+		],
+		"xp": 13,
+		"coins": [
+			2,
+			6
+		],
+		"drops": [
+			{
+				"item": "carbon",
+				"chance": 0.4
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 0.12
+			}
+		]
+	},
+	"mantis_jade": {
+		"kind": "pattern",
+		"name": "Mantis de jade",
+		"mini": true,
+		"blood": "#7ad94a",
+		"hp": 420,
+		"speed": 64.0,
+		"detect_range": 380.0,
+		"radius": 16.0,
+		"r_t": 0.5,
+		"size": 1.27,
+		"poise": 80,
+		"knock_resist": 0.6,
+		"sprites": {
+			"prefix": "res://art/monstruos/mantis_jade/mantis_jade_",
+			"feet": [
+				132.0,
+				177.7
+			]
+		},
+		"windup": 0.45,
+		"recover": 0.55,
+		"attack_cooldown": 0.7,
+		"attacks": [
+			{
+				"type": "dash_combo",
+				"count": 3,
+				"damage": 20,
+				"range": 180.0
+			},
+			{
+				"type": "cross",
+				"diag": true,
+				"aimed": true,
+				"count": 3,
+				"step": 24.0,
+				"radius": 16.0,
+				"damage": 22,
+				"range": 70.0,
+				"color": "#7ad94a"
+			},
+			{
+				"type": "multi_leap",
+				"count": 2,
+				"radius": 28.0,
+				"damage": 24,
+				"range": 220.0,
+				"windup": 0.5,
+				"color": "#7ad94a"
+			}
+		],
+		"xp": 150,
+		"coins": [
+			35,
+			55
+		],
+		"drops": [
+			{
+				"item": "hierba_vital",
+				"chance": 1.0
+			},
+			{
+				"item": "cristal_arcano",
+				"chance": 0.5
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 0.6
+			}
+		]
+	},
+	"caballero_hueco": {
+		"kind": "pattern",
+		"name": "Caballero hueco",
+		"mini": true,
+		"blood": "#7dffb0",
+		"hp": 520,
+		"speed": 44.0,
+		"detect_range": 380.0,
+		"radius": 16.0,
+		"r_t": 0.5,
+		"size": 1.46,
+		"poise": 100,
+		"knock_resist": 0.8,
+		"sprites": {
+			"prefix": "res://art/monstruos/caballero_hueco/caballero_hueco_",
+			"feet": [
+				132.0,
+				177.7
+			]
+		},
+		"windup": 0.6,
+		"recover": 0.7,
+		"attack_cooldown": 0.8,
+		"attacks": [
+			{
+				"type": "zone_ring",
+				"count": 1,
+				"dist": 0.0,
+				"radius": 55.0,
+				"damage": 30,
+				"range": 55.0,
+				"color": "#7dffb0"
+			},
+			{
+				"type": "charge",
+				"damage": 28,
+				"range": 220.0
+			},
+			{
+				"type": "shockwave",
+				"waves": 2,
+				"step": 36.0,
+				"radius": 18.0,
+				"damage": 24,
+				"range": 90.0,
+				"color": "#7dffb0"
+			},
+			{
+				"type": "leap",
+				"radius": 36.0,
+				"damage": 32,
+				"range": 240.0,
+				"windup": 0.6,
+				"color": "#7dffb0"
+			}
+		],
+		"xp": 170,
+		"coins": [
+			40,
+			65
+		],
+		"drops": [
+			{
+				"item": "lingote_hierro",
+				"chance": 1.0
+			},
+			{
+				"item": "lingote_acero",
+				"chance": 0.4
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 0.6
+			}
+		]
+	},
+	"hidra_pantano": {
+		"kind": "pattern",
+		"name": "Hidra del pantano",
+		"boss": true,
+		"blood": "#3fa070",
+		"hp": 2100,
+		"speed": 40.0,
+		"detect_range": 500.0,
+		"keep_distance": 130.0,
+		"radius": 26.0,
+		"r_t": 0.8,
+		"size": 1.75,
+		"poise": 140,
+		"knock_resist": 0.95,
+		"sprites": {
+			"prefix": "res://art/monstruos/hidra_pantano/hidra_pantano_",
+			"feet": [
+				228.0,
+				273.7
+			]
+		},
+		"windup": 0.65,
+		"recover": 0.55,
+		"attack_cooldown": 0.6,
+		"attacks": [
+			{
+				"type": "shot",
+				"n": 3,
+				"spread": 0.4,
+				"range": 320.0,
+				"projectile": {
+					"speed": 150.0,
+					"radius": 8.0,
+					"damage": 20,
+					"muzzle_height": 70.0,
+					"scale": 1.2,
+					"tint": "#8dff9a"
+				}
+			},
+			{
+				"type": "spiral",
+				"n": 6,
+				"waves": 6,
+				"range": 320.0,
+				"projectile": {
+					"speed": 110.0,
+					"radius": 7.0,
+					"damage": 16,
+					"muzzle_height": 60.0,
+					"scale": 1.0,
+					"tint": "#3fe07a"
+				}
+			},
+			{
+				"type": "meteor_rain",
+				"count": 8,
+				"spread": 90.0,
+				"radius": 24.0,
+				"damage": 30,
+				"range": 340.0,
+				"windup": 0.8,
+				"color": "#3fe07a"
+			},
+			{
+				"type": "cross",
+				"count": 5,
+				"step": 26.0,
+				"radius": 20.0,
+				"damage": 32,
+				"range": 150.0,
+				"color": "#8dff9a"
+			},
+			{
+				"type": "multi_leap",
+				"count": 2,
+				"radius": 50.0,
+				"damage": 42,
+				"range": 280.0,
+				"windup": 0.7,
+				"color": "#3fe07a"
+			}
+		],
+		"xp": 560,
+		"coins": [
+			300,
+			380
+		],
+		"drops": [
+			{
+				"item": "hierba_vital",
+				"chance": 1.0
+			},
+			{
+				"item": "hongo_luminoso",
+				"chance": 1.0
+			},
+			{
+				"item": "cristal_arcano",
+				"chance": 1.0
+			},
+			{
+				"item": "pocion_vida",
+				"chance": 1.0
+			}
+		]
+	},
+	"titan_volcanico": {
+		"kind": "pattern",
+		"name": "Titán volcánico",
+		"boss": true,
+		"blood": "#ff6a20",
+		"hp": 2600,
+		"speed": 36.0,
+		"detect_range": 500.0,
+		"radius": 28.0,
+		"r_t": 0.85,
+		"size": 2.54,
+		"poise": 160,
+		"knock_resist": 0.95,
+		"sprites": {
+			"prefix": "res://art/monstruos/titan_volcanico/titan_volcanico_",
+			"feet": [
+				228.0,
+				273.7
+			]
+		},
+		"windup": 0.75,
+		"recover": 0.7,
+		"attack_cooldown": 0.65,
+		"attacks": [
+			{
+				"type": "shockwave",
+				"waves": 3,
+				"step": 38.0,
+				"radius": 20.0,
+				"damage": 36,
+				"range": 110.0,
+				"color": "#ff6a20"
+			},
+			{
+				"type": "meteor_rain",
+				"count": 10,
+				"spread": 110.0,
+				"radius": 28.0,
+				"damage": 38,
+				"range": 360.0,
+				"windup": 0.9,
+				"color": "#ffb030"
+			},
+			{
+				"type": "multi_leap",
+				"count": 3,
+				"radius": 56.0,
+				"damage": 46,
+				"range": 300.0,
+				"windup": 0.7,
+				"color": "#ff6a20"
+			},
+			{
+				"type": "cross",
+				"diag": true,
+				"count": 5,
+				"step": 28.0,
+				"radius": 22.0,
+				"damage": 34,
+				"range": 160.0,
+				"color": "#ffb030"
+			},
+			{
+				"type": "spiral",
+				"n": 8,
+				"waves": 5,
+				"range": 300.0,
+				"projectile": {
+					"speed": 120.0,
+					"radius": 9.0,
+					"damage": 20,
+					"muzzle_height": 90.0,
+					"scale": 1.4,
+					"tint": "#ff8a30"
+				}
+			}
+		],
+		"xp": 640,
+		"coins": [
+			340,
+			440
+		],
+		"drops": [
+			{
+				"item": "carbon",
+				"chance": 1.0
+			},
+			{
+				"item": "lingote_acero",
+				"chance": 1.0
+			},
+			{
+				"item": "cristal_arcano",
+				"chance": 1.0
 			},
 			{
 				"item": "pocion_vida",

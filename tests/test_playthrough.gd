@@ -1,5 +1,5 @@
 extends SceneTree
-# Test de humo con un bot: recorre la dungeon (pisos 1-4 generados, el 4 con jefe: pelea, abre el cofre y baja) con el motor real
+# Test de humo con un bot: recorre la dungeon (pisos 1-3 generados, el 3 con jefe: pelea, abre el cofre y baja) con el motor real
 # (física, IA, hitbox, botín). Ejecutar con --fixed-fps 60 (pasos exactos de 1/60 s lo más rápido posible;
 # Engine.time_scale agranda el paso y rompe la simulación). Mide por piso tiempo, daño recibido y muertes.
 # No sustituye a jugar: el bot apunta perfecto y no esquiva, así que sirve para detectar atascos y desbalances gruesos.
@@ -104,7 +104,7 @@ func _tick() -> void:
 		_floor_done()
 		if is_instance_valid(main.floors.chest_door):
 			main.floors.open_chest()
-		if main.floors.floor_no >= 4:
+		if main.floors.floor_no >= 3:  # el jefe está en el piso 3
 			_finish()
 		else:
 			main.floors.next_floor()
@@ -132,10 +132,10 @@ func _finish() -> void:
 		print("PLAYTHROUGH ", line)
 	print("PLAYTHROUGH total: %.0f s de juego, daño %d, muertes %d, golpes %d, nivel %d, monedas %d, puntos sin gastar %d" % [elapsed, damage_taken, deaths, swings, main.prog.level, main.prog.coins, main.prog.points])
 	assert(swings >= 20, "el bot llegó a pelear")
-	assert(report.size() >= 4, "se completaron al menos los 4 pisos (%d) dentro del límite de %.0f s" % [report.size(), LIMIT])
+	assert(report.size() >= 3, "se completaron al menos los 3 pisos (%d) dentro del límite de %.0f s" % [report.size(), LIMIT])
 	assert(deaths <= 15, "el bot no debería morir tanto (%d): revisar escalado por piso en data/dungeon.json" % deaths)  # medido: 0-2 muertes
 	assert(elapsed <= 900.0, "recorrer la dungeon no debería tardar más de 15 min de juego (%.0f s)" % elapsed)  # medido: ~215 s
 	assert(main.prog.points >= 2 or main.prog.spent.values().reduce(func(a: int, b: int) -> int: return a + b, 0) >= 2, "el cofre del jefe da puntos de estadística")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(main.save_path))
-	print("PASS playthrough: los 4 pisos se completan con el motor real")
+	print("PASS playthrough: los 3 pisos (con el jefe) se completan con el motor real")
 	quit()

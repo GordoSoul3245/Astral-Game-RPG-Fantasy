@@ -1,6 +1,6 @@
 {
 	"layout": "open",
-	"boss_every": 4,
+	"boss_every": 3,
 	"level": {
 		"step": 0.75,
 		"cycle_gain": 1.5,
@@ -21,18 +21,21 @@
 		"max": 14,
 		"archer_from": 2,
 		"mini_from": 3,
-		"mini_every": 4,
+		"mini_every": 2,
 		"mini_max": 3,
 		"mini_pool": [
 			"cyclops",
 			"lobo_espectral",
-			"golem_cristal"
+			"golem_cristal",
+			"mantis_jade",
+			"caballero_hueco"
 		],
 		"melee_pool": [
 			"slime",
 			"slime",
 			"escarabajo_brasa",
-			"hongo_espora"
+			"hongo_espora",
+			"murcielago_ceniza"
 		]
 	},
 	"bosses": [
@@ -71,6 +74,22 @@
 			"escort": {
 				"escarabajo_brasa": 4,
 				"lobo_espectral": 1
+			}
+		},
+		{
+			"id": "hidra_pantano",
+			"title": "La ciénaga de las tres cabezas",
+			"escort": {
+				"hongo_espora": 3,
+				"mantis_jade": 1
+			}
+		},
+		{
+			"id": "titan_volcanico",
+			"title": "El corazón del volcán",
+			"escort": {
+				"murcielago_ceniza": 4,
+				"caballero_hueco": 1
 			}
 		}
 	],

@@ -13,6 +13,7 @@ func setup(data: Dictionary) -> void:
 		for i in tiles:
 			walk.append("1".repeat(tiles))
 	z_index = -4000  # siempre por debajo de héroe y entidades
+	floor_mesh = null  # piso nuevo: se rearman las mallas
 	queue_redraw()
 
 func _corner(i: int, j: int) -> Vector2:
@@ -28,17 +29,44 @@ func _near_floor(i: int, j: int) -> bool:  # muro visible: casilla bloqueada que
 				return true
 	return false
 
-func _draw() -> void:
+# Rendimiento: el piso entero va en dos mallas (suelo y muros) y una tanda de líneas (juntas), no ~1700 polígonos sueltos por cuadro.
+var floor_mesh: ArrayMesh
+var wall_mesh: ArrayMesh
+var joints := PackedVector2Array()
+
+func _tri_mesh(verts: PackedVector2Array, cols: PackedColorArray) -> ArrayMesh:
+	var arr := []
+	arr.resize(Mesh.ARRAY_MAX)
+	arr[Mesh.ARRAY_VERTEX] = verts
+	arr[Mesh.ARRAY_COLOR] = cols
+	var m := ArrayMesh.new()
+	if not verts.is_empty():
+		m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+	return m
+
+func _quad(verts: PackedVector2Array, cols: PackedColorArray, q: Array, col: Color) -> void:
+	for k: int in [0, 1, 2, 0, 2, 3]:
+		verts.append(q[k])
+		cols.append(col)
+
+func _build_meshes() -> void:
+	var fv := PackedVector2Array()
+	var fc := PackedColorArray()
+	joints = PackedVector2Array()
 	for i in tiles:
 		for j in tiles:
 			if not _floor(i, j):
 				continue
 			var v := float((i * 7 + j * 13) % 5) * 0.012  # variación leve entre losas
 			var base := Color("#2b2f4a") if (i + j) % 2 == 0 else Color("#32375a")
-			var quad := PackedVector2Array([_corner(i, j), _corner(i + 1, j), _corner(i + 1, j + 1), _corner(i, j + 1)])
-			draw_colored_polygon(quad, base.lightened(v))
-			quad.append(quad[0])
-			draw_polyline(quad, Color("#171a2c"), 2.0)  # juntas
+			var q := [_corner(i, j), _corner(i + 1, j), _corner(i + 1, j + 1), _corner(i, j + 1)]
+			_quad(fv, fc, q, base.lightened(v))
+			for k in 4:  # juntas
+				joints.append(q[k])
+				joints.append(q[(k + 1) % 4])
+	floor_mesh = _tri_mesh(fv, fc)
+	var wv := PackedVector2Array()
+	var wc := PackedColorArray()
 	var up := Vector2(0, WALL_H * main.SCALE)
 	for s in range(0, tiles * 2):  # de atrás hacia delante, para que cada bloque tape al de detrás
 		for i in range(maxi(0, s - tiles + 1), mini(s, tiles - 1) + 1):
@@ -49,8 +77,16 @@ func _draw() -> void:
 			var b := _corner(i + 1, j)
 			var c := _corner(i + 1, j + 1)
 			var d := _corner(i, j + 1)
-			draw_colored_polygon(PackedVector2Array([a, d, d - up, a - up]), Color("#1d2038"))
-			draw_colored_polygon(PackedVector2Array([d, c, c - up, d - up]), Color("#262a47"))
-			draw_colored_polygon(PackedVector2Array([a - up, b - up, c - up, d - up]), Color("#3b4068"))
+			_quad(wv, wc, [a, d, d - up, a - up], Color("#1d2038"))
+			_quad(wv, wc, [d, c, c - up, d - up], Color("#262a47"))
+			_quad(wv, wc, [a - up, b - up, c - up, d - up], Color("#3b4068"))
+	wall_mesh = _tri_mesh(wv, wc)
+
+func _draw() -> void:
+	if floor_mesh == null:
+		_build_meshes()
+	draw_mesh(floor_mesh, null)
+	draw_multiline(joints, Color("#171a2c"), 2.0)
+	draw_mesh(wall_mesh, null)
 	var rim := PackedVector2Array([_corner(0, 0), _corner(tiles, 0), _corner(tiles, tiles), _corner(0, tiles), _corner(0, 0)])
 	draw_polyline(rim, Color("#0a0c18"), 8.0)

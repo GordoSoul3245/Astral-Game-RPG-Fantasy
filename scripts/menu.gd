@@ -51,7 +51,8 @@ func _ready() -> void:
 	add_child(center)
 	panel = PanelContainer.new()
 	panel.custom_minimum_size = Vector2(1180, 720)
-	panel.add_theme_stylebox_override("panel", _box(Color("#463226"), Color("#c69e68"), 4, 5, 22, 24))
+	panel.add_theme_stylebox_override("panel", _tex("res://art/ui/menu_oscuro_x4.png", 24, 52, 40, 30))
+	panel.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	center.add_child(panel)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 12)
@@ -109,11 +110,30 @@ static func _box(bg: Color, border: Color, width := 2, radius := 8, margin := 8,
 		sb.shadow_color = Color(0, 0, 0, 0.6)
 	return sb
 
-static func style_button(button: Button) -> void:
+static func _tex(path: String, side: int, top: int, pad_x := 12, pad_y := 8) -> StyleBoxTexture:  # pieza de PixelLab en 9-slice
+	var sb := StyleBoxTexture.new()
+	sb.texture = load(path)
+	sb.texture_margin_left = side
+	sb.texture_margin_right = side
+	sb.texture_margin_top = top
+	sb.texture_margin_bottom = side
+	sb.content_margin_left = pad_x
+	sb.content_margin_right = pad_x
+	sb.content_margin_top = pad_y + (top - side)
+	sb.content_margin_bottom = pad_y
+	return sb
+
+static func style_button(button: Button) -> void:  # botón de cuero de PixelLab: más claro al pasar, apagado si no se puede
 	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
-		var leather := Color("#64432b") if state in ["hover", "focus"] else Color("#402d23")
-		button.add_theme_stylebox_override(state, _box(leather, Color("#b68c54"), 2, 3, 8))
+		var sb := _tex("res://art/ui/menu_boton_x2.png", 22, 14, 26, 6)
+		sb.texture_margin_bottom = 14
+		sb.modulate_color = {"hover": Color(1.25, 1.15, 1.05), "focus": Color(1.25, 1.15, 1.05), "pressed": Color(0.85, 0.8, 0.75), "disabled": Color(0.5, 0.5, 0.5)}.get(state, Color.WHITE)
+		button.add_theme_stylebox_override(state, sb)
+	button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	button.add_theme_color_override("font_color", Color("#f4dfae"))
+	button.add_theme_color_override("font_disabled_color", Color("#9a8a70"))
+	button.add_theme_color_override("font_outline_color", Color("#141013"))
+	button.add_theme_constant_override("outline_size", 4)
 
 func _close_panel() -> void:
 	visible = false
@@ -126,8 +146,6 @@ func _label(text: String, parent: Node, size := 18, color := Color.WHITE) -> Lab
 	var l := Label.new()
 	l.text = text
 	l.add_theme_font_size_override("font_size", size)
-	if body and body.is_ancestor_of(parent):
-		color = {GOLD: Color("#65401e"), MUTED: Color("#64513c"), GOOD: Color("#36582e"), BAD: Color("#853f30"), Color.WHITE: INK}.get(color, color)
 	l.add_theme_color_override("font_color", color)
 	parent.add_child(l)
 	return l
@@ -349,7 +367,7 @@ func _slot_button(id: String, size: float, equipped := false, count := 0, page_c
 func _card(parent: Node, min_size: Vector2) -> VBoxContainer:  # panel con fondo para una columna
 	var pc := PanelContainer.new()
 	pc.custom_minimum_size = min_size
-	pc.add_theme_stylebox_override("panel", _box(Color("#ead4a7"), Color("#987347"), 2, 3, 14))
+	pc.add_theme_stylebox_override("panel", _box(Color(0.1, 0.075, 0.06, 0.82), Color("#b68c54"), 2, 2, 16))  # tarjeta oscura con borde de latón
 	parent.add_child(pc)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 8)
@@ -416,17 +434,17 @@ func _build_book() -> void:  # el inventario sobre el libro de PixelLab
 				refresh())
 			_place(ab, Rect2(203 + (dir + 1) * 6, 180, 10, 9))
 
-func _build_magic() -> void:
+func _build_magic() -> void:  # árbol de nodos: cada rama es una columna, las líneas son los requisitos; se enciende al aprender
 	var p = main.prog
 	var data: Dictionary = p.skill_data
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 16)
 	body.add_child(top)
-	_label("Árbol de habilidades del grimorio", top, 24, GOLD)
+	_label("Árbol del grimorio", top, 24, GOLD)
 	var gap := Control.new()
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(gap)
-	_label("Puntos de habilidad: %d   (1 por nivel y 1 por jefe)" % p.skill_points, top, 20, GOOD if p.skill_points > 0 else MUTED)
+	_label("Puntos: %d   (1 por nivel y 1 por jefe)" % p.skill_points, top, 20, GOOD if p.skill_points > 0 else MUTED)
 	var cost: int = int(data["respec_cost_per_level"]) * p.level
 	var rb := Button.new()
 	rb.text = "Reiniciar (%d monedas)" % cost
@@ -438,35 +456,131 @@ func _build_magic() -> void:
 		main._apply_stats()
 		refresh())
 	top.add_child(rb)
-	var cols := HBoxContainer.new()
-	cols.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	cols.add_theme_constant_override("separation", 16)
-	body.add_child(cols)
-	for br: Dictionary in data["branches"]:
-		var card := _card(cols, Vector2(0, 0))
-		card.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_label(str(br["name"]), card, 22, GOLD)
-		_label(str(br["desc"]), card, 14, MUTED)
-		card.add_child(HSeparator.new())
-		for sid: String in br["skills"]:
+	var row := HBoxContainer.new()
+	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 16)
+	body.add_child(row)
+	var tree := _SkillTree.new()
+	tree.menu = self
+	tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tree.custom_minimum_size = Vector2(760, 520)
+	row.add_child(tree)
+	var info := _card(row, Vector2(330, 0))
+	if not data["skills"].has(magic_sel):
+		magic_sel = str(data["branches"][0]["skills"][0])
+	var d: Dictionary = data["skills"][magic_sel]
+	var rank: int = p.skill_rank(magic_sel)
+	var why: String = p.why_not_learn(magic_sel)
+	_label(str(d["name"]), info, 24, GOLD)
+	_label("Rango %d / %d" % [rank, int(d["max"])], info, 18, GOOD if rank > 0 else MUTED)
+	var dl := _label(str(d["desc"]), info, 16)
+	dl.autowrap_mode = TextServer.AUTOWRAP_WORD
+	if why != "" and rank < int(d["max"]):
+		var wl := _label(why, info, 15, BAD)
+		wl.autowrap_mode = TextServer.AUTOWRAP_WORD
+	var learn := Button.new()
+	learn.text = "Aprender" if rank == 0 else ("Mejorar" if rank < int(d["max"]) else "Dominado")
+	learn.focus_mode = Control.FOCUS_NONE
+	learn.disabled = why != ""
+	var sid := magic_sel
+	learn.pressed.connect(func() -> void:
+		if p.learn(sid):
+			main._apply_stats()
+		refresh())
+	info.add_child(learn)
+	_label("Clic en un nodo para verlo. Las líneas muestran qué abre cada uno.", info, 13, MUTED).autowrap_mode = TextServer.AUTOWRAP_WORD
+	tree.build(data, p)
+
+var magic_sel := ""   # nodo elegido en el árbol de magia
+
+class _SkillTree extends Control:  # los nodos (runas de PixelLab) en columnas por rama y las líneas de requisito entre ellos
+	var menu: Node
+	var spots := {}       # id -> centro del nodo
+	var links: Array = [] # [desde, hasta, activa]
+	const NODE := 72.0
+
+	func build(data: Dictionary, p: Object) -> void:
+		var branches: Array = data["branches"]
+		var col_w := custom_minimum_size.x / branches.size()
+		for bi in branches.size():
+			var br: Dictionary = branches[bi]
+			var title := Label.new()
+			title.text = str(br["name"])
+			title.add_theme_font_size_override("font_size", 20)
+			title.add_theme_color_override("font_color", Color("#f3d69a"))
+			title.position = Vector2(col_w * bi, 0)
+			title.size = Vector2(col_w, 26)
+			title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			add_child(title)
+			var depth := {}
+			for sid: String in br["skills"]:  # fila = profundidad del requisito; varias en la misma fila se reparten
+				var d: Dictionary = data["skills"][sid]
+				depth[sid] = 0 if str(d.get("req", "")) == "" else int(depth.get(str(d["req"]), 0)) + 1
+				if str(d.get("req2", "")) != "":
+					depth[sid] = maxi(int(depth[sid]), int(depth.get(str(d["req2"]), 0)) + 1)
+			var rows := {}
+			for sid: String in br["skills"]:
+				rows[depth[sid]] = rows.get(depth[sid], []) + [sid]
+			for dep: int in rows:
+				var ids: Array = rows[dep]
+				for k in ids.size():
+					spots[ids[k]] = Vector2(col_w * bi + col_w * (k + 0.5) / ids.size(), 80 + dep * 140)
+		for sid: String in spots:
+			var d: Dictionary = data["skills"][sid]
+			for req: String in [str(d.get("req", "")), str(d.get("req2", ""))]:
+				if req != "" and spots.has(req):
+					links.append([spots[req], spots[sid], p.skill_rank(req) > 0])
+		for sid: String in spots:
 			var d: Dictionary = data["skills"][sid]
 			var rank: int = p.skill_rank(sid)
-			var why: String = p.why_not_learn(sid)
-			var b := Button.new()
-			b.text = "%s   %d / %d" % [d["name"], rank, int(d["max"])]
-			b.focus_mode = Control.FOCUS_NONE
-			b.custom_minimum_size = Vector2(0, 46)
-			b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-			b.tooltip_text = str(d["desc"])
-			b.disabled = why != ""
-			var skill_id := sid
+			var avail: bool = p.why_not_learn(sid) == ""
+			var b := TextureButton.new()
+			b.texture_normal = load("res://art/ui/runa_nodo.png")
+			b.ignore_texture_size = true
+			b.stretch_mode = TextureButton.STRETCH_SCALE
+			b.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			b.size = Vector2(NODE, NODE)
+			b.position = spots[sid] - Vector2(NODE, NODE) / 2.0
+			# aprendido: dorado; se puede aprender: brilla azul; bloqueado: apagado
+			b.modulate = Color(1.0, 0.85, 0.35) if rank > 0 else (Color(1.15, 1.15, 1.25) if avail else Color(0.35, 0.35, 0.4))
+			b.tooltip_text = "%s (%d/%d)" % [d["name"], rank, int(d["max"])]
+			var id := sid
 			b.pressed.connect(func() -> void:
-				if p.learn(skill_id):
-					main._apply_stats()
-				refresh())
-			card.add_child(b)
-			var l := _label(d["desc"] if (why == "" or rank > 0) else why, card, 13, MUTED if why == "" or rank > 0 else BAD)
-			l.autowrap_mode = TextServer.AUTOWRAP_WORD
+				menu.magic_sel = id
+				menu.refresh())
+			add_child(b)
+			var nm := Label.new()
+			nm.text = "%s\n%d/%d" % [d["name"], rank, int(d["max"])]
+			nm.add_theme_font_size_override("font_size", 13)
+			nm.add_theme_color_override("font_color", Color("#f4dfae") if rank > 0 or avail else Color(0.6, 0.6, 0.65))
+			nm.add_theme_color_override("font_outline_color", Color.BLACK)
+			nm.add_theme_constant_override("outline_size", 4)
+			nm.position = spots[sid] + Vector2(-60, NODE / 2.0)
+			nm.size = Vector2(120, 34)
+			nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			add_child(nm)
+			if id == menu.magic_sel:  # aro del nodo elegido
+				var ring := Panel.new()
+				var sb := StyleBoxFlat.new()
+				sb.draw_center = false
+				sb.border_color = Color("#f2c14e")
+				sb.set_border_width_all(3)
+				sb.set_corner_radius_all(int(NODE))
+				ring.add_theme_stylebox_override("panel", sb)
+				ring.position = b.position - Vector2(5, 5)
+				ring.size = b.size + Vector2(10, 10)
+				ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				add_child(ring)
+		queue_redraw()
+
+	func _draw() -> void:  # líneas de requisito: doradas si ya están abiertas, grises si no
+		for l: Array in links:
+			var a: Vector2 = l[0] + Vector2(0, NODE / 2.0)
+			var b: Vector2 = l[1] - Vector2(0, NODE / 2.0)
+			var mid := Vector2(0, (b.y - a.y) / 2.0)
+			var pts := PackedVector2Array([a, a + mid, Vector2(b.x, a.y + mid.y), b])
+			draw_polyline(pts, Color(0, 0, 0, 0.6), 8.0)
+			draw_polyline(pts, Color("#e8b84a") if l[2] else Color(0.4, 0.4, 0.45), 4.0)
 
 # --- pesca: libro de capturas, acuario y estado del día
 func _build_fishing() -> void:
@@ -478,12 +592,30 @@ func _build_fishing() -> void:
 	body.add_child(cols)
 	var left := _card(cols, Vector2(520, 0))
 	_label("Libro de capturas   %d / %d" % [an.book.size(), an.species_total()], left, 22, GOLD)
+	var fgrid := GridContainer.new()
+	fgrid.columns = 5
+	fgrid.add_theme_constant_override("h_separation", 10)
+	fgrid.add_theme_constant_override("v_separation", 10)
+	left.add_child(fgrid)
 	for id: String in an.cfg["fish"]:
 		var e: Variant = an.book.get(id)
+		var cell := VBoxContainer.new()
+		cell.add_theme_constant_override("separation", 0)
+		fgrid.add_child(cell)
+		var ic := TextureRect.new()
+		ic.texture = load(main.icon_of(id)) if ResourceLoader.exists(main.icon_of(id)) else null
+		ic.custom_minimum_size = Vector2(80, 64)
+		ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		ic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		if e == null:
-			_label("???", left, 16, MUTED)
+			ic.modulate = Color(0, 0, 0, 0.7)  # silueta: todavía no lo pescaste
+			ic.tooltip_text = "???"
 		else:
-			_label("%s  ·  ×%d  ·  récord %d cm%s" % [cr.item_name(id), int(e["count"]), int(e["best_cm"]), ("  " + "★".repeat(int(e["best_star"]))) if int(e["best_star"]) > 0 else ""], left, 16)
+			ic.tooltip_text = "%s · ×%d · récord %d cm%s" % [cr.item_name(id), int(e["count"]), int(e["best_cm"]), ("  " + "★".repeat(int(e["best_star"]))) if int(e["best_star"]) > 0 else ""]
+		cell.add_child(ic)
+		var cap := _label("???" if e == null else "%d cm" % int(e["best_cm"]), cell, 13, MUTED if e == null else GOLD)
+		cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	left.add_child(HSeparator.new())
 	for i: int in an.cfg["book"].size():
 		var m: Dictionary = an.cfg["book"][i]

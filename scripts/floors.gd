@@ -66,16 +66,16 @@ func composition(n: int) -> Array:
 		return out
 	var budget := mini(int(e["base"]) + int(float(n - 1) * float(e["per_floor"])), int(e["max"]))
 	var minis := 0
-	if n >= int(e["mini_from"]):
-		minis = mini(1 + (n - int(e["mini_from"])) / int(e["mini_every"]), int(e["mini_max"]))
+	if n % int(e["mini_every"]) == 0:  # un semijefe cada mini_every pisos (los de jefe ya traen su escolta)
+		minis = 1
 	var rest := budget - minis
 	var archers := 0
 	if n >= int(e["archer_from"]):
 		archers = int(float(rest) * minf(0.25 + 0.03 * float(n), 0.5))
 	var mpool: Array = e.get("mini_pool", ["cyclops"])
 	var npool: Array = e.get("melee_pool", ["slime"])
-	for i in minis:  # el primer semijefe de cada piso es siempre el cíclope; los demás salen del grupo
-		out.append({"id": mpool[0] if i == 0 else mpool[rng.randi() % mpool.size()], "level": level_for(n, true), "extra": {}})
+	for i in minis:  # los semijefes se turnan piso a piso: 2 cíclope, 4 lobo, 8 gólem...
+		out.append({"id": mpool[(n / int(e["mini_every"]) - 1 + i) % mpool.size()], "level": level_for(n, true), "extra": {}})
 	for i in archers:
 		out.append({"id": "skeleton_archer", "level": lv, "extra": {}})
 	for i in rest - archers:
