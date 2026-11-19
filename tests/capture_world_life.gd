@@ -51,9 +51,9 @@ func capture() -> void:
 	main.clock.hour = 12.0
 	main.crafting.add("nasa", 1)
 	main.crafting.add("trampa", 1)
-	main.pos = main.tile_to_ground(Vector2(1.5, 27.5))
+	main.pos = main.tile_to_ground(Vector2(13.5, 38.5))
 	main._place()
-	main.forced_aim = (main.tile_to_ground(Vector2(0.5, 27.5)) - main.tile_to_ground(Vector2(1.5, 27.5))).normalized()
+	main.forced_aim = (main.tile_to_ground(Vector2(12.5, 38.5)) - main.tile_to_ground(Vector2(13.5, 38.5))).normalized()
 	main.traps.place("nasa", "water")
 	main.pos = main.tile_to_ground(Vector2(3.5, 27.5))
 	main._place()

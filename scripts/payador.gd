@@ -14,6 +14,7 @@ var fire_frames: Array[Texture2D] = []
 var man: Sprite2D
 var facing := ""
 var ground := Vector2.ZERO
+var fire_g := Vector2.ZERO  # la fogata en suelo (fija: no depende de la región en la que esté el héroe)
 var following := false   # tras la última copla anda al lado del héroe (shortcut: solo dentro de la zona; cruzar regiones pide un acompañante en main)
 
 const FEET := Vector2(68, 113.7)   # los pies dentro del sprite de 128 px (misma cámara que el héroe)
@@ -32,6 +33,7 @@ const COPLAS := [
 
 func _ready() -> void:
 	var fg: Vector2 = main.tile_to_ground(fire_tile)
+	fire_g = fg
 	for k in 4:
 		fire_frames.append(load("res://art/map/campfire_%d.png" % k))
 	fire = Sprite2D.new()
@@ -71,14 +73,14 @@ func _ready() -> void:
 	var l: PointLight2D = main.combat.light(Color(1.0, 0.62, 0.3), 0.9, 2.6)
 	l.position = (fg - Vector2(0, 10)) * main.SCALE
 	add_child(l)
-	for p: Vector2 in [Vector2(1.3, 0.5), Vector2(-1.4, -0.4), Vector2(0.2, 1.3)]:  # troncos para sentarse alrededor del fuego
-		var lg: Vector2 = main.tile_to_ground(fire_tile + p)
-		var log := _Log.new()
-		log.position = lg * main.SCALE
-		log.z_index = int(lg.y) - 1
-		log.scale = Vector2(2, 2)
-		add_child(log)
 	ground = main.tile_to_ground(seat_tile)
+	for lg: Vector2 in [ground, main.tile_to_ground(fire_tile + Vector2(-1.4, -0.4)), main.tile_to_ground(fire_tile + Vector2(0.2, 1.3))]:
+		var log_sprite := Sprite2D.new()
+		log_sprite.texture = preload("res://art/map/tronco_fogon.png")
+		log_sprite.position = (lg - Vector2(0, 12)) * main.SCALE
+		log_sprite.scale = Vector2.ONE * main.SCALE
+		log_sprite.z_index = int(lg.y) - 1
+		add_child(log_sprite)
 	man = Sprite2D.new()
 	man.centered = false
 	man.scale = Vector2.ONE * main.SCALE
@@ -91,6 +93,11 @@ func _ready() -> void:
 
 func _face(dir: Vector2) -> void:  # una de las 8 direcciones del proyecto (E, SE, S, SW, W, NW, N, NE)
 	var f: String = main.DIRS[posmod(roundi(dir.angle() / (PI / 4.0)), 8)]
+	if not following:
+		if facing != "sentado":
+			facing = "sentado"
+			man.texture = preload("res://art/gaucho/gaucho_sentado.png")
+		return
 	if f != facing:
 		facing = f
 		man.texture = load("res://art/gaucho/gaucho_idle_%s.png" % f)
@@ -115,7 +122,7 @@ func _process(delta: float) -> void:
 		man.z_index = int(ground.y)
 		_face(to_hero)
 	else:
-		_face(to_hero if to_hero.length() < 160.0 else main.tile_to_ground(fire_tile) - ground)
+		_face(to_hero if to_hero.length() < 160.0 else fire_g - ground)
 	# respiración: el sprite sube 1 px de arte (3 en pantalla) cada tanto, en la rejilla pixel art
 	man.position = (ground - FEET - Vector2(0, 1.0 if fmod(t, 1.8) < 0.9 else 0.0)) * main.SCALE
 	if fmod(t, 2.6) < delta:  # alguna nota de guitarra que sube
@@ -130,11 +137,3 @@ func _process(delta: float) -> void:
 		tw.tween_property(n, "position", n.position + Vector2(randf_range(-20, 20), -90), 2.0)
 		tw.tween_property(n, "modulate:a", 0.0, 2.0)
 		tw.chain().tween_callback(n.queue_free)
-
-class _Log extends Node2D:
-	func _draw() -> void:  # tronco tumbado: corteza en dos tonos y la cara del corte con anillos (pixel art x3)
-		var p := 3.0
-		draw_rect(Rect2(Vector2(-12, -5) * p, Vector2(24, 5) * p), Color(0.36, 0.23, 0.14))
-		draw_rect(Rect2(Vector2(-12, -5) * p, Vector2(24, 2) * p), Color(0.48, 0.31, 0.18))
-		draw_rect(Rect2(Vector2(10, -6) * p, Vector2(4, 6) * p), Color(0.78, 0.62, 0.42))
-		draw_rect(Rect2(Vector2(11, -4) * p, Vector2(2, 2) * p), Color(0.6, 0.44, 0.27))

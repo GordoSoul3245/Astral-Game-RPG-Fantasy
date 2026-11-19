@@ -111,7 +111,7 @@ func _ready() -> void:
 		touch = load("res://scripts/touch_controls.gd").new()
 		touch.main = self
 		add_child(touch)
-	RenderingServer.set_default_clear_color(Color("#0f1a2a"))  # mar alrededor de la isla
+	RenderingServer.set_default_clear_color(Color("#1c4462"))  # mar alrededor de la isla
 	settings = load("res://scripts/settings.gd").new()
 	if get_tree().get_script() == null:  # en los tests no se tocan las opciones del jugador
 		settings.load_file()
@@ -727,6 +727,7 @@ func _enter_dungeon() -> void:
 	in_dungeon = true
 	overworld = {"pos": pos, "C1": C1, "E1": E1, "E2": E2, "tiles": TILES, "world": world, "doors": doors, "dragon_alive": dragon.alive}
 	world.visible = false
+	_zones_visible(false)
 	for d: Node2D in doors:
 		d.visible = false
 	doors = []
@@ -771,6 +772,7 @@ func _exit_dungeon() -> void:
 	dungeon_node.queue_free()
 	world = overworld["world"]
 	world.visible = true
+	_zones_visible(true)
 	doors = overworld["doors"]
 	for d: Node2D in doors:
 		d.visible = true
@@ -782,7 +784,7 @@ func _exit_dungeon() -> void:
 	dragon.visible = true
 	dragon.alive = overworld["dragon_alive"]
 	refresh_world_levels()
-	RenderingServer.set_default_clear_color(Color("#0f1a2a"))
+	RenderingServer.set_default_clear_color(Color("#1c4462"))
 	combat.set_zone(false)
 	cam.position = (pos - Vector2(0, 40)) * SCALE
 
@@ -805,6 +807,7 @@ func _enter_interior(id: String) -> void:  # como la dungeon: oculta el exterior
 	current_interior = id
 	overworld = {"pos": pos, "C1": C1, "E1": E1, "E2": E2, "tiles": TILES, "world": world, "doors": doors, "dragon_alive": dragon.alive}
 	world.visible = false
+	_zones_visible(false)
 	for d: Node2D in doors:
 		d.visible = false
 	doors = []
@@ -852,6 +855,7 @@ func _exit_interior() -> void:
 	dungeon_node.queue_free()
 	world = overworld["world"]
 	world.visible = true
+	_zones_visible(true)
 	doors = overworld["doors"]
 	for d: Node2D in doors:
 		d.visible = true
@@ -862,7 +866,7 @@ func _exit_interior() -> void:
 	pos = overworld["pos"]
 	dragon.visible = true
 	dragon.alive = overworld["dragon_alive"]
-	RenderingServer.set_default_clear_color(Color("#0f1a2a"))
+	RenderingServer.set_default_clear_color(Color("#1c4462"))
 	combat.set_zone(false)
 	cam.position = (pos - Vector2(0, 40)) * SCALE
 
@@ -2390,6 +2394,7 @@ func _enter_mine() -> void:
 	in_mine = true
 	overworld = {"pos": pos, "C1": C1, "E1": E1, "E2": E2, "tiles": TILES, "world": world, "doors": doors, "dragon_alive": dragon.alive}
 	world.visible = false
+	_zones_visible(false)
 	for d: Node2D in doors:
 		d.visible = false
 	doors = []
@@ -2443,6 +2448,133 @@ func _build_links() -> void:
 	for l: Dictionary in links:
 		if l["a"] == "valle":
 			bridges.add_link(str(l["side_a"]), l["rows_a"], Color(zones_cfg[l["b"]]["ground"][0]), "%s →" % world_names[l["b"]])
+	_build_regions()
+
+# Un solo mapa (como en Pokémon): cada zona se arma al iniciar, pegada a su lado del valle según data/world.json, y todas se ven a la vez.
+# Cada región conserva sus casillas propias (su "marco": C1, E1, E2, TILES); al cruzar caminando solo cambia cuál es la región actual.
+var frames := {}               # nodo de región -> {id, C1, E1, E2, tiles}
+var zone_nodes := {}           # id de zona -> nodo
+var region_doors := {}         # id de región -> sus puertas
+var valley_world: Node2D
+var valley_dragon_alive := true
+
+func _build_regions() -> void:
+	frames[world] = {"id": "valle", "C1": C1, "E1": E1, "E2": E2, "tiles": TILES}
+	valley_world = world
+	region_doors["valle"] = doors
+	var e1 := E1 / TILES
+	var e2 := E2 / TILES
+	for l: Dictionary in links:
+		if l["a"] != "valle":
+			continue
+		var id: String = l["b"]
+		var n := int(zones_cfg[id]["tiles"])
+		var d := roundi((float(l["rows_a"][0]) + float(l["rows_a"][1]) - float(l["rows_b"][0]) - float(l["rows_b"][1])) / 2.0)  # alinea los dos claros
+		var o: Vector2 = {"w": Vector2(-n, d), "e": Vector2(TILES, d), "n": Vector2(d, -n), "s": Vector2(d, TILES)}[str(l["side_a"])]
+		var f := {"id": id, "C1": C1 + o.x * e1 + o.y * e2, "E1": e1 * n, "E2": e2 * n, "tiles": float(n)}
+		var keep := [C1, E1, E2, TILES, doors]
+		_use_frame(f)
+		doors = []
+		var node := Node2D.new()
+		node.set_script(load("res://scripts/region.gd"))
+		node.main = self
+		add_child(node)
+		var zcfg: Dictionary = zones_cfg[id].duplicate()
+		zcfg["gates"] = gates_of(id)
+		zcfg["seamless"] = true
+		node.setup(zcfg)
+		region_doors[id] = doors
+		C1 = keep[0]
+		E1 = keep[1]
+		E2 = keep[2]
+		TILES = keep[3]
+		doors = keep[4]
+		frames[node] = f
+		zone_nodes[id] = node
+
+func _use_frame(f: Dictionary) -> void:
+	C1 = f["C1"]
+	E1 = f["E1"]
+	E2 = f["E2"]
+	TILES = f["tiles"]
+
+func _tile_in(f: Dictionary, g: Vector2) -> Vector2:  # punto de suelo -> casilla en el marco de una región
+	return Transform2D(f["E1"] / f["tiles"], f["E2"] / f["tiles"], f["C1"]).affine_inverse() * g
+
+func _tiles_away(f: Dictionary, g: Vector2) -> float:  # casillas desde un punto de suelo hasta el borde de una región (0 = dentro)
+	var t := _tile_in(f, g)
+	var n: float = f["tiles"]
+	return maxf(maxf(-t.x, t.x - n), maxf(-t.y, t.y - n))
+
+func _inside(f: Dictionary, g: Vector2) -> bool:
+	var t := _tile_in(f, g)
+	return t.x >= 0.0 and t.y >= 0.0 and t.x < f["tiles"] and t.y < f["tiles"]
+
+func walkable_elsewhere(from: Node, i: int, j: int) -> bool:  # casilla fuera de una región: se pisa si cae en suelo transitable de la vecina
+	if not frames.has(from):
+		return false
+	var f: Dictionary = frames[from]
+	var g: Vector2 = Transform2D(f["E1"] / f["tiles"], f["E2"] / f["tiles"], f["C1"]) * Vector2(i + 0.5, j + 0.5)
+	for node: Node in frames:
+		if node != from and _inside(frames[node], g):
+			var t := _tile_in(frames[node], g)
+			return node._cell_walkable(floori(t.x), floori(t.y))
+	return false
+
+func _zones_visible(v: bool) -> void:  # las zonas se ven junto al valle, salvo dentro de casas, mina o mazmorra
+	for node: Node2D in zone_nodes.values():
+		node.visible = v and (node == world or _tiles_away(frames[node], pos) < 16.0)
+		node.process_mode = Node.PROCESS_MODE_INHERIT if node.visible else Node.PROCESS_MODE_DISABLED
+
+func _switch_region(id: String) -> void:  # cruzar caminando de una región a otra: sin fundido ni salto
+	if zone_id != "":  # la zona que se deja atrás se lleva sus monstruos y su cofre
+		for c: Node in [zone_chest, zone_chest_door]:
+			if is_instance_valid(c):
+				doors.erase(c)
+				c.queue_free()
+		zone_chest = null
+		zone_chest_door = null
+		zone_boss = null
+		for e in enemies.duplicate():
+			if e != dragon:
+				enemies.erase(e)
+				e.queue_free()
+	var node: Node2D = valley_world if id == "valle" else zone_nodes[id]
+	_use_frame(frames[node])
+	world = node
+	doors = region_doors[id]
+	if music:
+		music.set_theme(float(zones_cfg[id].get("theme_pitch", 1.0)) if id != "valle" else 1.0)
+	combat.set_zone(false)
+	if id == "valle":
+		in_dungeon = false
+		in_mine = false
+		zone_id = ""
+		dragon.visible = true
+		dragon.alive = valley_dragon_alive
+		RenderingServer.set_default_clear_color(Color("#1c4462"))
+		say(str(world_names.get("valle", "El valle")), 2.5)
+		return
+	var cfg: Dictionary = zones_cfg[id]
+	if zone_id == "":
+		valley_dragon_alive = dragon.alive
+	in_dungeon = true  # fauna, civiles y el dragón del valle se pausan; es exterior, así que sigue el reloj y la luz del día
+	in_mine = true
+	zone_id = id
+	dungeon_node = node
+	dragon.visible = false
+	dragon.alive = false
+	RenderingServer.set_default_clear_color(Color("#1c4462"))  # el mismo mar para todo el mapa
+	for e: Dictionary in cfg["enemies"]:  # monstruos fijos al nivel del héroe -2 (+ el desvío de la zona)
+		set_enemy_level(world_level(false) + int(e["off"]))
+		spawn_enemy(str(e["id"]), tile_to_ground(Vector2(e["t"][0], e["t"][1])))
+	set_enemy_level(0)
+	for e in enemies:
+		if e != dragon and e.data.get("boss", false):
+			zone_boss = e
+	if zone_boss != null and not zones_done.has(id):
+		combat.play_at("roar", pos)
+	say("%s: %s%s" % [cfg["name"], cfg["level_note"], ("  Jefe: %s." % zone_boss.data["name"]) if zone_boss != null and not zones_done.has(id) else ""], 4.0)
 
 func region() -> String:  # en qué región estás: "valle", el id de una zona, o "" (dungeon, mina, casas)
 	if in_mine:
@@ -2460,22 +2592,6 @@ func gates_of(id: String) -> Dictionary:  # lados abiertos de una región: side 
 		if l["b"] == id:
 			g[str(l["side_b"])] = l["rows_b"]
 	return g
-
-func _arrival(id: String, side: String, rows: Array) -> Vector2:  # casilla justo dentro del borde de `id` por ese lado
-	var n := float(region_tiles(id))
-	var mid := (float(rows[0]) + float(rows[1]) + 1.0) / 2.0
-	match side:
-		"w": return Vector2(1.7, mid)
-		"e": return Vector2(n - 1.7, mid)
-		"n": return Vector2(mid, 1.7)
-	return Vector2(mid, n - 1.7)
-
-# --- el valle cambia con la hora y el clima: de noche salen limos nocturnos (y con lluvia, algunos de día) y los conejos se esconden de la lluvia
-# --- mascotas: dale de comer a un conejo (hierba o bayas) o a un zorro (carne) varias veces con E y se queda contigo
-const TAME := {"rabbit": {"items": ["hierba_vital", "baya_roja"], "feeds": 2, "name": "conejo"}, "fox": {"items": ["carne_conejo", "carne_zorro", "pescado_asado", "carne_asada"], "feeds": 3, "name": "zorro"}}
-var pets: Array = []         # máx. 2: "rabbit" da un 20 % de recurso extra al recolectar; "fox" +8 % de daño cuerpo a cuerpo
-var pet_nodes: Array = []
-var tame_feeds := {}         # id de instancia del animal -> veces que lo has alimentado
 
 func _spawn_pet(kind: String) -> void:
 	var pn := Node2D.new()
@@ -2592,98 +2708,35 @@ func _tick_schedule(delta: float) -> void:
 		if spot.distance_to(pos) > 100.0:
 			night_mobs.append(spawn_enemy("limo_nocturno", spot))
 
+# --- el valle cambia con la hora y el clima: de noche salen limos nocturnos (y con lluvia, algunos de día) y los conejos se esconden de la lluvia
+# --- mascotas: dale de comer a un conejo (hierba o bayas) o a un zorro (carne) varias veces con E y se queda contigo
+const TAME := {"rabbit": {"items": ["hierba_vital", "baya_roja"], "feeds": 2, "name": "conejo"}, "fox": {"items": ["carne_conejo", "carne_zorro", "pescado_asado", "carne_asada"], "feeds": 3, "name": "zorro"}}
+var pets: Array = []         # máx. 2: "rabbit" da un 20 % de recurso extra al recolectar; "fox" +8 % de daño cuerpo a cuerpo
+var pet_nodes: Array = []
+var tame_feeds := {}         # id de instancia del animal -> veces que lo has alimentado
+
 func _check_edges(delta: float) -> void:
 	_tick_schedule(delta)
 	travel_cd = maxf(0.0, travel_cd - delta)
-	if travel_cd > 0.0 or transitioning or dying or links.is_empty():
+	if transitioning or dying or frames.is_empty() or region() == "" or (in_mine and zone_id == ""):
 		return
-	var r := region()
-	if r == "":
-		return
+	for node: Node2D in zone_nodes.values():  # solo se dibujan y procesan las zonas cercanas (luces, suelo y árboles cuestan aunque no se vean)
+		var near := node == world or _tiles_away(frames[node], pos) < 16.0
+		if node.visible != near:
+			node.visible = near
+			node.process_mode = Node.PROCESS_MODE_INHERIT if near else Node.PROCESS_MODE_DISABLED
 	var t := ground_to_tile(pos)
-	var n := float(region_tiles(r))
-	var trig := 0.85
-	for l: Dictionary in links:
-		for end in 2:
-			var name: String = l["a"] if end == 0 else l["b"]
-			if name != r:
-				continue
-			var side: String = l["side_a"] if end == 0 else l["side_b"]
-			var rows: Array = l["rows_a"] if end == 0 else l["rows_b"]
-			var along: float = t.y if side in ["w", "e"] else t.x
-			if along < float(rows[0]) or along >= float(rows[1]) + 1.0:
-				continue
-			var hit := (side == "w" and t.x < trig) or (side == "e" and t.x > n - trig) or (side == "n" and t.y < trig) or (side == "s" and t.y > n - trig)
-			if hit:
-				var other: String = l["b"] if end == 0 else l["a"]
-				var oside: String = l["side_b"] if end == 0 else l["side_a"]
-				var orows: Array = l["rows_b"] if end == 0 else l["rows_a"]
-				travel(other, _arrival(other, oside, orows))
-				return
+	if t.x >= 0.0 and t.y >= 0.0 and t.x < TILES and t.y < TILES:
+		return
+	for node: Node in frames:
+		if node != world and _inside(frames[node], pos):
+			_switch_region(frames[node]["id"])
+			return
 
-func travel(to: String, arrive: Vector2) -> void:  # cruza a la región vecina, con un fundido corto
-	travel_cd = 2.0
-	_transition(func() -> void: _do_travel(to, arrive))
-
-func _do_travel(to: String, arrive: Vector2) -> void:
-	if in_mine:
-		_exit_mine()
-	if to != "valle":
-		_enter_zone(to)
-	pos = tile_to_ground(arrive)
+func _enter_zone(id: String) -> void:  # pone al héroe en la entrada de la zona (partida nueva y pruebas)
+	_switch_region(id)
+	pos = tile_to_ground(world.spawn_tile())
 	cam.position = (pos - Vector2(0, 40)) * SCALE
-	if music:
-		music.set_theme(float(zones_cfg[to].get("theme_pitch", 1.0)) if to != "valle" else 1.0)
-	say(str(world_names.get(to, to)), 2.5)
-
-func _enter_zone(id: String) -> void:
-	var cfg: Dictionary = zones_cfg[id]
-	in_dungeon = true  # fauna, civiles y el dragón se pausan; es exterior, así que sigue el reloj y la luz del día
-	in_mine = true
-	zone_id = id
-	overworld = {"pos": pos, "C1": C1, "E1": E1, "E2": E2, "tiles": TILES, "world": world, "doors": doors, "dragon_alive": dragon.alive}
-	world.visible = false
-	for d: Node2D in doors:
-		d.visible = false
-	doors = []
-	dragon.visible = false
-	dragon.alive = false
-	var n: int = cfg["tiles"]
-	var s := n / TILES
-	E1 *= s
-	E2 *= s
-	TILES = n
-	C1 = -(E1 + E2) / 2.0
-	RenderingServer.set_default_clear_color(Color(cfg["clear"]))
-	combat.set_zone(false)
-	dungeon_node = Node2D.new()
-	dungeon_node.set_script(load("res://scripts/region.gd"))
-	dungeon_node.main = self
-	add_child(dungeon_node)
-	var zcfg: Dictionary = cfg.duplicate()
-	zcfg["gates"] = gates_of(id)
-	var prev := {}  # color de la región que se ve al otro lado de cada claro
-	for l: Dictionary in links:
-		if l["a"] == id:
-			prev[str(l["side_a"])] = "#35682a" if l["b"] == "valle" else zones_cfg[l["b"]]["ground"][0]
-		if l["b"] == id:
-			prev[str(l["side_b"])] = "#35682a" if l["a"] == "valle" else zones_cfg[l["a"]]["ground"][0]
-	zcfg["preview"] = prev
-	dungeon_node.setup(zcfg)
-	world = dungeon_node
-	pos = tile_to_ground(dungeon_node.spawn_tile())
-	cam.position = (pos - Vector2(0, 40)) * SCALE
-	for e: Dictionary in cfg["enemies"]:  # monstruos fijos al nivel del héroe -2 (+ el desvío de la zona)
-		set_enemy_level(world_level(false) + int(e["off"]))
-		spawn_enemy(str(e["id"]), tile_to_ground(Vector2(e["t"][0], e["t"][1])))
-	set_enemy_level(0)
-	zone_boss = null
-	for e in enemies:
-		if e != dragon and e.data.get("boss", false):
-			zone_boss = e
-	if zone_boss != null and not zones_done.has(id):
-		combat.play_at("roar", pos)
-	say("%s: %s%s" % [cfg["name"], cfg["level_note"], ("  Jefe: %s." % zone_boss.data["name"]) if zone_boss != null and not zones_done.has(id) else ""], 4.0)
 
 var zone_boss: Node2D
 
@@ -2728,6 +2781,10 @@ func exit_mine() -> void:
 	_transition(_exit_mine)
 
 func _exit_mine() -> void:
+	if zone_id != "":  # las zonas son parte del mapa: volver al valle no desarma nada (al morir o en pruebas: al inicio del valle)
+		_switch_region("valle")
+		pos = start_pos
+		return
 	in_dungeon = false
 	in_mine = false
 	zone_id = ""
@@ -2746,6 +2803,7 @@ func _exit_mine() -> void:
 	dungeon_node.queue_free()
 	world = overworld["world"]
 	world.visible = true
+	_zones_visible(true)
 	doors = overworld["doors"]
 	for d: Node2D in doors:
 		d.visible = true
@@ -2756,6 +2814,6 @@ func _exit_mine() -> void:
 	pos = overworld["pos"]
 	dragon.visible = true
 	dragon.alive = overworld["dragon_alive"]
-	RenderingServer.set_default_clear_color(Color("#0f1a2a"))
+	RenderingServer.set_default_clear_color(Color("#1c4462"))
 	combat.set_zone(false)
 	cam.position = (pos - Vector2(0, 40)) * SCALE

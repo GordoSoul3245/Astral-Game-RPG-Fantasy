@@ -91,17 +91,17 @@ func run_checks() -> void:
 
 	# mundo conectado: del valle a la marisma por el puente del oeste y de vuelta, sin puertas
 	main.prog.level = 4
-	main.pos = main.tile_to_ground(Vector2(0.5, 21.5))
+	main.pos = main.tile_to_ground(Vector2(-0.3, 21.5))
 	main.travel_cd = 0.0
 	main._check_edges(0.0)
 	await _wait(1.0)
 	assert(main.region() == "pantano" and main.ground_to_tile(main.pos).x > 24.0, "cruzar el puente oeste lleva a la marisma, por su lado este")
-	main.pos = main.tile_to_ground(Vector2(27.2, 13.5))
+	main.pos = main.tile_to_ground(Vector2(28.2, 13.5))
 	main.travel_cd = 0.0
 	main._check_edges(0.0)
 	await _wait(1.0)
 	assert(main.region() == "valle" and main.ground_to_tile(main.pos).x < 4.0, "y de vuelta al valle por el mismo puente")
-	main.pos = main.tile_to_ground(Vector2(49.5, 12.5))
+	main.pos = main.tile_to_ground(Vector2(50.2, 12.5))
 	main.travel_cd = 0.0
 	main._check_edges(0.0)
 	await _wait(1.0)
@@ -111,12 +111,12 @@ func run_checks() -> void:
 
 	# el puente norte lleva a las Cumbres Heladas por su lado sur
 	main.prog.level = 6
-	main.pos = main.tile_to_ground(Vector2(29.5, 0.5))
+	main.pos = main.tile_to_ground(Vector2(29.5, -0.3))
 	main.travel_cd = 0.0
 	main._check_edges(0.0)
 	await _wait(1.0)
 	assert(main.region() == "nieve" and main.ground_to_tile(main.pos).y > 24.0, "el puente norte lleva a las Cumbres Heladas por el sur")
-	main.pos = main.tile_to_ground(Vector2(14.0, 27.3))
+	main.pos = main.tile_to_ground(Vector2(14.0, 28.2))
 	main.travel_cd = 0.0
 	main._check_edges(0.0)
 	await _wait(1.0)
@@ -142,7 +142,7 @@ func run_checks() -> void:
 	assert(bseen.has(Vector2i(19, 9)), "bosque: se llega a la orilla del lago")
 	assert(b.water.size() > 30 and b.paths.size() > 100, "bosque: hay lago y camino")
 	assert(main.doors.any(func(d: Node) -> bool: return d.label == "Hablar con el viejo"), "bosque: el viejo de la fogata se puede hablar")
-	main.pos = main.tile_to_ground(Vector2(28.5, 0.5))
+	main.pos = main.tile_to_ground(Vector2(28.5, -0.3))
 	main.travel_cd = 0.0
 	main._check_edges(0.0)
 	await _wait(1.0)

@@ -36,6 +36,8 @@ func _locate() -> void:  # busca cerca del inicio un hueco libre de tierra firme
 			var d := o.distance_to(s)
 			if d < float(g.get("min_dist", 9.0)) or d >= best_d:
 				continue
+			if o.x < 1.0 or o.y < 1.0 or o.x + cols * sp > main.TILES - 1.0 or o.y + rows * sp > main.TILES - 1.0:
+				continue  # el huerto va dentro del valle (en el mapa único el suelo vecino también se pisa)
 			var ok := true
 			var centre := o + Vector2(float(cols) * sp, float(rows) * sp) * 0.5
 			for a: Vector2 in avoid:

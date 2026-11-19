@@ -254,7 +254,9 @@ func _process(delta: float) -> void:
 			faded.append(s)
 
 func _cell_walkable(i: int, j: int) -> bool:
-	return i >= 0 and i < tiles and j >= 0 and j < tiles and walk[i][j] == "1"
+	if i < 0 or j < 0 or i >= tiles or j >= tiles:  # fuera de esta región: se pisa si la región vecina tiene suelo ahí (un solo mapa)
+		return main.has_method("walkable_elsewhere") and main.walkable_elsewhere(self, i, j)
+	return walk[i][j] == "1"
 
 func is_water(t: Vector2) -> bool:  # casillas fuera de la isla: mar abierto (se puede pescar)
 	return not _cell_walkable(floori(t.x), floori(t.y))

@@ -62,7 +62,7 @@ for j in range(N):
     for i in range(N):
         p = (i + 0.5, j + 0.5)
         d = path_dist(p)
-        width = 1.0 if math.hypot(p[0] - PINCH[0], p[1] - PINCH[1]) < 3 else 1.5  # ~3 casillas; 2 en el estrechamiento
+        width = 1.5 if math.hypot(p[0] - PINCH[0], p[1] - PINCH[1]) < 3 else 2.0  # ~4 casillas; 3 en el estrechamiento
         if in_lake(i, j):
             g[j][i] = '~'
         elif d < width:

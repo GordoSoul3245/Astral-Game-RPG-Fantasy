@@ -27,10 +27,10 @@ func capture() -> void:
 	main.crafting.add("pez_cristal", 1)
 	main.crafting.add("anguila_luminosa", 1)
 	main.crafting.add("sardina", 3)
-	main.pos = main.tile_to_ground(Vector2(1.5, 27.5))
+	main.pos = main.tile_to_ground(Vector2(13.5, 38.5))
 	main._place()
 	main.cam.position = (main.pos - Vector2(0, 40)) * main.SCALE
-	main.forced_aim = (main.tile_to_ground(Vector2(0.5, 27.5)) - main.tile_to_ground(Vector2(1.5, 27.5))).normalized()
+	main.forced_aim = (main.tile_to_ground(Vector2(12.5, 38.5)) - main.tile_to_ground(Vector2(13.5, 38.5))).normalized()
 	main._select(main.hotbar.find("cana_hierro"))
 	await _wait(0.5)
 	main.cooldown = 0.0

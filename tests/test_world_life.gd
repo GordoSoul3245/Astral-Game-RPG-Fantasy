@@ -95,9 +95,9 @@ func run_checks() -> void:
 	main.prog.rod_parts["reel"] = true
 	main.prog.rod_parts["line"] = true
 	main.give_item("cana_hierro")
-	main.pos = main.tile_to_ground(Vector2(1.5, 27.5))
+	main.pos = main.tile_to_ground(Vector2(13.5, 38.5))
 	main._place()
-	main.forced_aim = (main.tile_to_ground(Vector2(0.5, 27.5)) - main.tile_to_ground(Vector2(1.5, 27.5))).normalized()
+	main.forced_aim = (main.tile_to_ground(Vector2(12.5, 38.5)) - main.tile_to_ground(Vector2(13.5, 38.5))).normalized()
 	fishing.cfg["junk_chance"] = 0.0
 	fishing.cfg["bite_wait"] = [0.1, 0.1]
 	main._select(main.hotbar.find("cana_hierro"))

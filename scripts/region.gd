@@ -16,8 +16,11 @@ class _Floor extends Node2D:
 	func _draw() -> void:
 		zone.paint(self)
 
+var frame_tf: Transform2D  # casilla -> suelo de esta región (se fija al armarla)
+
 func setup(data: Dictionary) -> void:
 	cfg = data
+	frame_tf = Transform2D(main.E1 / main.TILES, main.E2 / main.TILES, main.C1)
 	var n := int(data["tiles"])
 	var forest: Array = []
 	if data.has("layout"):  # mapa dibujado como texto: T bosque, . pasto, = camino, ~ agua (fila = j, columna = i)
@@ -131,8 +134,8 @@ func _object(sprite: String, x: float, y: float) -> Dictionary:
 func spawn_tile() -> Vector2:
 	return Vector2(cfg["start"][0], cfg["start"][1])
 
-func _corner(i: float, j: float) -> Vector2:
-	return main.tile_to_ground(Vector2(i, j)) * main.SCALE
+func _corner(i: float, j: float) -> Vector2:  # con el marco propio: en el mapa único el suelo se dibuja aunque la región actual sea otra
+	return frame_tf * Vector2(i, j) * main.SCALE
 
 func _in_rects(i: int, j: int, key: String) -> bool:
 	for r: Array in cfg[key]:
@@ -155,8 +158,9 @@ func paint(ci: CanvasItem) -> void:  # suelo de losas de colores: mullido, camin
 		for i in range(-m, tiles + m):
 			for j in range(-m, tiles + m):
 				var d := maxi(maxi(-i, i - tiles + 1), maxi(-j, j - tiles + 1))
-				if d <= 0:
-					continue
+				var gs: Dictionary = cfg.get("gates", {})
+				if d <= 0 or (gs.has("n") and j < 0) or (gs.has("s") and j >= tiles) or (gs.has("w") and i < 0) or (gs.has("e") and i >= tiles):
+					continue  # hacia el lado del valle no se pinta: ahí está el valle
 				var q := PackedVector2Array([_corner(i, j), _corner(i + 1, j), _corner(i + 1, j + 1), _corner(i, j + 1)])
 				var oc := Color(g[(i + j) % 2]).darkened(0.35).lerp(clear, clampf(float(d) / m, 0.0, 1.0))
 				verts.append_array([q[0], q[1], q[2], q[0], q[2], q[3]])
@@ -195,6 +199,8 @@ func paint(ci: CanvasItem) -> void:  # suelo de losas de colores: mullido, camin
 	ci.draw_mesh(floor_mesh, null)
 
 func _preview(ci: CanvasItem) -> void:  # adelanto de la región vecina al otro lado de cada claro
+	if cfg.get("seamless", false):  # en el mapa único la vecina ya se ve de verdad
+		return
 	var g: Dictionary = cfg.get("gates", {})
 	var pv: Dictionary = cfg.get("preview", {})
 	var n := int(cfg["tiles"])
@@ -258,5 +264,5 @@ func _detail(ci: CanvasItem, i: int, j: int, t: float) -> void:  # detalles de s
 
 func _process(delta: float) -> void:
 	super._process(delta)
-	if floor_node and not water.is_empty() and not cfg.has("layout"):  # las charcas brillan; en las zonas con layout el agua viva (WaterPatch) ya se mueve sola
+	if floor_node and not water.is_empty() and not cfg.has("layout") and main.world == self:  # las charcas brillan; en las zonas con layout el agua viva (WaterPatch) ya se mueve sola
 		floor_node.queue_redraw()
