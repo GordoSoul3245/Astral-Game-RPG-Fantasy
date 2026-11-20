@@ -217,7 +217,7 @@ func refresh() -> void:
 		_build_bar()
 	else:
 		for button in body.find_children("*", "Button", true, false):
-			if button is Button and not button is CheckButton:
+			if button is Button and not button is CheckButton and not button is _Slot:
 				style_button(button)
 
 func _has(id: String) -> bool:  # equipo conseguido, arma base o material/consumible con existencias
@@ -285,10 +285,10 @@ func _slot_button(id: String, size: float, equipped := false, count := 0, page_c
 	b.focus_mode = Control.FOCUS_NONE
 	var is_eq: bool = id != "" and p.equipment.has(id)
 	var tier := int(p.equipment[id]["tier"]) if is_eq else 0
-	var col: Color = TIER_COLORS.get(tier, Color(0.2, 0.23, 0.32))
+	var col: Color = TIER_COLORS.get(tier, Color("#6b4a2b"))
 	var chosen := id != "" and id == selected
 	for st in ["normal", "hover", "pressed", "focus", "disabled"]:
-		var bg := Color(0.07, 0.09, 0.15) if id == "" else col.darkened(0.82)
+		var bg := Color("#1e140c") if id == "" else col.darkened(0.82)
 		if st == "hover" and id != "":
 			bg = col.darkened(0.7)
 		if page_cell:  # casilla dibujada en el libro: sin fondo ni borde, solo el objeto centrado en el cuadrado del arte
@@ -881,29 +881,58 @@ func _build_options() -> void:
 		st.apply_audio())
 	_label("Los avisos de peligro (zonas rojas, línea de tiro) usan forma y color: no dependen de los destellos.", card, 15, MUTED)
 
-func _build_stats() -> void:
+func _build_stats() -> void:  # avatar | estadísticas actuales; mejora con puntos; equipo puesto abajo
 	var p = main.prog
-	var top := _card(body, Vector2(0, 0))
-	_label("Nivel %d" % p.level, top, 26, GOLD)
+	var ink := Color("#ead7b0")  # pergamino claro sobre la madera oscura
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 16)
+	body.add_child(top)
+	var av := _card(top, Vector2(250, 260))
+	_label("Héroe", av, 18, GOLD).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var hero := TextureRect.new()  # cuerpo completo, mirando al frente
+	hero.texture = load("res://art/hechicero/polished/idle_S_00.png")
+	hero.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	hero.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	hero.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	hero.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	av.add_child(hero)
+	var st := _card(top, Vector2(0, 260))
+	st.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_label("Nivel %d" % p.level, st, 26, GOLD)
 	var bar := ProgressBar.new()
 	bar.max_value = p.xp_needed()
 	bar.value = p.xp
-	bar.custom_minimum_size = Vector2(0, 22)
+	bar.custom_minimum_size = Vector2(0, 20)
 	bar.show_percentage = false
-	var fill := _box(Color(0.6, 0.4, 0.9), Color(0.6, 0.4, 0.9), 0, 6, 0)
-	bar.add_theme_stylebox_override("fill", fill)
-	bar.add_theme_stylebox_override("background", _box(Color(0.1, 0.1, 0.16), Color(0.25, 0.28, 0.4), 1, 6, 0))
-	top.add_child(bar)
-	_label("XP %d / %d      Puntos disponibles: %d" % [p.xp, p.xp_needed(), p.points], top, 18, Color.WHITE if p.points == 0 else GOOD)
-	var rows := _card(body, Vector2(0, 0))
-	rows.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	bar.add_theme_stylebox_override("fill", _box(Color("#c98a2e"), Color("#c98a2e"), 0, 4, 0))
+	bar.add_theme_stylebox_override("background", _box(Color("#24170e"), Color("#6b4a2b"), 1, 4, 0))
+	st.add_child(bar)
+	_label("XP %d / %d" % [p.xp, p.xp_needed()], st, 16, MUTED)
+	var g := GridContainer.new()
+	g.columns = 2
+	g.add_theme_constant_override("h_separation", 40)
+	g.add_theme_constant_override("v_separation", 6)
+	st.add_child(g)
+	for pair: Array in [["Vida máx.", str(main.hero_max_hp)], ["Maná máx.", str(main.hero_data["mana"])], ["Estamina máx.", str(main.hero_data["stamina"])],
+			["Daño de espada", "×%.2f" % p.melee_mult()], ["Daño de magia", "×%.2f" % p.magic_mult()], ["Daño recibido", "×%.2f" % p.defense_mult()],
+			["Movimiento", "×%.2f" % p.move_mult()], ["Vel. de ataque", "×%.2f" % p.attack_speed()]]:
+		var row := HBoxContainer.new()
+		_label(pair[0], row, 17, ink).custom_minimum_size = Vector2(170, 0)
+		_label(pair[1], row, 17, GOLD)
+		g.add_child(row)
+	var up := _card(body, Vector2(0, 0))
+	up.get_parent().size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var head := HBoxContainer.new()
+	up.add_child(head)
+	_label("Mejorar estadísticas", head, 22, GOLD).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_label("Puntos disponibles: %d" % p.points, head, 20, GOOD if p.points > 0 else MUTED)
 	var grid := GridContainer.new()
-	grid.columns = 4
-	grid.add_theme_constant_override("h_separation", 32)
-	grid.add_theme_constant_override("v_separation", 10)
-	rows.add_child(grid)
+	grid.columns = 8  # dos estadísticas por fila
+	grid.add_theme_constant_override("h_separation", 18)
+	grid.add_theme_constant_override("v_separation", 8)
+	up.add_child(grid)
 	for s: String in p.STATS:
-		_label(p.STAT_NAMES[s], grid, 19)
+		_label(p.STAT_NAMES[s], grid, 19, ink)
 		var bonus := int(p.bonus(s))
 		_label("%d%s" % [p.spent[s], ("  (+%d equipo)" % bonus) if bonus != 0 else ""], grid, 19, GOLD)
 		_label(p.STAT_INFO[s], grid, 15, MUTED)
@@ -912,18 +941,32 @@ func _build_stats() -> void:
 		b.focus_mode = Control.FOCUS_NONE
 		b.custom_minimum_size = Vector2(48, 34)
 		b.disabled = p.points <= 0
-		for st in ["normal", "hover", "pressed", "focus", "disabled"]:
-			var on: bool = st != "disabled"
-			b.add_theme_stylebox_override(st, _box(Color(0.35, 0.27, 0.1) if on else Color(0.1, 0.12, 0.18), GOLD if on else Color(0.25, 0.28, 0.36), 2, 8, 4))
 		b.pressed.connect(func() -> void:
 			p.spend(s)
 			main._apply_stats()
 			refresh())
 		grid.add_child(b)
-	rows.add_child(HSeparator.new())
-	_label("Vida máx. %d   ·   Maná máx. %d   ·   Estamina máx. %d" % [main.hero_max_hp, main.hero_data["mana"], main.hero_data["stamina"]], rows, 17)
-	_label("Daño de espada ×%.2f   ·   Daño de magia ×%.2f   ·   Daño recibido ×%.2f" % [p.melee_mult(), p.magic_mult(), p.defense_mult()], rows, 17)
-	_label("Velocidad de movimiento ×%.2f   ·   Velocidad de ataque ×%.2f" % [p.move_mult(), p.attack_speed()], rows, 17)
+	var eq := HBoxContainer.new()  # equipo puesto: 4 de armadura/accesorios y el arma
+	eq.alignment = BoxContainer.ALIGNMENT_CENTER
+	eq.add_theme_constant_override("separation", 30)
+	_card(body, Vector2(0, 0)).add_child(eq)
+	for slot: String in ["armor", "amulet", "ring", "grimoire", "sword"]:
+		var v := VBoxContainer.new()
+		v.alignment = BoxContainer.ALIGNMENT_CENTER
+		eq.add_child(v)
+		var id: String = p.equipped.get(slot, "")
+		if slot == "sword" and id == "":  # sin espada equipada: el arma que llevas en la barra
+			for h: String in main.hotbar:
+				if main.WEAPONS.has(h):
+					id = h
+					break
+		var cell := _slot_button(id, 84, true)
+		cell.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		v.add_child(cell)
+		var name_l := _label(main.name_of(id) if id != "" else p.SLOT_NAMES[slot], v, 14, ink if id != "" else MUTED)
+		name_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_l.custom_minimum_size = Vector2(120, 0)
+		name_l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 class _Slot extends Button:  # casilla de objeto: se puede arrastrar y, si es de la barra (index >= 0), recibe objetos
 	var menu: Node

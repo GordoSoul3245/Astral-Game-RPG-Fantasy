@@ -91,7 +91,7 @@ func run_checks() -> void:
 	assert(mage != null and fl.is_boss, "el piso 3 trae al mago de la tormenta")
 	var base_hp: int = int(main.creatures["storm_mage"]["hp"])
 	var mage_hp: int = mage.data["hp"]
-	assert(mage_hp > base_hp * 2, "el jefe está escalado a su nivel (%d contra %d)" % [mage_hp, base_hp])
+	assert(mage_hp > base_hp, "el jefe está escalado a su nivel (el primero lleva hp_mult 0.6) (%d contra %d)" % [mage_hp, base_hp])
 	fl.start(4)
 	await process_frame
 	var pool: Array = fl.cfg["enemies"]["melee_pool"]

@@ -56,13 +56,16 @@ func composition(n: int) -> Array:
 	var lv := level_for(n)
 	if is_boss_floor(n):
 		var def := boss_def(n)
+		if n <= every():  # primer jefe: el héroe recién empieza
+			def = def.duplicate()
+			def["hp_mult"] = float(def.get("hp_mult", 1.0)) * 0.6
 		out.append({"id": def["id"], "level": lv, "extra": def})
 		var tier := n / every() - 1
 		for id: String in def["escort"]:
 			var is_mini: bool = id in e.get("mini_pool", ["cyclops"])
 			var cnt: int = int(def["escort"][id]) + (tier / 3 if is_mini else tier / 2)
 			for i in mini(cnt, 8):
-				out.append({"id": id, "level": level_for(n, true) if is_mini else lv, "extra": {}})
+				out.append({"id": id, "level": level_for(n, true) if is_mini else lv, "extra": {"hp_mult": 0.5, "dmg_mult": 0.8} if is_mini else {}})  # el semijefe de escolta acompaña, no es la pelea principal
 		return out
 	var budget := mini(int(e["base"]) + int(float(n - 1) * float(e["per_floor"])), int(e["max"]))
 	var minis := 0
@@ -75,7 +78,7 @@ func composition(n: int) -> Array:
 	var mpool: Array = e.get("mini_pool", ["cyclops"])
 	var npool: Array = e.get("melee_pool", ["slime"])
 	for i in minis:  # los semijefes se turnan piso a piso: 2 cíclope, 4 lobo, 8 gólem...
-		out.append({"id": mpool[(n / int(e["mini_every"]) - 1 + i) % mpool.size()], "level": level_for(n, true), "extra": {}})
+		out.append({"id": mpool[(n / int(e["mini_every"]) - 1 + i) % mpool.size()], "level": level_for(n, true), "extra": {} if n >= int(e.get("mini_from", 3)) else {"hp_mult": 0.4, "dmg_mult": 0.7}})  # antes de mini_from el héroe aún es nivel 1-3: semijefe rebajado
 	for i in archers:
 		out.append({"id": "skeleton_archer", "level": lv, "extra": {}})
 	for i in rest - archers:
