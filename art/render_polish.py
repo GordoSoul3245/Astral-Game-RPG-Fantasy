@@ -104,7 +104,7 @@ def pose_hero(kind, phase):
     bpy.context.view_layer.update()
 
 
-def render_hero(names, preview):
+def render_hero(names, preview, only=None):
     cam, right, toward = K['_cam_vecs']()
     hidden = K['_prep']([])
     SCENE.camera = cam
@@ -113,11 +113,13 @@ def render_hero(names, preview):
             continue
         K['_facing']((right*dx+toward*dy).normalized(), RIG)
         for kind, count in [('idle',16), ('walk',16), ('run',16), ('hurt',6), ('death',12)]:
+            if only and kind not in only:
+                continue
             if 'locomotion' in sys.argv and kind not in ('walk', 'run'):
                 continue
             if 'hero_death' in sys.argv and kind != 'death':
                 continue
-            size = 192 if kind == 'death' else 128
+            size = 192 if kind in ('run','death') else 128
             SCENE.render.resolution_x = SCENE.render.resolution_y = size
             cam.data.ortho_scale = 2.75 * size / 128
             for i in (range(0,count, max(1,count//4)) if preview else range(count)):
@@ -130,20 +132,32 @@ def render_hero(names, preview):
         o.hide_render = v
 
 
+base_slash_pose = K['_pose']
+
+def articulated(rig, p):
+    base_slash_pose(rig, p)
+    t = p['sp'][1]
+    rotate('head', -p['sp'][0]*0.3, -t*0.3, 0)
+    rotate('cape', 5 + abs(t)*0.14, 0, -t*0.15)
+    for j in range(8):
+        rotate('coat.'+str(j), 3 + abs(t)*0.07, 0, -t*0.09)
+    lean = p['sp'][0]
+    rotate('spine', lean*0.55, t*0.52)
+    rotate('chest', lean*0.52, t*0.64)
+    rotate('clavicle.R', -lean*0.22, 0, -t*0.28)
+    rotate('clavicle.L', lean*0.12, 0, -t*0.18)
+    root_offset(t*0.001, -lean*0.0016, -0.065-abs(lean)*0.0014)
+    for side, sign in [('L',1),('R',-1)]:
+        ctrl = B['ankle_ik.'+side]
+        ankle = Vector((sign*0.18, -0.10 if side == 'R' else 0.09, 0.16))
+        ctrl.matrix = Matrix.Translation(ankle) @ ctrl.bone.matrix_local.to_3x3().to_4x4()
+        B['shin.'+side].constraints['Plant ankle'].influence = 1
+    bpy.context.view_layer.update()
+    for side in ('R','L'):
+        assert (B['foot.'+side].head-B['ankle_ik.'+side].head).length < 0.012
+
+
 def render_attacks(names):
-    # Keep hit-frame indices; add torso follow-through and delayed fabric at existing poses.
-    original = K['_pose']
-    def articulated(rig, p):
-        original(rig, p)
-        t = p['sp'][1]
-        rotate('head', -p['sp'][0]*0.3, -t*0.3, 0)
-        rotate('cape', 5 + abs(t)*0.14, 0, -t*0.15)
-        for j in range(8):
-            rotate('coat.'+str(j), 3 + abs(t)*0.07, 0, -t*0.09)
-        root_offset(0.025*t/45, 0, -0.045)
-        bpy.context.view_layer.update()
-        for side, sign in [('L',1),('R',-1)]:
-            leg(side, Vector((sign*0.18, -0.08 if side == 'R' else 0.08, 0.16)))
     K['_pose'] = articulated
     K['OUT_H'] = str(OUT) + '/'
     if 'KATANA_HAND' not in bpy.data.collections:
@@ -152,6 +166,12 @@ def render_attacks(names):
     if 'KATANA_FLAME' not in bpy.data.collections:
         K['add_flames']()
     K['render_slash'](names, prefix='f', fire=True)
+    for side in ('L','R'):
+        B['shin.'+side].constraints['Plant ankle'].influence = 0
+    reset()
+    K['OUT_H'] = str(ROOT / 'art/hechicero') + '/'
+    K['render_cast'](names)
+
 
 
 def render_dragon(names, preview):
@@ -173,8 +193,10 @@ if __name__ == '__main__':
     SCENE.render.filter_size = 0.0
     SCENE.eevee.taa_render_samples = 16
     names = ['S'] if preview else [v[0] for v in K['DIRS']]
-    render_hero(names, preview)
+    if "attacks" not in sys.argv:
+        render_hero(names, preview)
     if 'locomotion' not in sys.argv and 'hero_death' not in sys.argv:
         render_attacks(names)
-        render_dragon(names, preview)
+        if "attacks" not in sys.argv:
+            render_dragon(names, preview)
     print('POLISH_RENDER_COMPLETE', flush=True)

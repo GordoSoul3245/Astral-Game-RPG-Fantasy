@@ -8,7 +8,7 @@ PIVOTS = ['dr_panel']
 
 
 def build():
-    kit = Kit('DOOR', 'dr_root')
+    kit = Kit('DOOR', 'door_frame_root')
     STONE = ramp('Door • stone', 'Cel • midnight indigo', [(0.04, 0.045, 0.08), (0.09, 0.1, 0.18), (0.17, 0.19, 0.3), (0.28, 0.31, 0.45)])
     STONE2 = ramp('Door • stone light', 'Cel • midnight indigo', [(0.07, 0.08, 0.13), (0.14, 0.16, 0.26), (0.24, 0.27, 0.4), (0.38, 0.42, 0.58)])
     WOOD, OBS, GOLD = bpy.data.materials['Cel • dark wood'], bpy.data.materials['Cel • obsidian'], bpy.data.materials['Cel • antique gold']
@@ -44,4 +44,7 @@ def pose(kind, k):
 
 
 def render(kinds=(('open', 6),)):
-    render_fixed('DOOR', 'dr_root', pose, OUT, 'door_', tile_yaw(), RES, kinds)
+    render_fixed('DOOR', 'door_frame_root', pose, OUT, 'door_', tile_yaw(), RES, kinds)
+
+def render_dungeon():
+    render_fixed('DOOR', 'door_frame_root', pose, OUT, 'dungeon_', tile_yaw(), RES, [('open', 6)])

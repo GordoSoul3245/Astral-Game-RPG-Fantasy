@@ -9,8 +9,12 @@ from bpy_extras.object_utils import world_to_camera_view
 # Uso: blender -b blender/hechicero_floor.blend -P art/katana/calibrate_blade.py
 # Escribe data/blade_points.json: {"_sub": SUB, "slash_<tipo>": {dir: [[bx, by, tx, ty] por muestra]}}; la muestra i*SUB es el fotograma i.
 # Coordenadas en píxeles de un sprite de 128 px (origen arriba a la izquierda); pueden salirse del lienzo si la hoja sale del encuadre.
-ns = {}
-exec(open(r'C:/Users/Mateo/Documents/astral/art/katana/build_katana.py').read(), ns)
+from pathlib import Path
+from runpy import run_path
+polish = run_path(str(Path(__file__).resolve().parents[1] / 'render_polish.py'))
+ns = polish['K']
+if 'KATANA_HAND' not in bpy.data.collections:
+    ns['build_all']()
 OUT = r'C:/Users/Mateo/Documents/astral/data/blade_points.json'
 RES, SUB = 128, 4
 BASE_Y, TIP_Y = 0.12, 0.735   # a lo largo de la hoja (m, ejes locales de la espada; la hoja mide 0.70 + punta)
@@ -38,7 +42,7 @@ def lerp_pose(a, b, u):
 
 
 def sample(p):
-    ns['_pose'](rig, p)
+    polish['articulated'](rig, p)
     return blade_pt(BASE_Y) + blade_pt(TIP_Y)
 
 

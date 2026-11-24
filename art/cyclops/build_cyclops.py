@@ -10,7 +10,7 @@ K = 3.5                          # el cuadro es K veces mayor que el de 128 px (
 RES = int(128 * K)
 FEET = (68 + (RES - 128) / 2, 113.7 + (RES - 128) / 2)   # píxel de los pies dentro del sprite (FEET del juego + desplazamiento)
 DIRS = [('E', 1, 0), ('SE', 1, 1), ('S', 0, 1), ('SW', -1, 1), ('W', -1, 0), ('NW', -1, -1), ('N', 0, -1), ('NE', 1, -1)]
-PIVOTS = ['cy_body', 'cy_head', 'cy_armL', 'cy_armR', 'cy_legL', 'cy_legR']
+PIVOTS = ['cy_body', 'cy_head', 'cy_armL', 'cy_armR', 'cy_legL', 'cy_legR', 'cy_elbowL', 'cy_elbowR', 'cy_kneeL', 'cy_kneeR', 'cy_grip']
 
 
 def build():
@@ -132,19 +132,40 @@ def build():
     for nm, sx in (('cy_armL', 1), ('cy_armR', -1)):
         ap = pivot(nm, (sx * 1.5, 0.0, 3.6), body)
         ell((sx * 1.75, 0.0, 2.9), (0.58, 0.58, 0.95), SKIN, ap)
-        ell((sx * 1.9, -0.1, 1.9), (0.52, 0.52, 0.9), SKIN, ap)
-        ell((sx * 1.95, -0.2, 1.1), (0.55, 0.5, 0.5), SKIN2, ap)
+        elbow = pivot('cy_elbow' + nm[-1], (sx * 1.86, 0, 2.42), ap)
+        ell((sx * 1.9, -0.1, 1.9), (0.52, 0.52, 0.9), SKIN, elbow)
+        ell((sx * 1.95, -0.2, 1.1), (0.55, 0.5, 0.5), SKIN2, elbow)
         for dx in (-0.25, 0.0, 0.25):
-            ell((sx * 1.95 + dx, -0.35, 0.8), (0.14, 0.14, 0.26), SKIN2, ap)  # dedos
+            ell((sx * 1.95 + dx, -0.35, 0.8), (0.14, 0.14, 0.26), SKIN2, elbow)  # dedos
+
+        if sx == -1:
+            grip = pivot('cy_grip', (-1.95, -0.25, 1.06), elbow)
+            bark = ramp('Cyclops • heartwood', 'Cel • dark wood',
+                        [(0.12, 0.067, 0.033), (0.25, 0.135, 0.055), (0.43, 0.26, 0.12), (0.61, 0.42, 0.21)])
+            axis = Vector((-0.16, -1, -0.13)).normalized()
+            palm = Vector((-1.95, -0.25, 1.06))
+            rings = [(-0.55, 0.14), (-0.35, 0.13), (0.45, 0.14), (1.4, 0.25),
+                     (2.35, 0.40), (2.72, 0.42), (2.88, 0.31)]
+            for (a, ra), (b, rb) in zip(rings, rings[1:]):
+                beam(palm + axis * a, palm + axis * b, ra, rb, bark, grip, 10)
+            # Crestas longitudinales que siguen el ensanchamiento de la madera.
+            side = axis.cross(Vector((0, 0, 1))).normalized()
+            for i in range(7):
+                angle = i * math.tau / 7
+                outward = side * math.cos(angle) + axis.cross(side) * math.sin(angle)
+                for (a, ra), (b, rb) in zip(rings[2:-2], rings[3:-1]):
+                    beam(palm + axis*a + outward*ra*0.95, palm + axis*b + outward*rb*0.95,
+                         0.02, 0.035, WOOD, grip, 5)
 
     # --- piernas macizas con pies anchos
     for nm, sx in (('cy_legL', 1), ('cy_legR', -1)):
         lp = pivot(nm, (sx * 0.62, 0.0, 2.0), body)
         ell((sx * 0.62, 0.0, 1.4), (0.55, 0.55, 0.8), SKIN, lp)
-        ell((sx * 0.62, -0.05, 0.55), (0.46, 0.5, 0.65), SKIN, lp)
-        ell((sx * 0.62, -0.25, 0.16), (0.55, 0.78, 0.22), SKIN2, lp)
+        knee = pivot('cy_knee' + nm[-1], (sx * 0.62, 0, 0.96), lp)
+        ell((sx * 0.62, -0.05, 0.55), (0.46, 0.5, 0.65), SKIN, knee)
+        ell((sx * 0.62, -0.25, 0.16), (0.55, 0.78, 0.22), SKIN2, knee)
         for dx in (-0.3, 0.0, 0.3):
-            ell((sx * 0.62 + dx, -0.85, 0.12), (0.14, 0.14, 0.1), HRN, lp)   # uñas de los pies
+            ell((sx * 0.62 + dx, -0.85, 0.12), (0.14, 0.14, 0.1), HRN, knee)   # uñas de los pies
 
     # --- altura final = 2.5 veces el hechicero, apoyado en el suelo
     pose('idle', 0)
@@ -169,11 +190,16 @@ def pose(kind, k):
     def mv(n, dx=0.0, dy=0.0, dz=0.0):
         O[n].location = Vector(O[n]['rest']) + Vector((dx, dy, dz))
 
+    rot('cy_elbowR', -0.18)
+    rot('cy_elbowL', -0.10)
     if kind == 'idle':
         rot('cy_armL', 0.05, 0, 0.1)
         rot('cy_armR', 0.05, 0, -0.1)
     elif kind == 'walk':  # paso pesado: piernas y brazos opuestos, cuerpo que sube y baja
         ph = 2 * math.pi * k / 8
+        for side, phase in [('L', ph), ('R', ph + math.pi)]:
+            rot('cy_knee' + side, 0.48 * max(0, math.cos(phase)))
+            rot('cy_elbow' + side, -0.25 - 0.18 * math.cos(phase))
         a = 0.45 * math.sin(ph)
         rot('cy_legL', a); rot('cy_legR', -a)
         rot('cy_armL', -0.35 * math.sin(ph), 0, 0.1); rot('cy_armR', 0.35 * math.sin(ph), 0, -0.1)
@@ -181,14 +207,29 @@ def pose(kind, k):
         rot('cy_body', 0.03 * math.sin(2 * ph), 0.05 * math.sin(ph), 0.06 * math.sin(ph))
         rot('cy_head', 0.05 * math.sin(2 * ph + 1))
     elif kind == 'attack':  # 8 fotogramas: alza el brazo (preparar), golpea el suelo (fotograma 5), recupera
-        arm_r = [0.0, -0.8, -1.6, -2.3, -2.8, -0.9, -0.3, 0.0][k]
-        arm_l = [0.0, -0.3, -0.6, -0.9, -1.0, -0.4, -0.1, 0.0][k]
-        lean = [0.0, -0.05, -0.1, -0.13, -0.14, 0.2, 0.12, 0.0][k]
-        rot('cy_armR', arm_r, 0, -0.1); rot('cy_armL', arm_l, 0, 0.1)
-        rot('cy_body', lean); rot('cy_head', lean * 0.5)
-        mv('cy_body', 0, [0, 0, 0, 0, 0, -0.18, -0.1, 0][k], [0, 0.02, 0.05, 0.08, 0.1, -0.12, -0.05, 0][k])
+        # Primero carga sobre la pierna trasera; el hombro arrastra la maza
+        # y la cabeza sigue al torso un instante después del contacto.
+        arm = [-0.08, -0.48, -1.52, -2.66, -2.82, -0.43, -0.36, -0.12][k]
+        twist = [0, -0.12, -0.24, -0.35, -0.33, 0.28, 0.19, 0.04][k]
+        lean = [0.03, 0.13, 0.01, -0.14, -0.17, 0.48, 0.36, 0.10][k]
+        drop = [0, -0.12, -0.04, 0.06, 0.07, -0.28, -0.20, -0.05][k]
+        rot('cy_body', lean, twist * 0.35, twist)
+        mv('cy_body', twist * 0.26, -lean * 0.48, drop)
+        bend = [0.1, 0.38, 0.82, 1.05, 0.92, 0.04, 0.12, 0.16][k]
+        rot('cy_elbowR', -bend)
+        rot('cy_elbowL', -0.18 - bend * 0.55)
+        rot('cy_grip', [0, -0.18, -0.38, -0.65, -0.52, 0.39, 0.3, 0.04][k])
+        knee = [0, 0.33, 0.18, 0.12, 0.14, 0.62, 0.45, 0.12][k]
+        for side, weight in [('L', 1), ('R', 0.72)]:
+            rot('cy_knee' + side, knee * weight)
+            rot('cy_leg' + side, -lean - knee * weight * 0.5)
+        rot('cy_armR', arm + bend * 0.45, twist * 0.55, -0.12 - abs(twist) * 0.45)
+        rot('cy_armL', -0.12 - abs(twist) * 1.65, 0, 0.14 + abs(twist))
+        rot('cy_head', [-0.02, -0.09, 0, 0.10, 0.12, -0.21, -0.09, -0.03][k], 0, -twist * 0.65)
     elif kind == 'hurt':  # golpe recibido: retrocede el torso, la cabeza se sacude y los brazos se abren
         r = [1.0, 0.65, 0.3, 0.08][k]
+        rot('cy_elbowR', -0.35 * r); rot('cy_elbowL', -0.48 * r)
+        rot('cy_kneeL', 0.24 * r); rot('cy_kneeR', 0.18 * r)
         rot('cy_body', -0.18 * r); mv('cy_body', 0, 0.12 * r, -0.04 * r)
         rot('cy_head', -0.22 * r, 0, 0.1 * r)
         rot('cy_armL', 0.35 * r, 0, 0.1 + 0.35 * r); rot('cy_armR', 0.35 * r, 0, -0.1 - 0.35 * r)

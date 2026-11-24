@@ -340,6 +340,13 @@ def render_cast(names, res=128, prefix=''):
         _facing((right * dx + toward * dy).normalized(), rig)
         for k, f in enumerate([1, 7, 13, 19, 25, 31, 37, 43]):
             s.frame_set(f)
+            twist = (0,-6,-14,-18,16,11,5,0)[k]
+            rig.pose.bones['chest'].rotation_mode = 'XYZ'
+            rig.pose.bones['chest'].rotation_euler = (math.radians(twist*0.32),math.radians(twist),0)
+            for side, factor in [('R',-0.6),('L',0.32)]:
+                shoulder = rig.pose.bones['clavicle.'+side]
+                shoulder.rotation_mode = 'XYZ'
+                shoulder.rotation_euler.z = math.radians(twist*factor)
             r.filepath = OUT_H + f'{prefix}cast_{name}_{k:02d}.png'
             bpy.ops.render.render(write_still=True)
     rig.rotation_euler[2] = 0
