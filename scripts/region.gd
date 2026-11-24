@@ -168,13 +168,27 @@ func paint(ci: CanvasItem) -> void:  # suelo de losas de colores: mullido, camin
 			verts.append_array([quad[0], quad[1], quad[2], quad[0], quad[2], quad[3]])
 			for k in 6:
 				cols.append(col)
-			if not water.has(Vector2i(i, j)) and not paths.has(Vector2i(i, j)):  # textura: motas claras y oscuras repartidas por la casilla (hexágonos pequeños)
+			if paths.has(Vector2i(i,j)):
+				var center := (quad[0]+quad[2])*0.5
+				for side in 4:
+					var neighbour: Vector2i = Vector2i(i,j) + [Vector2i.UP, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT][side]
+					if paths.has(neighbour) or water.has(neighbour):
+						continue
+					for k in 5:
+						var a := quad[side].lerp(quad[(side+1)%4], k/5.0)
+						var b := quad[side].lerp(quad[(side+1)%4], (k+1)/5.0)
+						var seed_value := posmod(i*31+j*17+side*23+k*13,11)
+						var tip := a.lerp(b,0.5).lerp(center, 0.07+seed_value*0.013)
+						verts.append_array([a,b,tip])
+						cols.append_array([base,base,col.lerp(base,0.32)])
+			if not water.has(Vector2i(i, j)):  # textura: motas claras y oscuras repartidas por la casilla (hexágonos pequeños)
 				var c: Vector2 = _corner(i + 0.5, j + 0.5)
 				for k in 3:
 					var hh := (i * 131 + j * 17 + k * 53) % 100
 					var p := c + Vector2(float(hh % 21) - 10.0, float((hh * 7) % 9) - 4.0) * sc
 					var r := (1.4 + float(hh % 3) * 0.5) * sc
-					var mc := base.darkened(0.1) if hh % 2 == 0 else base.lightened(0.12)
+					var surface := col if paths.has(Vector2i(i,j)) else base
+					var mc := surface.darkened(0.1) if hh % 2 == 0 else surface.lightened(0.08)
 					for e in 6:
 						verts.append_array([p, p + Vector2.from_angle(e * TAU / 6.0) * r, p + Vector2.from_angle((e + 1) * TAU / 6.0) * r])
 						cols.append_array([mc, mc, mc])

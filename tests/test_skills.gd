@@ -62,7 +62,7 @@ func run_checks() -> void:
 	main.mana = main.hero_data["mana"]
 	main.cooldown = 0.0
 	main._select(0)
-	main._select(main.hotbar.find("grimorio_ignis"))
+	assert(main.wield("grimorio_ignis"))
 	main._attack("light")
 	assert(main.cooldown < cd_before - 0.01, "Chispa veloz acorta la espera (%.3f contra %.3f)" % [main.cooldown, cd_before])
 	# aoe del proyectil

@@ -17,15 +17,24 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	visible = not main.in_interior and not (main.in_dungeon and not main.in_mine)
 	var goal: Vector2 = main.pos + Vector2(-34.0 + 68.0 * float(slot), 22.0)
+	if not visible:
+		return
+	if main.world.blocked(main.ground_to_tile(goal), 0.12):
+		goal = main.pos
 	var d: Vector2 = goal - pos
 	var moving := false
 	if d.length() > 600.0:  # cambió de región: se coloca junto al héroe
 		pos = goal
 	elif d.length() > 26.0:
 		var speed := 120.0 if d.length() < 140.0 else 190.0
-		pos += d.normalized() * speed * delta
-		look = d
-		moving = true
+		var next: Vector2 = goal
+		if main.world.blocked(main.ground_to_tile(pos.move_toward(goal, minf(24, d.length()))), 0.12):
+			next = main.world.next_waypoint(pos, goal, 0.12)
+		var previous := pos
+		pos = main.world.move_collide(pos, pos.move_toward(next, speed * delta), 0.12)
+		moving = not previous.is_equal_approx(pos)
+		if moving:
+			look = pos - previous
 	position = pos * main.SCALE
 	z_index = int(pos.y)
 	idle_t = 0.0 if moving else idle_t + delta

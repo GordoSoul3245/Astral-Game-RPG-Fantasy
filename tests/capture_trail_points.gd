@@ -20,7 +20,7 @@ class Marks extends Node2D:
 	func _draw() -> void:
 		var f: int = main.hero.frame
 		var p: Array = table[anim][dir][f * int(table["_sub"])]
-		var o: Vector2 = main.hero.position + main.hero.offset * main.SCALE
+		var o: Vector2 = main.hero.position + (main.hero.offset - main.HERO_FRAME_CENTER) * main.SCALE
 		draw_circle(o + Vector2(p[0], p[1]) * main.SCALE, 7.0, Color(1, 0.1, 0.1))
 		draw_circle(o + Vector2(p[2], p[3]) * main.SCALE, 7.0, Color(0.1, 1, 0.1))
 

@@ -82,15 +82,21 @@ func run_checks() -> void:
 	main._strike()
 	assert(a.hp == 100, "fuera de alcance no golpea")
 
-	# estructuras: el castillo usa su zócalo real; el árbol bloquea proyectiles con el follaje y al caminar solo con el tronco
-	var mp: Dictionary = main._read_json("res://data/map.json")
-	var castle: Dictionary = mp["objects"].filter(func(o: Dictionary) -> bool: return o["sprite"] == "castle")[0]
-	var cr: Array = castle["rect"]
-	assert(cr[2] - cr[0] >= 4.4, "el rectángulo del castillo cubre las torres (%.2f m)" % (cr[2] - cr[0]))
-	var tree: Dictionary = mp["objects"].filter(func(o: Dictionary) -> bool: return o["sprite"].begins_with("tree"))[0]
-	assert(tree["pcircle"] > tree["circle"], "el follaje frena proyectiles")
-	var tp := Vector2(tree["tile"][0], tree["tile"][1])
-	assert(not main.world.hits_structure(tp + Vector2(0.45, 0), 0.0), "caminando, solo cuenta el tronco")
-	assert(main.world.hits_structure(tp + Vector2(0.45, 0), 0.0, true), "un proyectil choca con el follaje")
+	# Verifica el mapa construido, incluidos los árboles procedurales y las casas del pueblo.
+	main._enter_zone("bosque")
+	var tested_canopy := false
+	for circle: Array in main.world.circles:
+		if circle[2] <= circle[1]:
+			continue
+		var edge: Vector2 = circle[0] + Vector2.RIGHT * (circle[1] + circle[2]) * 0.5
+		if not main.world.hits_structure(edge, 0.01):
+			assert(main.world.hits_structure(edge, 0.01, true))
+			tested_canopy = true
+			break
+	assert(tested_canopy, "hay árboles cuyo follaje detiene el proyectil por encima del tronco")
+	main._switch_region("valle")
+	assert(not main.world.rects.is_empty(), "las construcciones tienen huella")
+	for rect: Rect2 in main.world.rects:
+		assert(main.world.hits_structure(rect.get_center(), 0.1))
 	print("PASS hitbox: siluetas cubiertas, golpes y estructuras ajustados al sprite")
 	quit()

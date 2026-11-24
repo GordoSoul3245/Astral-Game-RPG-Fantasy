@@ -59,6 +59,19 @@ func setup(data: Dictionary) -> void:
 		else:
 			_trim(s)
 		add_child(s)
+		var kind := str(o["sprite"])
+		if kind.begins_with("tree_") or kind in ["house", "stall", "portal", "pueblo_piedras"]:
+			var extent := Vector2(27, 74)
+			match kind:
+				"house": extent = Vector2(56, 84)
+				"stall": extent = Vector2(27, 48)
+				"portal": extent = Vector2(29, 70)
+				"pueblo_piedras": extent = Vector2(11, 13)
+			preload("res://scripts/projected_shadow.gd").add(s, Vector2(sp["feet"][0], sp["feet"][1]), extent.x, extent.y)
+		if kind in ["house", "stall"]:
+			preload("res://scripts/projected_shadow.gd").light_sprite(s)
+		if kind == "portal":
+			_portal_light.call_deferred(s, Vector2(sp["feet"][0], sp["feet"][1]-12))
 		if o["sprite"].begins_with("tree_") and not sp.has("anim"):
 			_living_tree(s, sp, tile)
 		if not o["sprite"].begins_with("rock") and o["sprite"] != "pueblo_piedras":  # las rocas son bajas: no tapan
@@ -68,6 +81,13 @@ func setup(data: Dictionary) -> void:
 
 # Rendimiento: un sprite se recorta a su parte no transparente (region_rect) y se desplaza lo mismo (offset), así se dibuja
 # igual pero la GPU no pinta los márgenes vacíos. El offset base queda en "base_off" (las sacudidas lo usan de referencia).
+func _portal_light(sprite: Sprite2D, local_pos: Vector2) -> void:
+	var lamp: PointLight2D = main.combat.light(Color(0.72, 0.30, 1.0), 0.70, 2.8)
+	lamp.position = local_pos
+	sprite.add_child(lamp)
+	lamp.scale = Vector2.ONE / sprite.global_scale
+	lamp.add_to_group("gate")
+
 func _image(tex: Texture2D) -> Image:
 	if not masks.has(tex):
 		var im: Image = tex.get_image()

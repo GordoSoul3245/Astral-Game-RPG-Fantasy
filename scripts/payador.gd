@@ -73,6 +73,7 @@ func _ready() -> void:
 	var l: PointLight2D = main.combat.light(Color(1.0, 0.62, 0.3), 0.9, 2.6)
 	l.position = (fg - Vector2(0, 10)) * main.SCALE
 	add_child(l)
+	l.add_to_group("hearth")
 	ground = main.tile_to_ground(seat_tile)
 	# Los asientos rodean el fuego. El punto del asiento es la cadera del gaucho en el suelo.
 	for lg: Vector2 in [ground, fg + Vector2(-70, 25), fg + Vector2(70, 25)]:
@@ -91,6 +92,8 @@ func _ready() -> void:
 	man.position = (ground - FEET) * main.SCALE
 	man.z_index = int(ground.y)
 	add_child(man)
+	preload("res://scripts/projected_shadow.gd").light_sprite(man)
+	preload("res://scripts/projected_shadow.gd").add(man, FEET, 15, 45)
 	_face(fg - ground)
 	door = main._add_door(seat_tile + Vector2(0.6, 0.6), "Hablar con el viejo", _talk, false)
 	door.reach = 1.8

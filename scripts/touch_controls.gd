@@ -191,7 +191,7 @@ func _press(b: String) -> void:
 			_sprint_idle = 0.0
 		"next":
 			if not main.attacking:
-				main._select((main.selected + 1) % main.hotbar.size())
+				main._select(-1 if main.selected == main.hotbar.size()-1 else main.selected+1)
 
 func _release(b: String) -> void:
 	match b:

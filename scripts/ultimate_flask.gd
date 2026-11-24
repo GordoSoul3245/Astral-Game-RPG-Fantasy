@@ -7,7 +7,7 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
 	offset_left = 16
 	offset_right = 144
-	scale = Vector2.ONE * preload("res://scripts/health_bar.gd").HUD_SCALE
+	scale = Vector2.ONE * 1.15
 	offset_top = -190
 	offset_bottom = -62
 	mouse_filter = Control.MOUSE_FILTER_IGNORE

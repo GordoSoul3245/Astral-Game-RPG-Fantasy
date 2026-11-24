@@ -163,15 +163,14 @@ func _release() -> void:
 	state = "throw"
 	t = 0.0
 
-var tips: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/rod_tips.json"))  # medido con tests/gen_rod_tips.gd
+var tips: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/rod_tips.json"))
 
-func tip() -> Vector2:  # punta de la caña, en suelo: el píxel medido del fotograma actual
-	var key: String = String(main.hero.animation)
-	var n := 0
-	if not (key.begins_with("fish_wait") or key.begins_with("fish_reel")):  # los fotogramas de lanzar cortan la caña: usa la de espera
+func tip() -> Vector2:
+	var key := String(main.hero.animation)
+	var n: int = main.hero.frame
+	if not tips.has(key):
 		key = "fish_wait_" + main.facing
-	else:
-		n = main.hero.frame
+		n = 0
 	var list: Array = tips.get(key, [])
 	if list.is_empty():
 		return main.pos + aim * 22.0 + Vector2(0, -46)
@@ -216,7 +215,8 @@ func _bite() -> void:
 	var diff := 20.0 if hooked["junk"] else float(cfg["fish"][hooked["id"]]["diff"])
 	bite_t = maxf(0.5, float(cfg["bite_window"]) - diff * 0.003) + (0.3 if main.prog.rod_parts.has("line") else 0.0)
 	state = "bite"
-	main.shake(2.0)
+	t = 0.0
+	main.shake(4.0)
 	main.combat.play_at("bite", main.pos)
 
 func _hook() -> void:
@@ -330,6 +330,8 @@ func _draw() -> void:
 		has_bob = true
 	elif state in ["wait", "bite", "fight"]:
 		bob = _screen(bob_g, -1.5 * dip if state != "fight" else 0.0)
+		if state == "bite":
+			bob += Vector2(2.0 * sin(t * 18.0), 5.0 * absf(sin(t * 10.0))) * sc
 		has_bob = true
 		_ripples(_screen(bob_g))
 	if has_bob:

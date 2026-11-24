@@ -14,7 +14,10 @@ var spr: AnimatedSprite2D
 var anim_t := 0.0
 
 func _ready() -> void:
+	preload("res://scripts/projected_shadow.gd").add(self, Vector2.ZERO, 10 * main.SCALE, 40 * main.SCALE)
 	spr = preload("res://scripts/life_sprite.gd").build(self, main, "res://art/fauna/villager_", {"idle": 1})
+	if spr:
+		preload("res://scripts/projected_shadow.gd").light_sprite(spr)
 	hit = preload("res://scripts/life_sprite.gd").hitbox(main, "res://art/fauna/villager_")
 	if spr:
 		spr.modulate = Color(1.0, 0.78, 0.62) if role == "merchant" else Color(0.7, 0.74, 0.95)  # un tono de ropa para cada uno

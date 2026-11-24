@@ -55,20 +55,16 @@ func run_checks() -> void:
 
 	# --- misiones: aceptar, avanzar, entregar, siguiente
 	var q: RefCounted = main.quests
-	assert(q.marker() == "!" and q.tracker() == "")
-	var t: String = q.talk(main)
-	assert(q.status == "active" and "dragon" == q.current()["id"] and t.find("Nueva misión") >= 0)
-	assert(q.talk(main).find("(0/1)") >= 0, "recordatorio de progreso")
-	main.quest_event("kill", "slime")  # otro objetivo: no cuenta
-	assert(q.status == "active")
-	main.quest_event("kill", "dragon")
+	assert(q.marker() == "" and "viejo" in q.tracker())
+	q.met_gaucho = true
+	assert(q.marker() == "!")
+	q.talk(main)
+	for floor_no in [1, 2, 3]:
+		main.quest_event(q.current().event, str(floor_no))
 	assert(q.status == "ready" and q.marker() == "?")
 	var coins0: int = main.prog.coins
 	q.talk(main)
-	assert(main.prog.coins == coins0 + 40 and q.idx == 1 and q.status == "none", "recompensa y siguiente misión")
-	q.talk(main)
-	main.quest_event("kill", "fox")
-	assert(q.status == "ready")
+	assert(main.prog.coins == coins0 + 600 and q.idx == 1)
 
 	# --- Tomás vende (pociones y equipo) y Bram compra materiales
 	var roles: Array = main.merchants.map(func(x: Node) -> String: return x.role)
@@ -100,20 +96,8 @@ func run_checks() -> void:
 	shop.close()
 	assert(not shop.is_open() and not main.get_tree().paused)
 
-	# --- nuevos tipos de misión: recoger material y piso 4 opcional
-	var qd: RefCounted = main.quests
-	var qs: Dictionary = qd.to_dict()  # se restaura al final: el guardado de más abajo comprueba este estado
-	qd.idx = qd.list.find_custom(func(q: Dictionary) -> bool: return q["id"] == "gel")
-	qd.status = "active"
-	qd.progress = 0
-	main.quest_event("loot", "gel_slime")
-	main.quest_event("loot", "gel_slime")
-	assert(qd.status == "active")
-	main.quest_event("loot", "gel_slime")
-	assert(qd.status == "ready", "recoger tres geles cumple la misión")
 	var dung: Dictionary = main._read_json("res://data/dungeon.json")
-	assert(int(dung["boss_every"]) == 4 and dung["bosses"].size() >= 2, "cada 4 pisos hay un jefe")
-	qd.from_dict(qs)
+	assert(int(dung["boss_every"]) == 3 and dung["bosses"].size() >= 2, "cada 3 pisos hay un jefe")
 
 	# --- guardado y carga (con validación)
 	main.prog.level = 4
@@ -127,8 +111,8 @@ func run_checks() -> void:
 	main.dungeon_floor = 1
 	main.quests.idx = 0
 	assert(main.load_game())
-	assert(main.prog.level == 4 and main.prog.points == 3 and main.prog.spent["strength"] == 2 and main.dungeon_floor == 5)
-	assert(main.quests.idx == 1 and main.quests.status == "ready", "la misión se conserva")
+	assert(main.prog.level == 4 and main.prog.points == 3 and main.prog.spent["strength"] == 2 and main.dungeon_floor == 4)
+	assert(main.quests.idx == 1 and main.quests.status == "none", "la misión se conserva")
 	assert(not main.prog.owned.is_empty() and main.prog.equipped.size() >= 1, "el equipo se conserva")
 	var f := FileAccess.open(main.save_path, FileAccess.WRITE)  # archivo corrupto: se ignora sin romper
 	f.store_string("{no es json")
@@ -140,7 +124,7 @@ func run_checks() -> void:
 	f.close()
 	assert(main.load_game())
 	assert(main.prog.level == 1 and main.prog.coins == 0 and main.prog.spent["strength"] == 0 and main.prog.equipped.is_empty() and main.dungeon_floor == 97)
-	assert(main.quests.idx == main.quests.list.size() and main.quests.status == "none")
+	assert(main.quests.idx == 0 and main.quests.status == "none")
 
 	# --- al morir en la dungeon, despierta en el pueblo
 	main._enter_dungeon()

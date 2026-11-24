@@ -45,7 +45,7 @@ func _ready() -> void:
 	_add(first * sub)
 
 func _world(p: Vector2) -> Vector2:  # píxel del sprite del héroe -> mundo, con el héroe donde está ahora
-	return main.hero.position + (p + main.hero.offset) * main.SCALE
+	return main.hero.position + (p + (main.hero.offset - main.HERO_FRAME_CENTER)) * main.SCALE
 
 func _add(i: int, stamp := 0.0) -> void:
 	var s: Array = pts[mini(i, pts.size() - 1)]

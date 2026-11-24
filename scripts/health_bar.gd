@@ -9,8 +9,8 @@ const LIGHT := Color("#f3cf7a")
 const FLASK := preload("res://art/ui/frasco_mana.png")
 const BOLT := preload("res://art/ui/rayo_estamina.png")
 const STAR := preload("res://art/ui/estrella_xp.png")
-const HUD_SCALE := 1.15
-enum Kind { HEALTH, MANA, STAMINA, XP }
+const HUD_SCALE := 1.15 * 1.17
+enum Kind { HEALTH, MANA, STAMINA, XP, ORB }
 var kind: Kind
 
 func _init(resource_kind := Kind.HEALTH) -> void:
@@ -25,7 +25,7 @@ func _ready() -> void:
 		offset_right = offset_left + 260
 		offset_top = -16 - size.y * HUD_SCALE
 		offset_bottom = offset_top + 38
-	else:
+	elif kind != Kind.ORB:
 		position = Vector2(16, 1 + kind * (roundi(size.y * HUD_SCALE) + 2))
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -56,18 +56,23 @@ func _draw() -> void:
 	var fraction := get_as_ratio()
 	if fraction > 0:
 		var end := 19 + roundi(103 * fraction)
-		var hue := lerpf(0.005, 0.295, fraction)
-		var fill := Color.from_hsv(hue, 0.70, 0.86)
+		var fill := Color("#ce383e")
 		if kind == Kind.MANA:
 			fill = Color("#546fb9")
-		elif kind == Kind.XP:
+		elif kind in [Kind.XP, Kind.ORB]:
 			fill = Color("#9972c1")
 		elif kind == Kind.STAMINA:
 			fill = Color("#64a454")
 		_band(17, end, 7, 13, 3, fill)
 		draw_rect(Rect2(17, 7, end - 17, 1), fill.lightened(0.28))
 		draw_rect(Rect2(17, 12, end - 17, 1), fill.darkened(0.24))
-	if kind == Kind.XP:
+	if kind == Kind.ORB:
+		draw_circle(Vector2(11,10), 9, OUTLINE)
+		draw_circle(Vector2(11,10), 8, GOLD)
+		draw_circle(Vector2(11,10), 7, Color("#53337c"))
+		draw_circle(Vector2(10,9), 5, Color("#9252d1"))
+		draw_rect(Rect2(7,5,4,2), Color("#eed0ff"))
+	elif kind == Kind.XP:
 		draw_texture_rect(STAR, Rect2(2, 0, 19, 19), false)
 	elif kind == Kind.STAMINA:
 		draw_texture_rect(BOLT, Rect2(2, 0, 19, 19), false)

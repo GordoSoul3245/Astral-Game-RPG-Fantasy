@@ -74,7 +74,7 @@ func step(dt: float, hold: bool) -> void:
 	retarget -= dt
 	if retarget <= 0.0:
 		_pick_target()
-	fish = move_toward(fish, target, (0.18 + diff / 100.0 * 0.7) * boost * dt)
+	fish = move_toward(fish, target, (0.15 + diff / 100.0 * 0.55) * boost * dt)
 	if inside():
 		progress += GAIN * gain_mult * dt
 	else:
@@ -87,13 +87,13 @@ func step(dt: float, hold: bool) -> void:
 
 func _pick_target() -> void:
 	boost = 1.0
-	var calm := 1.3 - diff / 150.0   # los peces difíciles cambian de idea antes
+	var calm := 1.5 - diff / 180.0   # los peces difíciles cambian de idea antes
 	match move:
 		"dart":
 			if rng.randf() < 0.35:  # dardo: cruza la barra a toda velocidad
 				target = 1.0 - fish if absf(1.0 - fish - fish) > 0.3 else rng.randf()
-				boost = 2.6
-				retarget = 0.45
+				boost = 1.8
+				retarget = 0.6
 			else:
 				target = clampf(fish + rng.randf_range(-0.15, 0.15), 0.03, 0.97)
 				retarget = rng.randf_range(0.3, 0.7) * calm

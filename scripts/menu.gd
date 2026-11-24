@@ -11,6 +11,15 @@ const BAD := Color(0.95, 0.4, 0.4)
 const BACKPACK_SLOTS := 16
 
 var main: Node
+var weapon_from_inventory := false
+var hud_opener: Control
+var panel_back: Button
+var change_weapon: Button
+var picker_origin := "weapon"
+var preview_weapon := ""
+var physical_tab := true
+var weapon_view := ""
+var talent := "discipline"
 var tab := "inv"
 var selected := ""               # objeto elegido: se muestra en el panel de detalle
 var body: VBoxContainer
@@ -62,7 +71,14 @@ func _ready() -> void:
 	v.add_child(head)
 	heading = _label("", head, 30, Color("#f3d69a"))
 	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	change_weapon = _weapon_button(head,"Cambiar arma",func():
+		picker_origin = tab
+		preview_weapon = weapon_view
+		physical_tab = main.items[preview_weapon].light.has("stamina")
+		_set_tab("weapon_picker"))
+	change_weapon.hide()
 	var close := Button.new()
+	panel_back = close
 	close.text = "Volver   [Esc]"
 	style_button(close)
 	close.pressed.connect(_close_panel)
@@ -124,11 +140,11 @@ static func _tex(path: String, side: int, top: int, pad_x := 12, pad_y := 8) -> 
 	return sb
 
 static func style_button(button: Button) -> void:  # botón de cuero de PixelLab: más claro al pasar, apagado si no se puede
-	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
-		var sb := _tex("res://art/ui/menu_boton_x2.png", 22, 14, 26, 6)
-		sb.texture_margin_bottom = 14
-		sb.modulate_color = {"hover": Color(1.25, 1.15, 1.05), "focus": Color(1.25, 1.15, 1.05), "pressed": Color(0.85, 0.8, 0.75), "disabled": Color(0.5, 0.5, 0.5)}.get(state, Color.WHITE)
-		button.add_theme_stylebox_override(state, sb)
+	for state in ["normal","hover","pressed","focus","disabled"]:
+		var sb := _tex("res://art/ui/marco_astral.png",10,10,14,8)
+		sb.modulate_color = {"hover":Color(1.24,1.14,1.22),"focus":Color(1.3,1.24,1.15),"pressed":Color(0.85,0.74,0.89),"disabled":Color(0.62,0.64,0.70)}.get(state,Color.WHITE)
+		button.add_theme_stylebox_override(state,sb)
+	button.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	button.add_theme_color_override("font_color", Color("#f4dfae"))
 	button.add_theme_color_override("font_disabled_color", Color("#9a8a70"))
@@ -136,11 +152,21 @@ static func style_button(button: Button) -> void:  # botón de cuero de PixelLab
 	button.add_theme_constant_override("outline_size", 4)
 
 func _close_panel() -> void:
+	if tab == "weapon_picker":
+		_set_tab(picker_origin)
+		return
+	if tab in ["weapon","weapon_tree"] and weapon_from_inventory:
+		weapon_from_inventory = false
+		_set_tab("inv")
+		return
 	visible = false
 	if tab == "opt" and options_closed.has_connections():
 		options_closed.emit()
 	else:
 		get_tree().paused = false
+		if is_instance_valid(hud_opener) and hud_opener.is_visible_in_tree():
+			hud_opener.grab_focus()
+		hud_opener = null
 
 func _label(text: String, parent: Node, size := 18, color := Color.WHITE) -> Label:
 	var l := Label.new()
@@ -173,13 +199,16 @@ func _set_tab(t: String) -> void:
 	tab = t
 	refresh()
 
-func open_tab(t: String) -> void:  # desde los botones del HUD
+func open_tab(t: String, opener: Control = null) -> void:  # desde los botones del HUD
 	if main.transitioning:
 		return
+	hud_opener = opener
 	tab = t
 	visible = true
 	get_tree().paused = true
 	refresh()
+	if opener:
+		panel_back.grab_focus()
 
 func refresh() -> void:
 	var p = main.prog
@@ -192,6 +221,13 @@ func refresh() -> void:
 	for c in book_items.get_children():
 		book_items.remove_child(c)
 		c.queue_free()
+	change_weapon.visible = tab in ["weapon","weapon_tree"]
+	var armory := change_weapon.visible or tab == "weapon_picker"
+	panel.custom_minimum_size = Vector2(990,570) if armory else Vector2(1180,720)
+	if armory or tab in ["magic","stats","fish"]:
+		panel.add_theme_stylebox_override("panel",_tex("res://art/ui/marco_astral.png",12,12,28,24))
+	else:
+		panel.add_theme_stylebox_override("panel",_tex("res://art/ui/menu_oscuro_x4.png",24,52,40,30))
 	panel.get_parent().visible = tab not in ["inv", "craft"]
 	book.visible = tab in ["inv", "craft"]
 	if tab == "inv":
@@ -204,6 +240,10 @@ func refresh() -> void:
 		book_pos = CRAFT_POS
 		book_bg.position = book_pos
 		_build_craft_book()
+	elif tab == "weapon_picker":
+		_build_weapon_picker()
+	elif tab in ["weapon","weapon_tree"]:
+		_build_weapon()
 	elif tab == "fish":
 		_build_fishing()
 	elif tab == "magic":
@@ -215,7 +255,7 @@ func refresh() -> void:
 	bar_row.get_parent().visible = book.visible
 	if book.visible:
 		_build_bar()
-	else:
+	elif not armory:
 		for button in body.find_children("*", "Button", true, false):
 			if button is Button and not button is CheckButton and not button is _Slot:
 				style_button(button)
@@ -247,8 +287,9 @@ func _build_bar() -> void:  # barra de objetos: arrastra aquí desde la mochila;
 func _backpack() -> Array:  # todo lo que llevas: equipo, consumibles y materiales (los planos ya se aprenden al recibirlos)
 	var p = main.prog
 	var out: Array = p.owned.duplicate()
+	out.erase(p.weapon)
 	for w: String in main.WEAPONS:  # las armas base aparecen aquí cuando no están en la barra, para poder volver a ponerlas
-		if not main.hotbar.has(w) and p.books.has(w):
+		if p.books.has(w) and w != p.weapon:
 			out.append(w)
 	if p.potions > 0:
 		out.append("pocion_vida")
@@ -336,9 +377,12 @@ func _slot_button(id: String, size: float, equipped := false, count := 0, page_c
 				b.add_child(n)
 		b.pressed.connect(func() -> void:
 			selected = id
-			refresh())
+			if p.owns_weapon(id):
+				open_weapon(id)
+			else:
+				refresh())
 		b.gui_input.connect(func(ev: InputEvent) -> void:  # doble clic: equipar o quitar; clic derecho en la forja: mejorar la herramienta
-			if not (is_eq and ev is InputEventMouseButton and ev.pressed):
+			if p.owns_weapon(id) or not (is_eq and ev is InputEventMouseButton and ev.pressed):
 				return
 			var slot: String = p.equipment[id]["slot"]
 			if ev.button_index == MOUSE_BUTTON_LEFT and ev.double_click:
@@ -367,7 +411,7 @@ func _slot_button(id: String, size: float, equipped := false, count := 0, page_c
 func _card(parent: Node, min_size: Vector2) -> VBoxContainer:  # panel con fondo para una columna
 	var pc := PanelContainer.new()
 	pc.custom_minimum_size = min_size
-	pc.add_theme_stylebox_override("panel", _box(Color(0.1, 0.075, 0.06, 0.82), Color("#b68c54"), 2, 2, 16))  # tarjeta oscura con borde de latón
+	pc.add_theme_stylebox_override("panel", _box(Color("#201d2c"), Color("#776044"), 1, 3, 16))  # tarjeta oscura con borde de latón
 	parent.add_child(pc)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 8)
@@ -399,7 +443,9 @@ func _build_book() -> void:  # el inventario sobre el libro de PixelLab
 	close.position = book_pos + Vector2(222, 30) * BOOK_SCALE
 	# equipo
 	for slot: String in EQUIP_CELLS:
-		var b := _slot_button(p.equipped.get(slot, ""), 72, true, 0, true)
+		if slot == "grimoire":
+			continue
+		var b := _slot_button(p.weapon if slot == "sword" else p.equipped.get(slot, ""), 72, true, 0, true)
 		b.tooltip_text = b.tooltip_text if b.tooltip_text != "" else p.SLOT_NAMES[slot]
 		_place(b, EQUIP_CELLS[slot])
 	# barras de vida y maná sobre las del dibujo
@@ -621,7 +667,7 @@ func _build_fishing() -> void:
 		var m: Dictionary = an.cfg["book"][i]
 		_label("%s %d especies: %s" % ["✔" if an.claimed.has(i) else "○", int(m["species"]), ("%d monedas" % int(m["coins"])) if m.has("coins") else "%s ×%d" % [cr.item_name(str(m["item"])), int(m.get("qty", 1))]], left, 15, MUTED)
 	var right := _card(cols, Vector2(0, 0))
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_label(main.clock.text(), right, 18, GOLD)
 	_label("Plato favorito de hoy: %s (efectos mayores)" % cr.item_name(cr.favorite_dish(main.clock.day)), right, 15, MUTED)
 	_label("Cebo elegido: %s   ([B] con la caña en la barra)" % (cr.item_name(main.bait) if main.bait != "" else "ninguno"), right, 15, MUTED)
@@ -950,16 +996,13 @@ func _build_stats() -> void:  # avatar | estadísticas actuales; mejora con punt
 	eq.alignment = BoxContainer.ALIGNMENT_CENTER
 	eq.add_theme_constant_override("separation", 30)
 	_card(body, Vector2(0, 0)).add_child(eq)
-	for slot: String in ["armor", "amulet", "ring", "grimoire", "sword"]:
+	for slot: String in ["armor", "amulet", "ring", "sword"]:
 		var v := VBoxContainer.new()
 		v.alignment = BoxContainer.ALIGNMENT_CENTER
 		eq.add_child(v)
 		var id: String = p.equipped.get(slot, "")
-		if slot == "sword" and id == "":  # sin espada equipada: el arma que llevas en la barra
-			for h: String in main.hotbar:
-				if main.WEAPONS.has(h):
-					id = h
-					break
+		if slot == "sword":
+			id = p.weapon
 		var cell := _slot_button(id, 84, true)
 		cell.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		v.add_child(cell)
@@ -1005,3 +1048,255 @@ class _Zone extends Control:  # la mochila: soltar aquí un objeto de la barra l
 	func _drop_data(_at: Vector2, data: Variant) -> void:
 		menu.main.hotbar_clear(int(data["from"]))
 		menu.refresh()
+
+func open_weapon(id: String) -> void:
+	if not main.prog.owns_weapon(id):
+		return
+	weapon_from_inventory = visible and tab == "inv"
+	weapon_view = id
+	talent = "discipline"
+	open_tab("weapon")
+
+const TALENT_LEVEL := {"discipline":1,"technique":3,"power":3,"master":5}
+const TALENT_COST := {"discipline":1,"technique":2,"power":2,"master":3}
+
+func _talent_name(key: String) -> String:
+	if key == "technique":
+		if weapon_view == "grimorio_escarcha":
+			return "Aguja glacial"
+		var kind: String = main.items[weapon_view].light.type
+		return "Tajo amplio" if kind == "melee" else ("Puño expansivo" if kind == "stone_fist" else "Proyección veloz")
+	return {"discipline":"Disciplina","power":"Golpe decisivo","master":"Dominio"}.get(key,"")
+
+func _talent_ready(key: String) -> bool:
+	var state: Dictionary = main.prog.training(weapon_view)
+	if key in state.nodes or state.orbs < TALENT_COST[key] or main.prog.level < TALENT_LEVEL[key]:
+		return false
+	if key == "master":
+		return "technique" in state.nodes and "power" in state.nodes
+	return key == "discipline" or "discipline" in state.nodes
+
+func _learn_talent() -> void:
+	if _talent_ready(talent):
+		var state: Dictionary = main.prog.training(weapon_view)
+		state.orbs -= TALENT_COST[talent]
+		state.nodes.append(talent)
+		main.refresh_weapon_hud()
+		main.save_game()
+		refresh()
+
+func _forge_weapon() -> void:
+	var state: Dictionary = main.prog.training(weapon_view)
+	var rank: int = state.level
+	if rank >= 5 or main._near_station().get("station","") != "forge" or main.prog.coins < rank*60 or main.crafting.count("mena_hierro") < rank:
+		return
+	main.prog.coins -= rank*60
+	main.crafting.take("mena_hierro", rank)
+	state.level += 1
+	main.refresh_weapon_hud()
+	main.save_game()
+	refresh()
+
+func _weapon_button(parent: Control, title: String, action: Callable, blocked := false) -> Button:
+	var button := Button.new()
+	button.text = title
+	button.disabled = blocked
+	button.custom_minimum_size.y = 42
+	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	style_button(button)
+	button.pressed.connect(action)
+	parent.add_child(button)
+	return button
+
+func _build_weapon() -> void:
+	var state: Dictionary = main.prog.training(weapon_view)
+	var item: Dictionary = main.items[weapon_view]
+	heading.text = item.name
+	var tabs := HBoxContainer.new()
+	body.add_child(tabs)
+	var weapon_tab := _weapon_button(tabs, "Arma", _set_tab.bind("weapon"), tab == "weapon")
+	weapon_tab.custom_minimum_size.x = 122
+	var tree_tab := _weapon_button(tabs, "Árbol", _set_tab.bind("weapon_tree"), tab == "weapon_tree")
+	tree_tab.custom_minimum_size.x = 122
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation",24)
+	body.add_child(row)
+	var portrait := _card(row,Vector2(245,0))
+	var icon := TextureRect.new()
+	icon.texture = load(item.icon)
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon.custom_minimum_size = Vector2(198,198)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.add_child(icon)
+	var physical: bool = item.light.has("stamina")
+	_label("Física · Estamina" if physical else "Mágica · Maná",portrait,21,GOLD)
+	_label("Forja   %d / 5" % state.level,portrait,19)
+	_label("%d orbes disponibles" % state.orbs,portrait,18,Color("#e2b6fc"))
+	_label("%d / 10 bajas para el próximo" % state.kills,portrait,16)
+	var card := VBoxContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.add_theme_constant_override("separation",10)
+	row.add_child(card)
+	if tab == "weapon":
+		var desc := _label(item.get("desc","Hoja de acero templada en ceniza." if physical else "Grimorio de fuego que concentra la energía de Ignis."),card,20)
+		desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		for mode in ["light","heavy","ultimate"]:
+			var attack: Dictionary = item[mode]
+			var cost: float = attack.get("stamina",attack.get("mana",0))
+			if "discipline" in state.nodes:
+				cost *= 0.85
+			if not physical:
+				cost *= main.mana_cost({"mana":1})
+			var line := HBoxContainer.new()
+			card.add_child(line)
+			var move := _label(attack.name,line,19)
+			move.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			_label("Ultimate llena" if mode == "ultimate" else "%.1f %s" % [cost,"estamina" if physical else "maná"],line,17,GOLD)
+		card.add_child(HSeparator.new())
+		var rank: int = state.level
+		if rank < 5:
+			_label("Forjar al nivel %d" % (rank+1),card,23,GOLD)
+			_label("Bonificación de daño   +%d%%  →  +%d%%" % [(rank-1)*10,rank*10],card,18)
+			var near: bool = main._near_station().get("station","") == "forge"
+			var ore: int = main.crafting.count("mena_hierro")
+			_label("Monedas  %d / %d      Mena de hierro  %d / %d" % [main.prog.coins,rank*60,ore,rank],card,17)
+			_weapon_button(card,"Forjar" if near else "Requiere el yunque de Bram",_forge_weapon,not near or main.prog.coins<rank*60 or ore<rank)
+		else:
+			_label("Forja completada · +40% de daño base",card,20,GOLD)
+		if main.prog.weapon != weapon_view:
+			_weapon_button(card,"Equipar "+item.name,func(): main.wield(weapon_view); refresh(),main.attacking or main.dashing or main.gathering)
+		else:
+			_label("Arma equipada",portrait,17,GOOD)
+	else:
+		var center := CenterContainer.new()
+		card.add_child(center)
+		var graph := Control.new()
+		graph.custom_minimum_size = Vector2(620,280)
+		center.add_child(graph)
+		var positions := {"discipline":Vector2(310,235),"technique":Vector2(145,127),"power":Vector2(475,127),"master":Vector2(310,40)}
+		for edge in [["discipline","technique"],["discipline","power"],["technique","master"],["power","master"]]:
+			var wire := Line2D.new()
+			wire.points = PackedVector2Array([positions[edge[0]],positions[edge[1]]])
+			wire.width = 3
+			wire.default_color = GOLD if edge[0] in state.nodes else Color("#6c566e")
+			graph.add_child(wire)
+		for key: String in positions:
+			var locked: bool = main.prog.level < TALENT_LEVEL[key]
+			var title := _talent_name(key) + (" · Nv. %d" % TALENT_LEVEL[key] if locked else "")
+			var node := _weapon_button(graph,"",func(): talent = key; refresh())
+			node.flat = true
+			node.tooltip_text = title
+			node.accessibility_name = title
+			var learned: bool = key in state.nodes
+			var available := _talent_ready(key)
+			var accent := Color("#f6cb78") if learned else (Color("#d5a5ff") if available else Color("#938a98"))
+			var emblem := TextureRect.new()
+			emblem.texture = load({"discipline":"res://art/ui/runa_nodo.png","technique":item.icon,"power":"res://art/ui/rayo_estamina.png","master":"res://art/ui/estrella_xp.png"}[key])
+			emblem.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			emblem.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			emblem.position = Vector2(76,0)
+			emblem.size = Vector2(48,46)
+			node.add_child(emblem)
+			var caption := _label(("✓ " if learned else "")+title,node,16)
+			caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			caption.position = Vector2(0,48)
+			caption.size.x = 200
+			node.draw.connect(func():
+				var ring := PackedVector2Array([Vector2(86,0),Vector2(114,0),Vector2(126,12),Vector2(126,35),Vector2(114,47),Vector2(86,47),Vector2(74,35),Vector2(74,12)])
+				node.draw_colored_polygon(ring,Color("#49324f") if key==talent else Color("#24212e"))
+				ring.append(ring[0])
+				node.draw_polyline(ring,accent,3 if key==talent else 2)
+				node.draw_rect(Rect2(6,48,188,23),Color("#191922")))
+			node.size = Vector2(200,72)
+			node.position = positions[key]-node.size/2
+			if key == talent:
+				node.grab_focus()
+		var effect := "Coste de ataques −15%."
+		match talent:
+			"power": effect = "Daño del ataque pesado +25% del daño base."
+			"master": effect = "Daño +20% del daño base. Requiere ambas ramas."
+			"technique": effect = "Arco de corte +25°." if item.light.type == "melee" else ("Radio del puño de 1,35 a 1,70 casillas." if item.light.type == "stone_fist" else "Velocidad de los proyectiles +25%.")
+		if talent == "technique" and weapon_view == "grimorio_escarcha":
+			effect = "Área de la aguja cargada de 2×2 a 3×3 casillas."
+		var detail := _label(_talent_name(talent)+"   ·   "+effect,card,19)
+		detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		if talent not in state.nodes and not _talent_ready(talent):
+			var reasons := PackedStringArray()
+			if main.prog.level < TALENT_LEVEL[talent]:
+				reasons.append("Nivel de personaje %d" % TALENT_LEVEL[talent])
+			var required := ["technique","power"] if talent == "master" else ([] if talent=="discipline" else ["discipline"])
+			for node in required:
+				if node not in state.nodes:
+					reasons.append(_talent_name(node))
+			if state.orbs < TALENT_COST[talent]:
+				reasons.append("%d orbes más" % (TALENT_COST[talent]-state.orbs))
+			_label("Falta: "+", ".join(reasons),card,16,Color("#ebc68e"))
+		_weapon_button(card, "Aprendido" if talent in state.nodes else "Aprender   ·   %d %s" % [TALENT_COST[talent],"orbe" if TALENT_COST[talent]==1 else "orbes"], _learn_talent, not _talent_ready(talent))
+
+func _build_weapon_picker() -> void:
+	heading.text = "Cambiar arma"
+	var tabs := HBoxContainer.new()
+	body.add_child(tabs)
+	for physical: bool in [true,false]:
+		_weapon_button(tabs,"Armas físicas" if physical else "Armas mágicas",func():
+			physical_tab = physical
+			preview_weapon = main.prog.weapon
+			refresh(),physical == physical_tab)
+	var choices: Array[String] = []
+	for id: String in main.items:
+		if main.prog.owns_weapon(id) and main.items[id].light.has("stamina") == physical_tab:
+			choices.append(id)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation",20)
+	body.add_child(row)
+	var list := _card(row,Vector2(300,0))
+	if choices.is_empty():
+		_label("Todavía no tienes armas de este tipo.",list)
+		return
+	if preview_weapon not in choices:
+		preview_weapon = choices[0]
+	for id in choices:
+		var label: String = main.items[id].name
+		if id == main.prog.weapon:
+			label += "  ✓"
+		var button := _weapon_button(list,label,func(): preview_weapon = id; refresh(),id == preview_weapon)
+		button.tooltip_text = "Equipada" if id == main.prog.weapon else label
+	var detail := _card(row,Vector2(500,0))
+	detail.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var item: Dictionary = main.items[preview_weapon]
+	var header := HBoxContainer.new()
+	detail.add_child(header)
+	var icon := TextureRect.new()
+	icon.custom_minimum_size = Vector2(72,72)
+	icon.texture = load(item.icon)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	header.add_child(icon)
+	_label(item.name,header,25,GOLD)
+	var desc := _label(item.get("desc","Corta en arco y atraviesa enemigos con una estocada ígnea." if physical_tab else "Lanza bolas de fuego y hace caer un meteoro sobre el objetivo."),detail,17)
+	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_label("Forja %d / 5" % main.prog.training(preview_weapon).level,detail,17,GOLD)
+	for mode: String in ["light","heavy","ultimate"]:
+		var spec: Dictionary = main.weapon_attack(mode,preview_weapon)
+		var stats := PackedStringArray()
+		if spec.has("damage"):
+			stats.append("%d daño base" % spec.damage)
+		if spec.type == "freeze":
+			stats.append("Congela durante %.1f s" % spec.duration)
+		if spec.has("cooldown"):
+			stats.append("%.2f s de recarga" % spec.cooldown)
+		if mode == "ultimate":
+			stats.append("Ultimate llena")
+		else:
+			stats.append("%.1f estamina" % spec.stamina if physical_tab else "%.1f maná" % main.mana_cost(spec))
+		_label(spec.name,detail,18,GOLD)
+		_label("   ·   ".join(stats),detail,16)
+	var equipped: bool = preview_weapon == main.prog.weapon
+	_weapon_button(detail,"Arma equipada" if equipped else "Equipar "+item.name,func():
+		if main.wield(preview_weapon):
+			weapon_view = preview_weapon
+			talent = "discipline"
+			_set_tab("weapon"),equipped or main.attacking or main.dashing or main.gathering)

@@ -12,13 +12,22 @@
 
 ## Archivos y regeneración
 
-`art/render_polish.py` se ejecuta en una instancia de Blender en segundo plano sobre `blender/hechicero_floor.blend`. Exporta a `art/hechicero/polished/` y usa la cámara y materiales existentes. No guarda cambios sobre el blend original. Las imágenes originales del héroe siguen disponibles.
+El protagonista actual es el viajero de Ignis. Su diseño toma la silueta del viajero joven de la referencia, con cabello castaño corto y revuelto, expresión reservada, túnica de lino oliva con lazada y remiendo, capucha caída, capa marrón de borde irregular, cinturón con bolsa y botas envueltas en lino.
 
-Comando completo: Blender con `--background blender/hechicero_floor.blend --python art/render_polish.py -- all`. Modos de revisión: `preview`, `locomotion`, `hero_death`.
+Los píxeles visibles se pintan en Krita. El atlas editable de piezas y accesorios está en `blender/viajero_pixel.kra` (160 × 128). Exportar a `blender/viajero_pixel.png` al guardar cambios. El retrato tiene su propio original en `blender/retrato_pixel_ignis.kra` y se exporta directamente a `art/dialogue/heroe.png` (90 × 96).
 
-La muerte del héroe usa un lienzo de 192 px y la del dragón uno de 160 px con la misma densidad de píxeles; Godot compensa el margen añadido (32 y 16 px por borde). Las demás imágenes siguen en 128 px.
+Para regenerar los sprites en PowerShell desde la raíz del proyecto:
 
-Importar después con Godot `--headless --editor --quit --path .`.
+```powershell
+$env:ASTRAL_POSES = Join-Path $env:TEMP 'astral_pixel_poses.json'
+blender -b blender/viajero_ignis.blend --python-exit-code 1 -P art/hechicero/export_pose_guide.py
+uv run --no-project --python 3.13 --with "pillow>=12.1" python art/hechicero/compose_painted.py $env:ASTRAL_POSES
+godot --headless --editor --import
+```
+
+La guía guarda posiciones y profundidad de las articulaciones, el filo y las herramientas. El montaje ordena las piezas pintadas por profundidad, usa vecino más cercano y conserva los colores de pincel. El modelo 3D queda como fuente de poses. Para reconstruirlo desde el rig original se usa `art/hechicero/build_traveler.py` sobre `blender/hechicero_floor.blend`.
+
+El horneado conserva la escala del mundo. Las acciones con un arco amplio usan un lienzo de 192 px, el lanzamiento de la caña usa 224 px y el resto, 128 px. La cámara ortográfica y el centro del fotograma mantienen la misma posición de los pies. Las puntas de caña de `data/rod_tips.json` se calculan al renderizar desde la geometría de la vara.
 
 ## Verificación reproducible
 

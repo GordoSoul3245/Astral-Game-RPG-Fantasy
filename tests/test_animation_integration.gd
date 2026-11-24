@@ -8,6 +8,7 @@ func run_checks() -> void:
 	root.add_child(main)
 	main.set_physics_process(false)
 	main.dragon.set_physics_process(false)
+	var tips: Dictionary = main._read_json("res://data/rod_tips.json")
 	for dir in main.DIRS:
 		for kind in ["idle", "walk", "run", "hurt", "death"]:
 			var frames: SpriteFrames = main.hero.sprite_frames
@@ -20,6 +21,20 @@ func run_checks() -> void:
 					assert(picture.get_width() == 192)
 					var bounds := picture.get_used_rect()
 					assert(bounds.position.y > 0 and bounds.end.y < 192, "%s frame %d bounds %s" % [key, i, bounds])
+		for kind in main.ANIMS:
+			var key: String = kind + "_" + dir
+			assert(main.hero.sprite_frames.get_frame_count(key) == main.ANIMS[kind])
+			if key.begins_with("fish_"):
+				assert(tips[key].size() == main.ANIMS[kind])
+			for i in main.ANIMS[kind]:
+				var image: Image = main.hero.sprite_frames.get_frame_texture(key, i).get_image()
+				if kind.begins_with("fish_"):
+					var socket: Array = tips[key][i]
+					var pad: int = (image.get_width() - 128) / 2
+					var point := Vector2i(roundi(socket[0]) + pad, roundi(socket[1]) + pad)
+					assert(image.get_region(Rect2i(point - Vector2i(2,2), Vector2i(5,5))).get_used_rect().has_area(), "Sedal separado de la punta en %s %d" % [key,i])
+				# El mago original incluye efectos que llegan al borde del lienzo.
+				assert(image.get_used_rect().has_area(), "%s %d vacío" % [key, i])
 		for kind in ["slash_light", "slash_heavy", "fslash_light", "fslash_heavy", "cast"]:
 			var strike := 5 if kind.ends_with("heavy") else 3
 			var key: String = kind + "_" + dir
@@ -40,6 +55,7 @@ func run_checks() -> void:
 	assert(main.dying and main.hero.animation == "death_S")
 	main._physics_process(1.01)
 	assert(not main.dying and main.hero_hp == main.hero_max_hp)
+	main.dragon.reset(main.dragon_start)
 	main.dragon.take_damage(9999)
 	assert(not main.dragon.alive and main.dragon.animation.begins_with("death_"))
 	var xp_after: int = main.prog.xp

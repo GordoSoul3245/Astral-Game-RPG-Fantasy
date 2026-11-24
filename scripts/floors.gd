@@ -41,7 +41,10 @@ func is_boss_floor(n: int) -> bool:
 
 func boss_def(n: int) -> Dictionary:
 	var b: Array = cfg["bosses"]
-	return b[(n / every() - 1) % b.size()]
+	# La semilla del piso ya viaja en la partida. Consultar su jefe no consume el RNG de la sala.
+	var roll := RandomNumberGenerator.new()
+	roll.seed = hash([layout_state,n])
+	return b[roll.randi_range(0,b.size()-1)]
 
 # Nivel de los monstruos del piso n: por debajo del héroe al empezar cada tramo y casi igual en el jefe; cada tramo sube un poco.
 func level_for(n: int, mini := false) -> int:
@@ -55,9 +58,10 @@ func composition(n: int) -> Array:
 	var e: Dictionary = cfg["enemies"]
 	var lv := level_for(n)
 	if is_boss_floor(n):
-		var def := boss_def(n)
+		var def := boss_def(n).duplicate()
+		def["hp_mult"] = float(def.get("hp_mult",1.0)) * 0.75
+		def["dmg_mult"] = float(def.get("dmg_mult",1.0)) * 0.85
 		if n <= every():  # primer jefe: el héroe recién empieza
-			def = def.duplicate()
 			def["hp_mult"] = float(def.get("hp_mult", 1.0)) * 0.6
 		out.append({"id": def["id"], "level": lv, "extra": def})
 		var tier := n / every() - 1
@@ -89,6 +93,7 @@ func reward_mult(n: int) -> float:  # lo que se multiplica la recompensa del cof
 	return 1.0 + float(cfg["per_floor"]["chest"]) * float(n - 1)
 
 func start(n: int) -> void:
+	main.next_spawn_slot = 1
 	floor_no = n
 	if n % every() == 1:  # cada tramo acaba en un jefe: el piso siguiente es el nuevo punto de reanudación
 		main.dungeon_floor = n
@@ -120,7 +125,7 @@ func start(n: int) -> void:
 		main.set_enemy_level(int(m["level"]), m["extra"], floor_no)
 		main.spawn_enemy(m["id"], main.tile_to_ground(t))
 	main.set_enemy_level(0)
-	next_door = main._add_door(Vector2(Gen.CENTER.x, Gen.N - 0.25), "Bajar al piso %d" % (n + 1), next_floor)
+	next_door = main._add_door(Vector2(Gen.CENTER.x, Gen.N - 0.25), "Bajar al piso %d" % (n + 1), next_floor,true,"dungeon")
 	next_door.locked = true
 	main.say(title, 2.5)
 

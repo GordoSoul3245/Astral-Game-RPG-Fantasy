@@ -30,7 +30,7 @@ func _attack(mode: String, dir_i: int) -> Node:  # empieza un ataque y devuelve 
 
 func _head(t: Node, i: int) -> Vector2:  # dónde debe estar la punta de la muestra i, con el héroe donde está ahora
 	var p: Array = t.pts[i]
-	return main.hero.position + (Vector2(p[2], p[3]) + main.hero.offset) * main.SCALE
+	return main.hero.position + (Vector2(p[2], p[3]) + (main.hero.offset - main.HERO_FRAME_CENTER)) * main.SCALE
 
 func run_checks() -> void:
 	main = load("res://scenes/main.tscn").instantiate()

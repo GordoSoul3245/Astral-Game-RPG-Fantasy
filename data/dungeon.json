@@ -49,47 +49,11 @@
 			}
 		},
 		{
-			"id": "cyclops",
-			"title": "El gigante de piedra",
-			"hp_mult": 2.6,
-			"dmg_mult": 1.35,
-			"size_mult": 1.45,
-			"xp_mult": 2.5,
-			"escort": {
-				"skeleton_archer": 4,
-				"slime": 4
-			}
-		},
-		{
-			"id": "rey_osario",
-			"title": "El trono de huesos",
-			"escort": {
-				"skeleton_archer": 3,
-				"hongo_espora": 2
-			}
-		},
-		{
-			"id": "reina_arana",
-			"title": "El nido de la reina",
-			"escort": {
-				"escarabajo_brasa": 4,
-				"lobo_espectral": 1
-			}
-		},
-		{
 			"id": "hidra_pantano",
 			"title": "La ciénaga de las tres cabezas",
 			"escort": {
 				"hongo_espora": 3,
 				"mantis_jade": 1
-			}
-		},
-		{
-			"id": "titan_volcanico",
-			"title": "El corazón del volcán",
-			"escort": {
-				"murcielago_ceniza": 4,
-				"caballero_hueco": 1
 			}
 		}
 	],

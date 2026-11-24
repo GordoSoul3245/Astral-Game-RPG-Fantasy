@@ -13,7 +13,10 @@ var music := 0.6
 func load_file() -> bool:
 	if not FileAccess.file_exists(path):
 		return false
-	var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	var json := JSON.new()
+	if json.parse(FileAccess.get_file_as_string(path)) != OK:
+		return false
+	var d: Variant = json.data
 	if not d is Dictionary:
 		return false
 	shake = clampf(float(d.get("shake", 1.0)), 0.0, 1.0)

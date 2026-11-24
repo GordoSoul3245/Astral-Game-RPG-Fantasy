@@ -18,13 +18,13 @@ func setup(data: Dictionary) -> void:
 		var r: Array = f["rect"]
 		var rc := Rect2(r[0], r[1], r[2] - r[0], r[3] - r[1])
 		if f["kind"] != "rug":  # la alfombra se pisa
-			rects.append(rc)
+			rects.append(rc.grow(-0.12))
 		var fn := Furn.new()
 		fn.room = self
 		fn.kind = f["kind"]
 		fn.rect = rc
 		fn.h = float(f["h"])
-		var y := 0.0
+		var y := -INF
 		for corner in [rc.position, rc.end, Vector2(rc.position.x, rc.end.y), Vector2(rc.end.x, rc.position.y)]:
 			y = maxf(y, main.tile_to_ground(corner).y)
 		fn.z_index = -3000 if f["kind"] == "rug" else int(y)
@@ -52,11 +52,11 @@ func _draw() -> void:
 			quad.append(quad[0])
 			draw_polyline(quad, floor_col.darkened(0.35), 1.5)  # juntas de las tablas
 	var wall := Color(cfg["wall"])
-	_wall(Vector2(0, 0), Vector2(tiles, 0), wall.darkened(0.1))
+	_wall(Vector2(0, 0), Vector2(tiles, 0), wall.darkened(0.1), false)
 	_wall(Vector2(tiles, 0), Vector2(tiles, tiles), wall)
 	draw_polyline(PackedVector2Array([_corner(0, 0), _corner(tiles, 0), _corner(tiles, tiles)]), Color("#2a1a0e"), 6.0)
 
-func _wall(a: Vector2, b: Vector2, col: Color) -> void:  # pared con zócalo, vigas y una ventana
+func _wall(a: Vector2, b: Vector2, col: Color, window := true) -> void:  # pared con zócalo, vigas y una ventana
 	var pa := _corner(a.x, a.y)
 	var pb := _corner(b.x, b.y)
 	draw_colored_polygon(PackedVector2Array([pa, pb, _up(pb, WALL_H), _up(pa, WALL_H)]), col)
@@ -65,10 +65,18 @@ func _wall(a: Vector2, b: Vector2, col: Color) -> void:  # pared con zócalo, vi
 	for k in range(1, 4):
 		var m := pa.lerp(pb, k / 4.0)
 		draw_line(m, _up(m, WALL_H), col.darkened(0.3), 3.0)
+	if not window:
+		return
 	var w0 := pa.lerp(pb, 0.58)
 	var w1 := pa.lerp(pb, 0.78)
 	draw_colored_polygon(PackedVector2Array([_up(w0, 30.0), _up(w1, 30.0), _up(w1, 58.0), _up(w0, 58.0)]), Color("#cfe4f2"))
 	draw_polyline(PackedVector2Array([_up(w0, 30.0), _up(w1, 30.0), _up(w1, 58.0), _up(w0, 58.0), _up(w0, 30.0)]), Color("#3a2515"), 3.0)
+
+	var mid := w0.lerp(w1,0.5)
+	draw_line(_up(mid,30),_up(mid,58),Color("#634636"),4)
+	draw_line(_up(w0,43),_up(w1,43),Color("#634636"),4)
+	draw_line(_up(w0,29),_up(w1,29),Color("#bf9564"),6)
+
 
 # caja isométrica sobre un rectángulo de casillas: tapa y las dos caras que ve la cámara (i = i0 y j = j1)
 func box(canvas: CanvasItem, rc: Rect2, h_m: float, top: Color, left: Color, right: Color) -> void:
@@ -98,9 +106,26 @@ class Furn extends Node2D:
 		match kind:
 			"table":
 				room.box(self, Rect2(rect.position + Vector2(0.1, 0.1), rect.size - Vector2(0.2, 0.2)), h, Color("#b98b57"), Color("#7a5530"), Color("#8a6038"))
+				var pot: Vector2 = room._up(room._corner(rect.get_center().x,rect.get_center().y),h*room.PXM)
+				var sc: float = room.main.SCALE
+				draw_circle(pot-Vector2(0,5)*sc,6*sc,Color("#ac6047"))
+				for i in range(-2,3):
+					var tip := pot+Vector2(i*4,-24+abs(i)*3)*sc
+					draw_line(pot-Vector2(0,9)*sc,tip,Color("#5d7950"),2*sc)
+					draw_circle(tip,3*sc,Color("#8caa67"))
 			"shelf":
 				room.box(self, rect, h, Color("#8a5f35"), Color("#5e3d20"), Color("#6e4727"))
-				room.box(self, Rect2(rect.position + Vector2(0.12, 0.05), Vector2(rect.size.x - 0.24, rect.size.y * 0.45)), h * 0.5, Color("#c98a5a"), Color("#a86a40"), Color("#b87a4c"))
+				var inks := [Color("#934d46"),Color("#5b8179"),Color("#ad9056"),Color("#595777")]
+				for tier in 2:
+					for i in 6:
+						var u := (i+0.65)/7.0
+						var p: Vector2 = room._corner(rect.position.x+u*rect.size.x,rect.end.y)
+						var base: Vector2 = room._up(p,(0.10+tier*0.46)*h*room.PXM)
+						var rise: float = (0.23+0.035*(i%3))*h*room.PXM*room.main.SCALE
+						draw_line(base,base-Vector2(0,rise),inks[(i+tier)%4],4*room.main.SCALE)
+					var left: Vector2 = room._corner(rect.position.x,rect.end.y)
+					var right: Vector2 = room._corner(rect.end.x,rect.end.y)
+					draw_line(room._up(left,(0.08+tier*0.46)*h*room.PXM),room._up(right,(0.08+tier*0.46)*h*room.PXM),Color("#cc9e65"),2*room.main.SCALE)
 			"forge":
 				room.box(self, rect, h, Color("#4a4a52"), Color("#33333a"), Color("#3d3d45"))
 				room.box(self, Rect2(rect.position + Vector2(0.25, 0.4), rect.size - Vector2(0.5, 0.8)), h + 0.02, Color("#ff9a2a"), Color("#c24b10"), Color("#e06a18"))
@@ -134,8 +159,15 @@ class Furn extends Node2D:
 			"bed":
 				room.box(self, rect, h * 0.55, Color("#d8d2c0"), Color("#8a6038"), Color("#9a6c3f"))
 				room.box(self, Rect2(rect.position + Vector2(0.05, 0.7), Vector2(rect.size.x - 0.1, rect.size.y - 0.75)), h * 0.62, Color("#a8342e"), Color("#7a2420"), Color("#8e2b26"))
+				room.box(self,Rect2(rect.position+Vector2(0.22,0.14),Vector2(rect.size.x-0.44,0.40)),h*0.74,Color("#f3dfb5"),Color("#c2a888"),Color("#d2ba95"))
 			"rug":
 				room.box(self, rect, h, Color("#8e3b34"), Color("#6a2a25"), Color("#6a2a25"))
 				room.box(self, Rect2(rect.position + Vector2(0.25, 0.25), rect.size - Vector2(0.5, 0.5)), h + 0.01, Color("#c9a24a"), Color("#c9a24a"), Color("#c9a24a"))
+				for i in 5:
+					var center: Vector2 = rect.position+Vector2(rect.size.x*0.5,rect.size.y*(i+1)/6.0)
+					var pts := PackedVector2Array()
+					for off: Vector2 in [Vector2(-0.21,0),Vector2(0,-0.13),Vector2(0.21,0),Vector2(0,0.13)]:
+						pts.append(room._up(room._corner(center.x+off.x,center.y+off.y),(h+0.02)*room.PXM))
+					draw_colored_polygon(pts,Color("#854638"))
 			_:
 				room.box(self, rect, h, Color.GRAY, Color.DIM_GRAY, Color.DIM_GRAY)

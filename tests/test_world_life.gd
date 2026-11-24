@@ -87,7 +87,7 @@ func run_checks() -> void:
 	main.prog.rod_parts.clear()
 	cr.add("carrete_pesca", 1)
 	cr.add("sedal_trenzado", 1)
-	assert(cr.why_not("carrete_pesca") == "" or true)
+	assert(cr.why_not("carrete_pesca") != "", "faltan ingredientes para fabricar otro carrete")
 	assert(cr.cfg["recipes"]["carrete_pesca"]["station"] == "forge" and cr.cfg["recipes"]["sedal_trenzado"]["inputs"].has("alga_marina"), "las piezas se fabrican en la forja y a mano con alga")
 	main.menu.visible = true
 	main.menu._set_tab("fish")
@@ -95,9 +95,19 @@ func run_checks() -> void:
 	main.prog.rod_parts["reel"] = true
 	main.prog.rod_parts["line"] = true
 	main.give_item("cana_hierro")
-	main.pos = main.tile_to_ground(Vector2(13.5, 38.5))
+	var shore := Vector2.ZERO
+	for j in range(2, main.world.tiles - 2):
+		for i in range(5, main.world.tiles - 2):
+			var cell := Vector2(i + 0.5, j + 0.5)
+			if not main.world.is_water(cell) and main.world.is_water(cell - Vector2(3, 0)) and main.world.is_water(cell - Vector2(4, 0)):
+				shore = cell
+				break
+		if shore != Vector2.ZERO:
+			break
+	assert(shore != Vector2.ZERO)
+	main.pos = main.tile_to_ground(shore)
 	main._place()
-	main.forced_aim = (main.tile_to_ground(Vector2(12.5, 38.5)) - main.tile_to_ground(Vector2(13.5, 38.5))).normalized()
+	main.forced_aim = (main.tile_to_ground(shore - Vector2.RIGHT) - main.tile_to_ground(shore)).normalized()
 	fishing.cfg["junk_chance"] = 0.0
 	fishing.cfg["bite_wait"] = [0.1, 0.1]
 	main._select(main.hotbar.find("cana_hierro"))

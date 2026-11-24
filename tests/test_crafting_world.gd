@@ -177,7 +177,10 @@ func run_checks() -> void:
 
 	# botín: un plano que cae de un monstruo se aprende una sola vez
 	assert(not cr.knows("plano_elixir_furia"))
-	main.on_kill(_FakeEnemy.new(main.pos, {"drops": [{"item": "plano_elixir_furia", "chance": 1.0}]}))
+	var fake := _FakeEnemy.new(main.pos, {"drops": [{"item": "plano_elixir_furia", "chance": 1.0}]})
+	main.add_child(fake)
+	main.on_kill(fake)
+	fake.queue_free()
 	assert(cr.knows("plano_elixir_furia"), "el plano soltado se aprende")
 
 	# guardado y carga conservan planos, herramientas y consumibles

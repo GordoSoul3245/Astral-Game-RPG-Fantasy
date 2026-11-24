@@ -76,14 +76,24 @@ func run_checks() -> void:
 		var rid: String = fishing.roll(9.0, 3)["id"]
 		assert(rid != "anguila_luminosa" and rid != "pez_cristal" and rid != "pez_lanza" and rid != "pez_abisal", "de día y sin lluvia no pican los peces nocturnos ni de lluvia")
 
-	# ciclo completo en la orilla norte de la isla
+	# ciclo completo en la orilla este del lago
 	main.fishing = fishing
 	cfg = fishing.cfg
 	cfg["junk_chance"] = 0.0
 	cfg["bite_wait"] = [0.1, 0.1]
-	main.pos = main.tile_to_ground(Vector2(13.5, 38.5))
+	var shore := Vector2.ZERO
+	for j in range(2, main.world.tiles - 2):
+		for i in range(5, main.world.tiles - 2):
+			var cell := Vector2(i + 0.5, j + 0.5)
+			if not main.world.is_water(cell) and main.world.is_water(cell - Vector2(3, 0)) and main.world.is_water(cell - Vector2(4, 0)):
+				shore = cell
+				break
+		if shore != Vector2.ZERO:
+			break
+	assert(shore != Vector2.ZERO)
+	main.pos = main.tile_to_ground(shore)
 	main._place()
-	main.forced_aim = (main.tile_to_ground(Vector2(12.5, 38.5)) - main.tile_to_ground(Vector2(13.5, 38.5))).normalized()
+	main.forced_aim = (main.tile_to_ground(shore - Vector2.RIGHT) - main.tile_to_ground(shore)).normalized()
 	main._select(main.hotbar.find("cana_madera"))
 	main.cooldown = 0.0
 	assert(main._attack("light") and main._fishing() and fishing.state == "charge", "el clic con la caña empieza a cargar el lanzamiento")
@@ -121,15 +131,27 @@ func run_checks() -> void:
 	assert(not main._fishing(), "lanzar a tierra cancela la pesca")
 
 	# esquivar recoge el sedal
-	main.pos = main.tile_to_ground(Vector2(13.5, 38.5))
+	main.pos = main.tile_to_ground(shore)
 	main._place()
-	main.forced_aim = (main.tile_to_ground(Vector2(12.5, 38.5)) - main.tile_to_ground(Vector2(13.5, 38.5))).normalized()
+	main.forced_aim = (main.tile_to_ground(shore - Vector2.RIGHT) - main.tile_to_ground(shore)).normalized()
 	main.cooldown = 0.0
 	main._attack("light")
 	assert(main._fishing())
 	main._dash()
 	assert(not main._fishing(), "el dash cancela la pesca")
 
+	main.cooldown = 0
+	main.dashing = false
+	main._attack("light")
+	assert(main._fishing())
+	var pause_menu = preload("res://scripts/start_menu.gd").new()
+	pause_menu.main = main
+	main.add_child(pause_menu)
+	var escape := InputEventKey.new()
+	escape.physical_keycode = KEY_ESCAPE
+	escape.pressed = true
+	root.push_input(escape)
+	assert(not main._fishing() and not paused, "el primer Escape recoge la caña")
 	# usos: cocina y alquimia con peces, venta
 	while cr.favorite_dish(main.clock.day) == "pescado_asado":  # el plato favorito del día multiplica los efectos
 		main.clock.day += 1

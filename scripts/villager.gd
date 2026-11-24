@@ -37,9 +37,12 @@ var hit := {}              # hitbox corporal medida del sprite (hitbox.gd)
 var spr: AnimatedSprite2D  # sprite de Blender; si falta, se dibuja por código
 
 func _ready() -> void:
+	preload("res://scripts/projected_shadow.gd").add(self, Vector2.ZERO, 10 * main.SCALE, 40 * main.SCALE)
 	pos = rest
 	goal = work
 	spr = preload("res://scripts/life_sprite.gd").build(self, main, "res://art/fauna/villager_", {"idle": 1, "hide": 1, "walk": 8, "flee": 8})
+	if spr:
+		preload("res://scripts/projected_shadow.gd").light_sprite(spr)
 	hit = preload("res://scripts/life_sprite.gd").hitbox(main, "res://art/fauna/villager_")
 	_place()
 

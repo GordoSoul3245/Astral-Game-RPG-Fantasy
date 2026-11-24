@@ -4,6 +4,14 @@ extends "res://scripts/world_map.gd"
 
 const WALL_H := 34.0  # px de suelo; bajo, para que no tape al héroe
 
+var sconces: Array[PointLight2D] = []
+var flame_time := 0.0
+
+func _process(delta: float) -> void:
+	flame_time += delta
+	for i in sconces.size():
+		sconces[i].energy = 0.72 + 0.08*sin(flame_time*3.1+i) + 0.04*sin(flame_time*5.3+i)
+
 func setup(data: Dictionary) -> void:
 	tiles = int(data["tiles"])
 	if data.has("walk"):
@@ -13,6 +21,13 @@ func setup(data: Dictionary) -> void:
 		for i in tiles:
 			walk.append("1".repeat(tiles))
 	z_index = -4000  # siempre por debajo de héroe y entidades
+	if sconces.is_empty():
+		for spot in [Vector2(2,tiles/2),Vector2(tiles-2,tiles/2),Vector2(tiles/2-2,1),Vector2(tiles/2+2,1),Vector2(tiles/2-2,tiles-1),Vector2(tiles/2+2,tiles-1)]:
+			var light: PointLight2D = main.combat.light(Color("#f7aa69"),0.75,3.5)
+			light.range_z_min = -4096
+			light.position = _corner(spot.x,spot.y)
+			add_child(light)
+			sconces.append(light)
 	floor_mesh = null  # piso nuevo: se rearman las mallas
 	queue_redraw()
 
@@ -90,3 +105,12 @@ func _draw() -> void:
 	draw_mesh(wall_mesh, null)
 	var rim := PackedVector2Array([_corner(0, 0), _corner(tiles, 0), _corner(tiles, tiles), _corner(0, tiles), _corner(0, 0)])
 	draw_polyline(rim, Color("#0a0c18"), 8.0)
+
+	for lamp in sconces:
+		var pos := lamp.position
+		draw_set_transform(pos,0,Vector2.ONE*main.SCALE)
+		draw_rect(Rect2(-6,-2,12,3),Color("#494153"))
+		draw_rect(Rect2(-5,-5,10,4),Color("#897368"))
+		draw_rect(Rect2(-3,-9,6,5),Color("#d38851"))
+		draw_rect(Rect2(-1,-11,2,6),Color("#ffe7a2"))
+		draw_set_transform(Vector2.ZERO)

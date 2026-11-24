@@ -15,15 +15,15 @@ func run_checks() -> void:
 	main.testing = true
 	await process_frame
 	var cr = main.crafting
-	assert(main.hotbar.size() == 6 and main.hotbar.slice(0, 3) == ["katana_ceniza", "grimorio_ignis", "pocion_vida"] and main.hotbar[3] == "", "al empezar: katana, grimorio, poción y tres casillas libres")
+	assert(main.hotbar.size() == 6 and main.hotbar.slice(0, 3) == ["", "", "pocion_vida"] and main.hotbar[3] == "", "las armas tienen su propia ranura")
 
 	# colocar en una casilla concreta e intercambiar
 	cr.add("carne_asada", 2)
 	assert(main.hotbar_drop("carne_asada", 5) and main.hotbar[5] == "carne_asada", "se coloca donde se suelta")
-	assert(main.hotbar_drop("carne_asada", 0) and main.hotbar[0] == "carne_asada" and main.hotbar[5] == "katana_ceniza", "si había otro objeto se intercambian")
+	assert(main.hotbar_drop("carne_asada", 0) and main.hotbar[0] == "carne_asada" and main.hotbar[5] == "", "si había otro objeto se intercambian")
 	assert(main.hotbar_drop("pocion_vida", 4) and main.hotbar[2] == "" and main.hotbar[4] == "pocion_vida", "mover a una casilla libre deja libre la de origen")
-	main.hotbar_drop("katana_ceniza", 0)
-	assert(main.hotbar[0] == "katana_ceniza" and main.hotbar[5] == "carne_asada", "deshacer el intercambio")
+	main.hotbar_drop("pocion_vida", 0)
+	assert(main.hotbar[0] == "pocion_vida" and main.hotbar[4] == "carne_asada", "deshacer el intercambio")
 
 	# soltar sobre un objeto desde la mochila: el desplazado vuelve a la mochila
 	cr.add("pocion_mana", 1)
@@ -40,7 +40,7 @@ func run_checks() -> void:
 	# llena: hotbar_add falla, soltar sobre una casilla sigue funcionando
 	for id in ["carne_asada", "pocion_vida", "pocion_mana"]:
 		main.hotbar_remove(id)
-	for id in ["pocion_vida", "pocion_mana", "carne_asada", "asado_zorro", "pastel_baya"]:
+	for id in ["pocion_vida", "pocion_mana", "carne_asada", "asado_zorro", "pastel_baya","tostada_hongo"]:
 		cr.add(id, 1)
 		main.hotbar_add(id)
 	assert(not main.hotbar.has(""), "la barra se llena")
@@ -62,7 +62,7 @@ func run_checks() -> void:
 	main.hotbar_clear(1)
 	main._select(1)
 	main.cooldown = 0.0
-	assert(not main._attack("light"), "con la casilla vacía no se hace nada")
+	assert(main._attack("light"), "con la casilla vacía se usa el arma equipada")
 
 	# arrastre real de la interfaz: casilla de la mochila -> casilla de la barra, y barra -> mochila
 	menu.visible = true
@@ -75,7 +75,8 @@ func run_checks() -> void:
 	var target = Slot.new()
 	target.menu = menu
 	target.index = 1
-	assert(from_bag._get_drag_data(Vector2.ZERO) is Dictionary and target._can_drop_data(Vector2.ZERO, {"id": "carne_asada", "from": -1}), "se puede arrastrar y soltar")
+	from_bag.force_drag({"id": from_bag.id, "from": -1}, null)
+	assert(root.gui_is_dragging() and from_bag._get_drag_data(Vector2.ZERO) is Dictionary and target._can_drop_data(Vector2.ZERO, {"id": "carne_asada", "from": -1}), "se puede arrastrar y soltar")
 	target._drop_data(Vector2.ZERO, {"id": "carne_asada", "from": -1})
 	assert(main.hotbar[1] == "carne_asada", "soltar en la casilla la rellena")
 	var bag_slot = Slot.new()
@@ -84,6 +85,9 @@ func run_checks() -> void:
 	bag_slot._drop_data(Vector2.ZERO, {"id": "carne_asada", "from": 1})
 	assert(main.hotbar[1] == "", "soltar sobre la mochila lo quita de la barra")
 	assert(menu.bar_row.get_children().filter(func(c: Node) -> bool: return not c.is_queued_for_deletion()).size() == 6, "el menú muestra las 6 casillas de la barra")
+	root.gui_cancel_drag()
+	target.free()
+	bag_slot.free()
 	menu.visible = false
 
 	# guardado
@@ -101,7 +105,7 @@ func run_checks() -> void:
 	f.store_string(JSON.stringify(d))
 	f.close()
 	assert(main.load_game(), "se carga una partida antigua")
-	assert(main.hotbar.slice(0, 2) == ["katana_ceniza", "grimorio_ignis"] and main.hotbar.has("pocion_vida") and main.hotbar.has("carne_asada") and main.hotbar.size() == 6, "y se migra a la barra nueva")
+	assert(not main.hotbar.has("katana_ceniza") and main.prog.weapon == "katana_ceniza" and main.hotbar.has("pocion_vida") and main.hotbar.has("carne_asada") and main.hotbar.size() == 6, "y se migra a la barra nueva")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(main.save_path))
 	print("PASS hotbar: colocar, intercambiar, quitar, herramientas, casilla vacía, arrastre del menú y guardado")
 	quit()

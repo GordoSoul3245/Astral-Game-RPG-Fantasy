@@ -68,7 +68,7 @@ func run_checks() -> void:
 	cr.add("lingote_hierro", 2)
 	cr.add("madera", 5)
 	assert(cr.craft("espada_hierro")["ok"] and prog.owned.has("espada_hierro"))
-	assert(prog.equipped["sword"] == "espada_hierro", "la espada nueva se equipa")
+	assert(prog.wield("espada_hierro") and prog.weapon == "espada_hierro", "la espada nueva se equipa")
 
 	# cocina
 	cr.add("carne_conejo", 2)

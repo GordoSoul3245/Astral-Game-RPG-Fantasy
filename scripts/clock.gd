@@ -18,9 +18,12 @@ var rng := RandomNumberGenerator.new()
 var overlay: Control
 var drops: Array = []      # [x, y, velocidad] en 0..1
 
+var sunlight := DirectionalLight2D.new()
+
 signal new_day
 
 func _ready() -> void:
+	add_child(sunlight)
 	rng.randomize()
 	var layer := CanvasLayer.new()
 	layer.layer = 5
@@ -35,6 +38,14 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	advance(delta)
+	sunlight.enabled = outdoors and dark() < 1.0
+	if sunlight.enabled:
+		var elevation := sin(PI * clampf((hour - 6.0) / 12.0, 0.0, 1.0))
+		sunlight.rotation = lerpf(1.22, -1.22, clampf((hour-6.0)/12.0, 0.0, 1.0))
+		sunlight.height = lerpf(0.24, 0.85, elevation)
+		sunlight.color = Color("#ffb78c").lerp(Color("#fff3df"), elevation)
+		sunlight.energy = (1.0-dark()) * 0.13
+	preload("res://scripts/projected_shadow.gd").update(self)
 	overlay.visible = rain and outdoors  # sin lluvia no dibuja nada: oculto no se procesa ni se redibuja
 	if rain and outdoors:
 		for d: Array in drops:

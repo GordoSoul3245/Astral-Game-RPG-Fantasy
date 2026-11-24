@@ -35,9 +35,9 @@ func _ready() -> void:
 	glow.fill_from = Vector2(0.5, 0.5)
 	glow.fill_to = Vector2(0.5, 1.0)
 	ambient = CanvasModulate.new()
-	main.add_child.call_deferred(ambient)
+	add_child(ambient)
 	lantern = light(Color(1.0, 0.82, 0.6), 0.0, 3.2)
-	main.add_child.call_deferred(lantern)
+	add_child(lantern)
 	for k: String in KINDS:
 		sounds[k] = _synth(KINDS[k]["hz"], KINDS[k]["dur"], KINDS[k]["noise"])
 	set_zone(false)
@@ -77,11 +77,16 @@ func flash(ground: Vector2, col: Color, energy: float, size: float, secs: float)
 	tw.tween_callback(l.queue_free)
 
 # único punto de daño del héroe a enemigos: aplica daño, empuje, sonido, chispa y luz según el tipo de golpe
-func hit(e: Node, dmg: int, kind: String, from: Vector2, charge := true) -> void:
+func hit(e: Node, dmg: int, kind: String, from: Vector2, charge := true, weapon_id := "") -> void:
 	if not e.alive:
 		return
 	var k: Dictionary = KINDS[kind]
 	e.take_damage(dmg, charge)
+	if not e.alive and main.prog.owns_weapon(weapon_id):
+		main.prog.credit_weapon(weapon_id)
+		if main.prog.training(weapon_id).kills == 0:
+			main.popup(e.pos, "+1 orbe · " + main.name_of(weapon_id), Color("#e0acff"))
+		main.refresh_weapon_hud()
 	if charge and (kind == "light" or kind == "heavy"):
 		main.mana_on_hit(kind)  # la espada alimenta la magia
 	if e.alive and e.has_method("add_poise"):
@@ -179,7 +184,7 @@ func ground_impact(ground: Vector2, size: float) -> void:  # onda y grietas en e
 	var g := preload("res://scripts/ground_impact.gd").new()
 	g.position = ground * main.SCALE
 	g.size = size
-	g.tint = Color("#c4c3dc") if main.in_dungeon else Color("#f2e6c8")
+	g.tint = Color("#c4c3dc") if not main.clock.outdoors else Color("#f2e6c8")
 	g.z_index = -2999  # sobre el suelo, bajo entidades
 	main.add_child(g)
 
@@ -203,10 +208,10 @@ func mark(e: Node) -> void:
 func consume(e: Node) -> bool:
 	return marks.erase(e)
 
-func detonate(ground: Vector2) -> void:  # la explosión no marca ni consume marcas: no puede encadenarse
-	detonate_at(ground, mark_spec["radius"], roundi(float(mark_spec["damage"]) * (1.0 + main.prog.skill_sum("mark_dmg_pct"))))
+func detonate(ground: Vector2, weapon_id := "") -> void:  # la explosión no marca ni consume marcas: no puede encadenarse
+	detonate_at(ground, mark_spec["radius"], roundi(float(mark_spec["damage"]) * (1.0 + main.prog.skill_sum("mark_dmg_pct"))), weapon_id)
 
-func detonate_at(ground: Vector2, radius: float, damage: int) -> void:  # también la usa el frasco de Ignis (alquimia)
+func detonate_at(ground: Vector2, radius: float, damage: int, weapon_id := "") -> void:  # también la usa el frasco de Ignis (alquimia)
 	play("blast")
 	flash(ground, Color(1.0, 0.5, 0.15), 1.4, 3.5, 0.45)
 	ground_impact(ground, 1.8)
@@ -214,7 +219,7 @@ func detonate_at(ground: Vector2, radius: float, damage: int) -> void:  # tambi�
 	main.shake(KINDS["blast"]["shake"])
 	for e in main.targets():
 		if e.alive and preload("res://scripts/hitbox.gd").foot_dist(e, ground) < radius:
-			hit(e, roundi(damage * main.prog.magic_mult()), "blast", ground, false)
+			hit(e, roundi(damage * main.prog.magic_mult()), "blast", ground, false, weapon_id)
 
 func _process(delta: float) -> void:
 	if main.clock.outdoors:  # el exterior sigue la hora del día; el resto de zonas tiene su ambiente fijo

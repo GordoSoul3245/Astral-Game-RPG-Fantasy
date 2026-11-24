@@ -9,6 +9,7 @@ var speed := 260.0
 var radius := 6.0         # px del suelo original
 var height := 40.0        # altura de la mano sobre el suelo, en px del sprite
 var ground := Vector2.ZERO  # posición en el suelo, px del suelo original (misma unidad que `pos` del héroe)
+var weapon_id := ""
 var source := "hero"       # quién disparó: "hero" daña al dragón, "dragon" daña al héroe
 var damage := 0
 var tint := Color.WHITE
@@ -27,7 +28,7 @@ var t := 0.0               # reloj de la animación de energía (órbitas y puls
 const HB := preload("res://scripts/hitbox.gd")  # hitbox del cuerpo (silueta del sprite), no un círculo en el suelo
 
 func _burn(e: Node) -> void:  # golpe del héroe: daña y, según el hechizo, marca (fuego), ralentiza (hielo) o encadena (rayo)
-	main.combat.hit(e, damage, "magic", ground)
+	main.combat.hit(e, damage, "magic", ground, true, weapon_id)
 	match effect:
 		"slow":
 			if "slow_t" in e:
@@ -35,11 +36,16 @@ func _burn(e: Node) -> void:  # golpe del héroe: daña y, según el hechizo, ma
 				main.fx_ice(e.pos)
 		"chain":
 			var n := 0
-			for o in main.targets():  # el rayo salta a los 2 enemigos más cercanos con un 60 % del daño
+			var ordered: Array = main.targets().duplicate()
+			ordered.sort_custom(func(a: Node, b: Node) -> bool:
+				var da: float = a.pos.distance_squared_to(e.pos)
+				var db: float = b.pos.distance_squared_to(e.pos)
+				return a.get_instance_id() < b.get_instance_id() if da == db else da < db)
+			for o in ordered:  # el rayo salta a los 2 enemigos más cercanos con un 60 % del daño
 				if n >= 2:
 					break
 				if o != e and o.alive and o.pos.distance_to(e.pos) < 130.0:
-					main.combat.hit(o, roundi(float(damage) * 0.6), "magic", e.pos, false)
+					main.combat.hit(o, roundi(float(damage) * 0.6), "magic", e.pos, false, weapon_id)
 					main.fx_bolt(e.pos, o.pos, Color(0.85, 0.75, 1.0))
 					n += 1
 		"fire":
@@ -68,6 +74,8 @@ func _ready() -> void:
 	glow = main.combat.light(tint if tint != Color.WHITE else Color(1.0, 0.6, 0.25), 0.5 * scale_mult, 0.9 * scale_mult)
 	glow.position = Vector2(0, height * 0.6) * main.SCALE  # ilumina el suelo bajo la bola
 	add_child(glow)
+	if visual == "boulder":
+		glow.energy = 0.0
 	_sync()
 
 func _sync() -> void:

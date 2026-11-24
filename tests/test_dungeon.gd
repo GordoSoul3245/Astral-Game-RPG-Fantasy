@@ -1,5 +1,5 @@
 extends SceneTree
-# Dungeon procedural: pisos conexos con la entrada, la salida y todos los puestos de monstruos alcanzables; jefe cada 4 pisos;
+# Dungeon procedural: pisos conexos con la entrada, la salida y todos los puestos de monstruos alcanzables; jefe cada 3 pisos;
 # niveles de los monstruos (por debajo del héroe al principio, el jefe a su nivel, y subiendo piso a piso); recompensas crecientes;
 # punto de reanudación tras cada jefe; y monstruos del exterior ajustados al nivel del héroe.
 
@@ -58,7 +58,13 @@ func run_checks() -> void:
 	# jefe cada 3 pisos, con jefes que rotan
 	for n in range(1, 13):
 		assert(fl.is_boss_floor(n) == (n % 3 == 0), "el piso %d %s jefe" % [n, "es" if n % 3 == 0 else "no es"])
-	assert(fl.boss_def(3)["id"] == "storm_mage" and fl.boss_def(6)["id"] == "cyclops" and fl.boss_def(9)["id"] == "rey_osario" and fl.boss_def(12)["id"] == "reina_arana" and fl.boss_def(15)["id"] == "hidra_pantano" and fl.boss_def(18)["id"] == "titan_volcanico" and fl.boss_def(21)["id"] == "storm_mage", "los jefes rotan")
+	var seen := {}
+	for seed_value in range(32):
+		fl.layout_state = seed_value
+		var id: String = fl.boss_def(3).id
+		assert(id in ["hidra_pantano","storm_mage"] and fl.boss_def(3).id == id)
+		seen[id] = true
+	assert(seen.size() == 2)
 
 	# niveles: empiezan por debajo del héroe, el jefe va a su nivel y cada tramo sube
 	main.prog.level = 10
@@ -78,7 +84,7 @@ func run_checks() -> void:
 	assert(fl.composition(2).any(func(m: Dictionary) -> bool: return m["id"] == "skeleton_archer"), "arqueros desde el piso 2")
 	assert(fl.composition(2).any(func(m: Dictionary) -> bool: return m["id"] == "cyclops") and fl.composition(4).any(func(m: Dictionary) -> bool: return m["id"] in fl.cfg["enemies"]["mini_pool"]) and not fl.composition(5).any(func(m: Dictionary) -> bool: return m["id"] in fl.cfg["enemies"]["mini_pool"]), "semijefe cada 2 pisos")
 	var boss_comp: Array = fl.composition(3)
-	assert(boss_comp[0]["id"] == "storm_mage" and boss_comp.size() > 3, "el jefe viene con escolta")
+	assert(boss_comp[0]["id"] == fl.boss_def(3).id and boss_comp.size() > 3, "el jefe viene con escolta")
 
 	# el piso real: monstruos a su nivel y jefe con más vida
 	main.prog.level = 8
@@ -86,12 +92,15 @@ func run_checks() -> void:
 	await process_frame
 	var mage: Node = null
 	for e in main.enemies:
-		if e != main.dragon and e.id == "storm_mage":
+		if e != main.dragon and e.id == fl.boss_def(3).id:
 			mage = e
 	assert(mage != null and fl.is_boss, "el piso 3 trae al mago de la tormenta")
-	var base_hp: int = int(main.creatures["storm_mage"]["hp"])
+	var base_hp: int = int(main.creatures[mage.id]["hp"])
 	var mage_hp: int = mage.data["hp"]
-	assert(mage_hp > base_hp, "el jefe está escalado a su nivel (el primero lleva hp_mult 0.6) (%d contra %d)" % [mage_hp, base_hp])
+	var boss: Dictionary = fl.boss_def(3)
+	var scaled_hp := base_hp * (1.0 + float(main.LEVEL_HP) * (int(fl.level_for(3)) - 1))
+	assert(mage_hp == roundi(scaled_hp * float(boss.get("hp_mult", 1.0)) * 0.6 * 0.75))
+	assert(is_equal_approx(fl.composition(3)[0].extra.dmg_mult, float(boss.get("dmg_mult", 1.0)) * 0.85))
 	fl.start(4)
 	await process_frame
 	var pool: Array = fl.cfg["enemies"]["melee_pool"]

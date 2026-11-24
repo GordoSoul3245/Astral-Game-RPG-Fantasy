@@ -84,6 +84,7 @@ func run_checks() -> void:
 	assert(main.hero.self_modulate == Color.WHITE and (main.equip_aura == null or main.equip_aura.energy == 0.0), "sin equipo, aspecto base")
 	main.prog.add_item("armadura_dorada")
 	main.prog.add_item("katana_tormenta")
+	assert(main.wield("katana_tormenta"))
 	main.prog.add_item("amuleto_tormenta")
 	main._apply_stats()
 	assert(main.hero.self_modulate == main.ARMOR_TINT[3], "la armadura dorada tiñe la ropa")

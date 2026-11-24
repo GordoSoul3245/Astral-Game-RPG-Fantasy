@@ -22,7 +22,7 @@ func _ready() -> void:
 		lights.append(l)
 
 func _process(_delta: float) -> void:
-	visible = main.clock.outdoors and not main.in_dungeon
+	visible = main.clock.outdoors
 	if not visible:
 		return
 	var k: float = main.clock.dark()

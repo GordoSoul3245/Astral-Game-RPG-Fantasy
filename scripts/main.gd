@@ -4,6 +4,7 @@ extends Node2D
 # del objeto equipado, 1/2 o Q = cambiar objeto de la barra, Espacio = dash, R = ultimate, rueda = zoom.
 
 const SCALE := 3.0
+const HERO_FRAME_CENTER := Vector2(64, 64)
 const FEET := Vector2(68, 113.7)            # píxel de los pies dentro del sprite de 128x128
 const WALK_SPEED := 100.0     # +11 %: el héroe se sentía lento junto al dash y al combate nuevo
 const SPRINT_SPEED := 200.0
@@ -69,7 +70,7 @@ var hero: AnimatedSprite2D
 var pos := Vector2.ZERO  # pies del personaje, en píxeles del suelo original
 var items := {}
 var hotbar: Array = []           # ids de objeto en la barra; el seleccionado es el equipado
-var selected := 0
+var selected := -1
 var slots: Array[Panel] = []
 var hint_label: Label
 var cooldown := 0.0
@@ -83,6 +84,8 @@ var dashing := false             # durante el dash: invulnerable y atraviesa ent
 var dash_t := 0.0
 const BUFFER_MS := 100          # punto de partida del estudio (probar 70/130)
 var buf := ""                   # una sola acción anticipada: "light", "heavy" o "dash"
+var buffered_target := Vector2.INF
+var buffered_weapon := ""
 var buf_until := 0
 var dash_dir := Vector2.ZERO
 const DASH_GHOST_EVERY := 0.05  # s entre siluetas residuales del dash
@@ -170,7 +173,8 @@ func _ready() -> void:
 				frames.add_frame(key, load("res://art/hechicero/%s%s_%s_%02d.png" % [folder, anim, d, i]), timing[i] if not timing.is_empty() else 1.0)
 	hero = AnimatedSprite2D.new()
 	hero.sprite_frames = frames
-	hero.centered = false
+	hero.centered = true
+	hero.offset = HERO_FRAME_CENTER
 	hero.scale = Vector2.ONE * SCALE
 	var hero_feet := Node2D.new()  # el pasto (grass_manager.gd) se aparta alrededor de los pies del héroe
 	hero_feet.position = FEET
@@ -183,17 +187,8 @@ func _ready() -> void:
 	hero.frame_changed.connect(_on_hero_frame)
 	hero.animation_finished.connect(func() -> void: attacking = false)
 	add_child(hero)
-	contact_shadow = Node2D.new()
-	for layer in 3:
-		var shadow := Polygon2D.new()
-		var outline := PackedVector2Array()
-		for i in 32:
-			var angle := TAU * i / 32.0
-			outline.append(Vector2(cos(angle) * (12 - layer * 2), sin(angle) * (4.5 - layer * 0.7)) * SCALE)
-		shadow.polygon = outline
-		shadow.color = Color(0.04, 0.03, 0.08, 0.10)
-		contact_shadow.add_child(shadow)
-	add_child(contact_shadow)
+	preload("res://scripts/projected_shadow.gd").light_sprite(hero)
+	contact_shadow = preload("res://scripts/projected_shadow.gd").add(self, Vector2.ZERO, 12 * SCALE, 48 * SCALE)
 	var glow_gradient := Gradient.new()
 	glow_gradient.colors = PackedColorArray([Color.WHITE, Color(1, 1, 1, 0)])
 	var glow_texture := GradientTexture2D.new()
@@ -251,7 +246,10 @@ func _ready() -> void:
 	if not testing:
 		fresh = get_tree().get_meta("new_game", false)
 		if not fresh:
-			fresh = not load_game(true)
+			fresh = not FileAccess.file_exists(save_path)
+			if not fresh and not load_game(true):
+				get_tree().change_scene_to_file.call_deferred("res://scenes/title_menu.tscn")
+				return
 		if get_tree().has_meta("new_game"):
 			get_tree().remove_meta("new_game")
 	_apply_stats()
@@ -271,6 +269,7 @@ func _ready() -> void:
 		npc.pos = tile_to_ground(Vector2(trader["tile"][0], trader["tile"][1]))
 		add_child(npc)
 		merchants.append(npc)
+	_build_lamps()
 	_build_world_props()
 	_build_farm()
 	station_ui = CanvasLayer.new()
@@ -287,6 +286,7 @@ func _ready() -> void:
 	add_child(dialogue)
 	_place()
 	if not testing:
+		get_tree().auto_accept_quit = false
 		var start_menu: CanvasLayer = load("res://scripts/start_menu.gd").new()
 		start_menu.main = self
 		add_child(start_menu)
@@ -333,14 +333,14 @@ func quest_event(event: String, target: String) -> void:  # muertes y pisos comp
 	if quests.progress != previous:
 		save_game()
 
-func save_game() -> void:
+func save_game() -> bool:
 	if testing and save_path == "user://save.json":
-		return
-	var d := {"version": 2, "level": prog.level, "xp": prog.xp, "points": prog.points, "spent": prog.spent,
+		return false
+	var d := {"version": 3, "weapon": prog.weapon, "mastery": prog.mastery, "level": prog.level, "xp": prog.xp, "points": prog.points, "spent": prog.spent,
 		"coins": prog.coins, "potions": prog.potions, "materials": prog.materials, "owned": prog.owned,
 		"equipped": prog.equipped, "blueprints": prog.blueprints, "slots": prog.slots, "dungeon_floor": dungeon_floor, "quests": quests.to_dict(), "clock": clock.to_dict(), "stars": prog.stars, "angler": angler.to_dict(), "bait": bait, "rod_parts": prog.rod_parts, "farm": farm.to_dict() if farm else pending_farm, "skills": prog.skills, "skill_points": prog.skill_points, "social": social.to_dict(), "zones_done": zones_done, "tool_up": prog.tool_up, "pets": pets, "books": prog.books}
 	if not pending_player.is_empty():
-		return
+		return false
 	var area := "outdoors"
 	var exterior := pos
 	if in_interior or (in_dungeon and zone_id == ""):
@@ -350,6 +350,8 @@ func save_game() -> void:
 		"x": pos.x, "y": pos.y, "outside_x": exterior.x, "outside_y": exterior.y,
 		"buffs": prog.buffs, "hp": hero_hp, "mana": mana, "stamina": stamina, "ult": ult,
 		"facing": facing, "selected": selected, "zoom": cam.zoom.x}
+	player["death_pending"] = dying or hero_hp <= 0
+	player["effects"] = {"regen_left": regen_left, "regen_rate": regen_rate, "regen_acc": regen_acc, "night_vision_t": night_vision_t, "fish_luck_t": fish_luck_t, "burn_t": burn_t, "burn_mult": burn_mult, "dash_cd": dash_cd}
 	if area == "dungeon" and is_instance_valid(floors):
 		player["floor"] = floors.floor_no
 		player["floor_seed"] = str(floors.layout_state)
@@ -358,23 +360,102 @@ func save_game() -> void:
 		var survivors := []
 		for e in enemies:
 			if e != dragon and e.alive:
-				survivors.append([e.id, e.pos.x, e.pos.y, e.hp])
+				var freeze: Timer = e.get_node_or_null("ElementalFreeze")
+				survivors.append([e.id, e.pos.x, e.pos.y, e.hp, e.get_meta("spawn_slot"), freeze.time_left if freeze else 0.0, e.slow_t])
 		player["enemies"] = survivors
 	d["player"] = player
 	var f := FileAccess.open(save_path + ".tmp", FileAccess.WRITE)
-	if f:
-		f.store_string(JSON.stringify(d, "\t"))
-		f.flush()
-		if f.get_error() == OK:
-			f.close()
-			if DirAccess.rename_absolute(save_path + ".tmp", save_path) != OK:
-				push_error("No se pudo reemplazar la partida guardada")
+	if not f or not f.store_string(JSON.stringify(d, "\t")):
+		return false
+	f.flush()
+	var error := f.get_error()
+	f.close()
+	return error == OK and DirAccess.rename_absolute(save_path + ".tmp", save_path) == OK
+
+static func _number(value: Variant) -> bool:
+	return (value is int or value is float) and is_finite(float(value))
+
+static func _numeric_fields(record: Variant, keys: Array) -> bool:
+	if not record is Dictionary:
+		return false
+	for key in keys:
+		if record.has(key) and not _number(record[key]):
+			return false
+	return true
+
+static func _valid_records(records: Variant, keys: Array) -> bool:
+	if not records is Array:
+		return false
+	for record in records:
+		if not _numeric_fields(record, keys):
+			return false
+	return true
+
+static func valid_save(data: Variant) -> bool:
+	if not data is Dictionary:
+		return false
+	for field in ["xp", "points", "potions", "dungeon_floor", "skill_points"]:
+		if data.has(field) and not _number(data[field]):
+			return false
+	for field in ["materials", "spent", "tool_up", "skills"]:
+		if data.has(field):
+			if not data[field] is Dictionary or not data[field].values().all(_number):
+				return false
+	if data.has("player"):
+		var player = data.player
+		if not player is Dictionary:
+			return false
+		for field in ["hp", "x", "y", "outside_x", "outside_y", "mana", "ult", "stamina", "floor", "zoom", "selected"]:
+			if player.has(field) and not _number(player[field]):
+				return false
+		if player.has("effects") and (not player.effects is Dictionary or not player.effects.values().all(_number)):
+			return false
+		if not _valid_records(player.get("buffs", []), ["amount", "t"]):
+			return false
+		if not player.get("enemies", []) is Array:
+			return false
+		for row in player.get("enemies", []):
+			if not row is Array or row.size() not in [4, 7] or not row[0] is String or not row.slice(1).all(_number):
+				return false
+		if player.has("floor_seed") and not str(player.floor_seed).is_valid_int():
+			return false
+	if not _numeric_fields(data.get("clock", {}), ["hour", "day", "total"]) or not _numeric_fields(data.get("quests", {}), ["idx"]):
+		return false
+	var farm_data = data.get("farm", {})
+	if not farm_data is Dictionary or not _valid_records(farm_data.get("plots", []), ["growth", "wet"]):
+		return false
+	var angling = data.get("angler", {})
+	var social_data = data.get("social", {})
+	if not angling is Dictionary or not social_data is Dictionary:
+		return false
+	for group in [angling.get("bin", {}), angling.get("done", {}), social_data.get("friend", {}), social_data.get("gifted", {}), social_data.get("talked", {})]:
+		if not group is Dictionary or not group.values().all(_number):
+			return false
+	if not angling.get("book", {}) is Dictionary or not _valid_records(angling.get("book", {}).values(), ["count", "best_cm", "best_star"]):
+		return false
+	if not angling.get("claimed", []) is Array or not angling.get("claimed", []).all(_number):
+		return false
+	if not _valid_records(angling.get("traps", []), ["ready"]):
+		return false
+	for trap in angling.get("traps", []):
+		if not trap.get("pos") is Array or trap.pos.size() != 2 or not trap.pos.all(_number):
+			return false
+	if not data.get("stars", {}) is Dictionary:
+		return false
+	for pair in data.get("stars", {}).values():
+		if not pair is Array or pair.size() != 2 or not pair.all(_number):
+			return false
+	var version: Variant = data.get("version", 1)
+	return (version is int or version is float) and (version == 1 or version == 2 or version == 3) and (data.get("level") is int or data.get("level") is float) and (data.get("coins") is int or data.get("coins") is float)
 
 func load_game(resume_session := false) -> bool:  # valida cada campo: el archivo puede estar editado o ser de otra versión
 	if not FileAccess.file_exists(save_path):
 		return false
-	var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(save_path))
-	if not d is Dictionary:
+	var json := JSON.new()
+	if json.parse(FileAccess.get_file_as_string(save_path)) != OK:
+		return false
+	var d: Variant = json.data
+	if not valid_save(d):
 		push_warning("partida guardada ilegible: se ignora")
 		return false
 	prog.level = maxi(1, int(d.get("level", 1)))
@@ -412,13 +493,36 @@ func load_game(resume_session := false) -> bool:  # valida cada campo: el archiv
 		for b: Variant in d["books"]:
 			if WEAPONS.has(str(b)) and not prog.books.has(str(b)):
 				prog.books.append(str(b))
+	var old_id := "katana_ceniza"
+	var old_slots = d.get("slots", [])
+	if old_slots is Array and not old_slots.is_empty():
+		var player_data = d.get("player", {})
+		var index := int(player_data.get("selected", 0)) if player_data is Dictionary else 0
+		if index >= 0 and index < old_slots.size() and prog.owns_weapon(str(old_slots[index])):
+			old_id = str(old_slots[index])
+	old_id = str(prog.equipped.get("sword" if old_id == "katana_ceniza" else "grimoire", old_id))
+	if not prog.wield(str(d.get("weapon",old_id))):
+		prog.wield("katana_ceniza")
+	prog.mastery.clear()
+	var records = d.get("mastery", {})
+	if records is Dictionary:
+		for id in records:
+			if prog.owns_weapon(str(id)) and records[id] is Dictionary:
+				var state: Dictionary = prog.training(id)
+				for key in ["level","kills","orbs"]:
+					if typeof(records[id].get(key)) in [TYPE_INT,TYPE_FLOAT]:
+						state[key] = clampi(int(records[id][key]), 1 if key=="level" else 0, 5 if key=="level" else (9 if key=="kills" else 1000000000))
+				if records[id].get("nodes") is Array:
+					for node in ["discipline","technique","power","master"]:
+						if node in records[id].nodes:
+							state.nodes.append(node)
 	var layout: Array = []
 	if d.get("slots") is Array:
 		for i in HOTBAR_MAX:
 			var sid := str(d["slots"][i]) if i < (d["slots"] as Array).size() else ""
 			layout.append(sid if (sid == "" or (can_hotbar(sid) and not layout.has(sid))) else "")
 	else:  # partida anterior a la barra editable: armas, herramientas equipadas y los consumibles elegidos
-		layout = WEAPONS.filter(func(w: String) -> bool: return prog.books.has(w))
+		layout = []
 		for kind: String in ["pickaxe", "axe", "rod"]:
 			if prog.equipped.has(kind):
 				layout.append(prog.equipped[kind])
@@ -430,9 +534,11 @@ func load_game(resume_session := false) -> bool:  # valida cada campo: el archiv
 	while layout.size() < HOTBAR_MAX:
 		layout.append("")
 	prog.slots = layout
+	refresh_weapon_hud()
 	tool_seen = prog.equipped.duplicate()
 	_refresh_hotbar()
-	dungeon_floor = (clampi(int(d.get("dungeon_floor", 1)), 1, 999) - 1) / 4 * 4 + 1  # siempre un punto de reanudación (piso 1, 5, 9...)
+	var interval := int(_read_json("res://data/dungeon.json").boss_every)
+	dungeon_floor = (clampi(int(d.get("dungeon_floor",1)),1,999)-1) / interval * interval + 1
 	if d.get("quests") is Dictionary:
 		quests.from_dict(d["quests"])
 	if d.get("clock") is Dictionary:
@@ -508,7 +614,7 @@ func _restore_player() -> void:
 		for e in enemies.duplicate():
 			if e == dragon:
 				continue
-			var index := remaining.find_custom(func(row: Variant) -> bool: return row is Array and row.size() == 4 and row[0] == e.id)
+			var index := remaining.find_custom(func(row: Variant) -> bool: return row is Array and row.size() >= 4 and row[0] == e.id and (row.size() == 4 or (row.size() == 7 and int(row[4]) == e.get_meta("spawn_slot"))))
 			if index < 0:
 				enemies.erase(e)
 				e.queue_free()
@@ -516,6 +622,10 @@ func _restore_player() -> void:
 				var row: Array = remaining.pop_at(index)
 				e.pos = Vector2(float(row[1]), float(row[2]))
 				e.hp = maxi(1, int(row[3]))
+				if row.size() == 7:
+					e.slow_t = maxf(0, float(row[6]))
+					if float(row[5]) > 0:
+						preload("res://scripts/elemental_magic.gd")._freeze(e, float(row[5]))
 		if saved.get("area") == "dungeon" and remaining.is_empty() and enemies.all(func(e: Node) -> bool: return e == dragon):
 			floors._clear(false)
 			if saved.get("opened", false):
@@ -536,16 +646,39 @@ func _restore_player() -> void:
 	ult = clampf(float(saved.get("ult", ult)), 0, hero_data.ult_max)
 	if saved.get("facing") in DIRS:
 		facing = saved.facing
-	var hand := clampi(int(saved.get("selected", selected)), 0, HOTBAR_MAX - 1)
+	var hand := clampi(int(saved.get("selected", selected)), -1, HOTBAR_MAX - 1)
 	_select(hand)
 	cam.zoom = Vector2.ONE * clampf(float(saved.get("zoom", cam.zoom.x)), ZOOM_MIN, ZOOM_MAX)
 	cam.position = (pos - Vector2(0, 40)) * SCALE
-	_place()
+	var effects: Dictionary = saved.get("effects", {})
+	regen_left = maxf(0, effects.get("regen_left", 0.0))
+	regen_rate = maxf(0, effects.get("regen_rate", 0.0))
+	regen_acc = maxf(0, effects.get("regen_acc", 0.0))
+	night_vision_t = maxf(0, effects.get("night_vision_t", 0.0))
+	fish_luck_t = maxf(0, effects.get("fish_luck_t", 0.0))
+	burn_t = maxf(0, effects.get("burn_t", 0.0))
+	burn_mult = maxf(0, effects.get("burn_mult", 1.0))
+	dash_cd = maxf(0, effects.get("dash_cd", 0.0))
 	pending_player = {}
+	if saved.get("death_pending", false) or int(saved.get("hp", 1)) <= 0:
+		_respawn()
+	_place()
 
 func _notification(what: int) -> void:
+	if what == NOTIFICATION_PAUSED:
+		buf = ""
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
-		save_game()
+		if save_game():
+			if not testing:
+				get_tree().quit()
+		elif not testing:
+			var notice := AcceptDialog.new()
+			notice.process_mode = Node.PROCESS_MODE_ALWAYS
+			notice.dialog_text = "No se pudo guardar. La partida sigue abierta. Revisá el espacio y los permisos antes de reintentar."
+			add_child(notice)
+			notice.close_requested.connect(notice.queue_free)
+			notice.confirmed.connect(notice.queue_free)
+			notice.popup_centered()
 
 # --- puertas, avisos y dungeon
 const DUNGEON_TILES := preload("res://scripts/dungeon_gen.gd").N
@@ -584,7 +717,7 @@ func _build_prompt() -> void:
 	quest_label.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	quest_label.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	quest_label.offset_right = -18.0
-	quest_label.offset_top = 70.0
+	quest_label.offset_top = 78.0
 	quest_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	quest_label.add_theme_font_size_override("font_size", 20)
 	quest_label.add_theme_color_override("font_color", Color(1.0, 0.88, 0.55))
@@ -601,7 +734,7 @@ var loot_box: HBoxContainer
 var loot_t := 0.0
 
 func item_icon(id: String) -> String:
-	return "res://art/items/%s.png" % id
+	return icon_of(id)  # planos usan el icono de plano, no uno propio
 
 func show_loot(ids: Array) -> void:  # muestra los iconos de los objetos obtenidos unos segundos
 	for c in loot_box.get_children():
@@ -619,7 +752,7 @@ func say(text: String, secs := 1.5) -> void:  # aviso temporal sobre la barra de
 	say_text = text
 	say_t = secs
 
-func _add_door(tile: Vector2, label: String, on_open: Callable, visible_door := true) -> Node2D:
+func _add_door(tile: Vector2, label: String, on_open: Callable, visible_door := true, design := "standard") -> Node2D:
 	var d := Node2D.new()
 	d.set_script(load("res://scripts/door.gd"))
 	d.main = self
@@ -627,16 +760,21 @@ func _add_door(tile: Vector2, label: String, on_open: Callable, visible_door := 
 	d.label = label
 	d.on_open = on_open
 	d.draw_door = visible_door
+	d.design = design
 	add_child(d)
 	doors.append(d)
 	return d
 
 func _near_door() -> Node2D:
 	var t := ground_to_tile(pos)
+	var nearest: Node2D
+	var best := INF
 	for d: Node2D in doors:
-		if t.distance_to(d.tile) <= d.reach:
-			return d
-	return null
+		var distance := t.distance_to(d.tile)
+		if distance <= d.reach and distance < best:
+			nearest = d
+			best = distance
+	return nearest
 
 func social_target() -> String:  # con quién se puede hablar y a quién regalar: id de data/npcs.json
 	if in_dungeon and not in_interior:
@@ -799,6 +937,7 @@ func _update_prompt(delta: float) -> void:
 			prompt.text += "  ·  [G] Regalar  %s" % social.hearts_text(sid)
 
 func _transition(change: Callable) -> void:  # fundido a negro, cambio de mapa y fundido de vuelta
+	buf = ""
 	transitioning = true
 	var t := create_tween()
 	t.tween_property(fade, "color:a", 1.0, 0.25)
@@ -835,7 +974,7 @@ func _enter_dungeon() -> void:
 	add_child(dungeon_node)
 	dungeon_node.setup({"tiles": DUNGEON_TILES})
 	world = dungeon_node
-	_add_door(Vector2(DUNGEON_TILES / 2.0, 0.25), "Salir de la dungeon", exit_dungeon)  # su cara trasera (0.25 m de fondo) toca el borde del suelo
+	_add_door(Vector2(DUNGEON_TILES / 2.0, 0.25), "Salir de la dungeon", exit_dungeon,true,"dungeon")  # su cara trasera (0.25 m de fondo) toca el borde del suelo
 	pos = _dungeon_spawn()
 	cam.position = (pos - Vector2(0, 40)) * SCALE
 	floors = Node.new()
@@ -916,7 +1055,7 @@ func _enter_interior(id: String) -> void:  # como la dungeon: oculta el exterior
 	add_child(dungeon_node)
 	dungeon_node.setup(cfg)
 	world = dungeon_node
-	_add_door(Vector2(n / 2.0, 0.25), "Salir de la casa", exit_interior)
+	_add_door(Vector2(n / 2.0, 0.0), "Salir de la casa", exit_interior,true,"house")
 	pos = tile_to_ground(Vector2(n / 2.0, 2.4))
 	cam.position = (pos - Vector2(0, 40)) * SCALE
 	for nd: Dictionary in cfg["npcs"]:
@@ -1038,12 +1177,16 @@ func sword_trail_color() -> Color:  # color del tajo según la espada equipada (
 		return Color.html(prog.equipment[sid]["trail"])
 	return SWORD_TRAIL.get(_tier("sword"), Color.html(current["trail_color"]))
 
+var next_spawn_slot := 1
+
 func spawn_enemy(id: String, ground: Vector2) -> Node2D:
 	var e := Node2D.new()
 	e.set_script(load("res://scripts/enemy.gd"))
 	e.main = self
 	e.data = _scaled(creatures[id]) if in_dungeon else level_data(id, world_level(false))
 	e.id = id
+	e.set_meta("spawn_slot", next_spawn_slot)
+	next_spawn_slot += 1
 	e.pos = ground
 	add_child(e)
 	enemies.append(e)
@@ -1197,12 +1340,80 @@ func _update_bars() -> void:
 	info_label.text = "Monedas %d  ·  Menú [I]%s  ·  %s" % [prog.coins, ("  ·  ¡%d puntos!" % prog.points) if prog.points > 0 else "", clock.text()]
 	burn_label.text = "Espada en llamas  %.1f s" % burn_t if burn_t > 0.0 else ""
 
+var weapon_button: Button
+var weapon_icon: TextureRect
+var weapon_name: Label
+var weapon_status: Label
+
+func _build_weapon_hud(ui: CanvasLayer) -> void:
+	const Skin = preload("res://scripts/menu.gd")
+	weapon_button = Button.new()
+	ui.add_child(weapon_button)
+	weapon_button.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+	weapon_button.offset_left = ceilf(bars.ult.offset_left + bars.ult.size.x * bars.ult.scale.x) + 12
+	weapon_button.offset_right = weapon_button.offset_left + 280
+	weapon_button.offset_top = -157
+	weapon_button.offset_bottom = -46
+	weapon_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	for state in ["normal","hover","pressed","focus"]:
+		var border := Color("#91704e") if state == "normal" else Color("#ffda91")
+		weapon_button.add_theme_stylebox_override(state,Skin._box(Color("#191823"),border,2,6,4))
+	weapon_button.pressed.connect(func(): menu.open_weapon(prog.weapon))
+	var badge := Panel.new()
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	badge.position = Vector2(8,8)
+	badge.size = Vector2(62,62)
+	badge.add_theme_stylebox_override("panel",Skin._box(Color("#302635"),Color("#b08b58"),2,4,2))
+	weapon_button.add_child(badge)
+	weapon_icon = TextureRect.new()
+	weapon_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	weapon_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	weapon_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	weapon_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	weapon_icon.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	badge.add_child(weapon_icon)
+	weapon_name = Label.new()
+	weapon_name.position = Vector2(80,9)
+	weapon_name.size = Vector2(196,32)
+	weapon_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	weapon_name.add_theme_font_size_override("font_size",19)
+	weapon_name.add_theme_color_override("font_color",Color("#ffe3a6"))
+	weapon_button.add_child(weapon_name)
+	weapon_status = Label.new()
+	weapon_status.position = Vector2(80,42)
+	weapon_status.add_theme_color_override("font_color",Color("#ddc4ee"))
+	weapon_button.add_child(weapon_status)
+	bars["orb"] = preload("res://scripts/health_bar.gd").new(preload("res://scripts/health_bar.gd").Kind.ORB)
+	weapon_button.add_child(bars["orb"])
+	bars.orb.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	bars.orb.position = Vector2(8,71)
+	bars.orb.size = Vector2(260,38)
+	bars.orb.scale = Vector2.ONE
+	refresh_weapon_hud()
+
+func refresh_weapon_hud() -> void:
+	if not is_instance_valid(weapon_button):
+		return
+	var id: String = prog.weapon
+	var state: Dictionary = prog.training(id)
+	weapon_name.text = items[id].name
+	weapon_icon.texture = load(items[id].icon)
+	weapon_status.text = "Nv. %d   ·   %d %s" % [state.level,state.orbs,"orbe" if state.orbs == 1 else "orbes"]
+	_set_bar("orb",state.kills,10,"%d / 10" % state.kills)
+	weapon_button.tooltip_text = "%s · Abrir arma y árbol de mejoras" % items[id].name
+
 func _load_inventory() -> void:
 	items = _read_json("res://data/items.json")
 	items[""] = {"name": "Manos libres", "icon": "", "hand": "empty", "light": {"name": "casilla vacía: arrastra un objeto desde el inventario [I]"}}
-	var inv := _read_json("res://data/inventory_test.json")
+	for id: String in prog.equipment:
+		if prog.weapon_gear(id):
+			var gear: Dictionary = prog.equipment[id]
+			items[id] = items["katana_ceniza" if gear.slot == "sword" else "grimorio_ignis"].duplicate(true)
+			items[id].name = gear.name
+			items[id].desc = gear.desc
+			items[id].icon = item_icon(id)
 	hotbar = prog.slots
-	selected = int(inv["selected"])
+	selected = -1
 	var ui := CanvasLayer.new()
 	add_child(ui)
 	const ResourceBar = preload("res://scripts/health_bar.gd")
@@ -1214,11 +1425,12 @@ func _load_inventory() -> void:
 	ui.add_child(bars["stamina"])
 	bars["ult"] = preload("res://scripts/ultimate_flask.gd").new()
 	ui.add_child(bars["ult"])
+	_build_weapon_hud(ui)
 	bars["xp"] = ResourceBar.new(ResourceBar.Kind.XP)
 	ui.add_child(bars["xp"])
 	info_label = Label.new()
 	info_label.add_theme_font_size_override("font_size", 20)
-	info_label.position = Vector2(16, 141)
+	info_label.position = Vector2(16, 162)
 	ui.add_child(info_label)
 	# lo que no está en el inventario-libro de PixelLab se abre desde aquí (por ahora): Pesca, Magia, Estadísticas y Opciones
 	var hud_tabs := HBoxContainer.new()
@@ -1229,21 +1441,22 @@ func _load_inventory() -> void:
 	for pair in [["fish", "Pesca"], ["magic", "Magia"], ["stats", "Estadísticas"]]:
 		var b := Button.new()
 		b.text = pair[1]
-		b.focus_mode = Control.FOCUS_NONE
+		b.focus_mode = Control.FOCUS_ALL
 		preload("res://scripts/menu.gd").style_button(b)
-		b.custom_minimum_size = Vector2(0, 38)
 		b.add_theme_font_size_override("font_size", 17)
-		b.pressed.connect(func() -> void: menu.open_tab(pair[0]))
+		b.custom_minimum_size = (Vector2(b.get_minimum_size().x, maxf(38, b.get_minimum_size().y)) * 1.17).round()
+		b.add_theme_font_size_override("font_size", 20)
+		b.pressed.connect(func() -> void: menu.open_tab(pair[0], b))
 		hud_tabs.add_child(b)
 	buff_label = Label.new()
-	buff_label.position = Vector2(16, 209)
+	buff_label.position = Vector2(16, 230)
 	buff_label.add_theme_font_size_override("font_size", 18)
 	buff_label.add_theme_color_override("font_color", Color(0.6, 0.95, 0.7))
 	buff_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	buff_label.add_theme_constant_override("outline_size", 5)
 	ui.add_child(buff_label)
 	burn_label = Label.new()
-	burn_label.position = Vector2(16, 183)
+	burn_label.position = Vector2(16, 204)
 	burn_label.add_theme_color_override("font_color", Color(1.0, 0.6, 0.2))
 	ui.add_child(burn_label)
 	_update_bars()
@@ -1275,6 +1488,8 @@ func _load_inventory() -> void:
 	_refresh_hotbar(true)
 
 func _select(i: int) -> void:
+	if i != selected:
+		buf = ""
 	if _fishing():
 		fishing.cancel()
 	_cancel_aim()
@@ -1286,7 +1501,7 @@ func _select(i: int) -> void:
 		sb.border_color = Color(0.95, 0.75, 0.3) if n == i else Color(0.4, 0.45, 0.55)
 		sb.set_corner_radius_all(6)
 		slots[n].add_theme_stylebox_override("panel", sb)
-	var it: Dictionary = items[hotbar[i]]
+	var it: Dictionary = items[active_hand()]
 	if it.has("hand"):
 		hint_label.text = "%s%s  ·  clic izq: %s%s" % [it["name"], "  ×%d" % crafting.count(hotbar[i]) if it["hand"] == "consumable" else "", it["light"]["name"],
 			"  ·  [B] cebo: %s" % (crafting.item_name(bait) if bait != "" else "ninguno") if it["hand"] == "rod" else ""]
@@ -1450,7 +1665,6 @@ func damage_hero(n: int) -> void:
 		dying = true
 		attacking = false
 		reaction_time = 1.0
-		hero.offset = Vector2(-32, -32)
 		hero.play("death_" + facing)
 	elif not attacking:
 		reaction_time = 0.2
@@ -1458,7 +1672,7 @@ func damage_hero(n: int) -> void:
 
 func _respawn() -> void:
 	dying = false
-	hero.offset = Vector2.ZERO
+	hero.offset = HERO_FRAME_CENTER
 	reaction_time = 0.0
 	hero_hp = hero_max_hp
 	mana = hero_data["mana"]
@@ -1520,6 +1734,7 @@ func spawn_projectile(source: String, ground: Vector2, dir: Vector2, spec: Dicti
 	p.set_script(load("res://scripts/projectile.gd"))
 	p.main = self
 	p.source = source
+	p.weapon_id = str(spec.get("weapon_id", prog.weapon)) if source == "hero" else ""
 	p.dir = dir
 	p.speed = spec["speed"]
 	p.radius = spec["radius"]
@@ -1625,7 +1840,11 @@ func _push_out(list: Array) -> void:  # saca al héroe de los enemigos
 	for e in list:
 		var off: Vector2 = pos - e.pos
 		if off.length() < e.radius + HERO_RADIUS:
-			pos = e.pos + off.normalized() * (e.radius + HERO_RADIUS)
+			var normal := off.normalized() if not off.is_zero_approx() else Vector2.from_angle(DIRS.find(facing) * PI / 4.0)
+			var depth: float = e.radius + HERO_RADIUS - off.length()
+			var steps := maxi(1, ceili(depth / 3.0))
+			for step in steps:
+				pos = world.move_collide(pos, pos + normal * depth / steps, HERO_R_T)
 
 # ¿alcanza el recurso para este ataque? (maná para magia, estamina para espada)
 func mana_cost(spec: Dictionary) -> float:  # la eficiencia del grimorio abarata los hechizos
@@ -1643,16 +1862,20 @@ func _pay(spec: Dictionary) -> void:
 		stamina_idle = 0.0
 
 # clic izquierdo = "light", clic derecho = "heavy" del objeto equipado (data/items.json)
-func _attack(mode: String) -> bool:  # true si el ataque empezó (y se cobró)
+func _attack(mode: String, target := Vector2.INF) -> bool:  # true si el ataque empezó (y se cobró)
 	if _fishing():
 		return false
 	if attacking or dashing or aiming or gathering or cooldown > 0.0:
 		return false
-	if items[hotbar[selected]].has("hand"):
-		return _use_hand(hotbar[selected], items[hotbar[selected]])
-	var spec: Dictionary = items[hotbar[selected]][mode]
+	if items[active_hand()].has("hand"):
+		return _use_hand(active_hand(), items[active_hand()])
+	var spec := weapon_attack(mode)
 	if not _afford(spec):
 		return false
+	if spec.type == "ice_spike":
+		aim_cell = ground_to_tile(_mouse() / SCALE if target == Vector2.INF else target).round()
+		if world.blocked(aim_cell, 0.05):
+			return false
 	_pay(spec)
 	_begin(spec, mode)
 	return true
@@ -1662,23 +1885,25 @@ func _press(action: String) -> void:
 	var started: bool = _dash() if action == "dash" else _attack(action)
 	if not started:
 		buf = action
+		buffered_target = _mouse() / SCALE
+		buffered_weapon = active_hand()
 		buf_until = Time.get_ticks_msec() + BUFFER_MS
 
 func _try_buffer() -> void:
 	if buf == "":
 		return
-	if Time.get_ticks_msec() > buf_until:
+	if Time.get_ticks_msec() > buf_until or buffered_weapon != active_hand():
 		buf = ""
 		return
-	var started: bool = _dash() if buf == "dash" else _attack(buf)
+	var started: bool = _dash() if buf == "dash" else _attack(buf, buffered_target)
 	if started:
 		buf = ""
 
 # arranca un ataque o ultimate: orienta al héroe y reproduce su animación (o dispara al instante si no tiene)
 func _begin(spec: Dictionary, mode: String) -> void:
+	var book := str(spec.get("weapon_id", prog.weapon))
+	spell_light.color = {"grimorio_escarcha": Color("#9adfff"), "grimorio_tierra": Color("#b89564"), "grimorio_tormenta": Color("#b8aeff")}.get(book, Color("#ff943f"))
 	current = spec
-	if spec.type == "ice_spike":
-		aim_cell = ground_to_tile(_mouse() / SCALE).round()
 	current_mode = mode
 	if spec.type == "fissure":
 		var rest := hero.offset
@@ -1691,6 +1916,10 @@ func _begin(spec: Dictionary, mode: String) -> void:
 	swing_mana = 0.0
 	recover_t = 0.0
 	aim_dir = _chest_aim()
+	if spec.type == "ice_spike":
+		var to_target := tile_to_ground(aim_cell) - pos
+		if not to_target.is_zero_approx():
+			aim_dir = to_target.normalized()
 	facing = DIRS[posmod(roundi(aim_dir.angle() / (PI / 4.0)), 8)]  # el héroe mira hacia donde ataca
 	if current.has("anim"):
 		attacking = true
@@ -1757,9 +1986,9 @@ func _strike() -> void:
 					continue
 				if current_mode == "heavy" and combat.consume(e):  # el pesado detona la marca de Ignis
 					blasts.append(e.pos)
-				combat.hit(e, roundi(dmg), current_mode, pos)
+				combat.hit(e, roundi(dmg), current_mode, pos, true, current.get("weapon_id", prog.weapon))
 			for b in blasts:
-				combat.detonate(b)
+				combat.detonate(b, current.get("weapon_id", prog.weapon))
 
 func _spawn_trail() -> void:  # la cinta sigue el filo calibrado de esta animación; la espada pone color, ancho y persistencia
 	var t: Node2D = preload("res://scripts/slash_trail.gd").new()
@@ -1785,7 +2014,7 @@ func _spawn_dash_dust(direction: Vector2) -> void:
 	var dust := preload("res://scripts/dash_dust.gd").new()
 	dust.position = pos * SCALE
 	dust.direction = direction
-	dust.tint = Color("#8e8da1") if in_dungeon else Color("#b7a38a")
+	dust.tint = Color("#8e8da1") if not clock.outdoors else Color("#b7a38a")
 	dust.z_index = int(pos.y) + 1
 	add_child(dust)
 
@@ -1794,9 +2023,9 @@ func _ultimate() -> void:
 	if aiming:
 		_cancel_aim()
 		return
-	if ult < hero_data["ult_max"] or attacking or dashing or items[hotbar[selected]].has("hand"):
+	if gathering or ult < hero_data["ult_max"] or attacking or dashing:
 		return
-	var u: Dictionary = items[hotbar[selected]]["ultimate"]
+	var u := weapon_attack("ultimate")
 	if u["type"] == "meteor":
 		aiming = true  # el clic izquierdo elige dónde cae
 		aim_marker = Node2D.new()
@@ -1805,6 +2034,12 @@ func _ultimate() -> void:
 		aim_marker.z_index = -3000
 		add_child(aim_marker)
 	elif u["type"] in ["freeze", "fissure"]:
+		if u.type == "fissure":
+			var origin := ground_to_tile(pos)
+			var direction := (ground_to_tile(pos + _chest_aim()) - origin).normalized()
+			if preload("res://scripts/elemental_magic.gd").fissure_length(self, origin, direction) <= 0:
+				say("Necesitás espacio para abrir la grieta.")
+				return
 		ult = 0.0
 		_begin(u, "ultimate")
 	elif u["type"] == "flame_dash":
@@ -1817,7 +2052,7 @@ func _cancel_aim() -> void:
 		aim_marker = null
 
 func _update_aim() -> void:  # el marcador sigue al cursor y solo es válido dentro del rango de casillas
-	var u: Dictionary = items[hotbar[selected]]["ultimate"]
+	var u := weapon_attack("ultimate")
 	var t := ground_to_tile(_mouse() / SCALE)
 	aim_cell = Vector2(floorf(t.x), floorf(t.y))
 	var h := ground_to_tile(pos)
@@ -1830,7 +2065,7 @@ func _update_aim() -> void:  # el marcador sigue al cursor y solo es válido den
 	aim_marker.color = Color(1.0, 0.4, 0.1) if aim_valid else Color(0.6, 0.6, 0.6)
 
 func _confirm_meteor() -> void:
-	var u: Dictionary = items[hotbar[selected]]["ultimate"]
+	var u := weapon_attack("ultimate")
 	ult = 0.0
 	var cell := aim_cell
 	_cancel_aim()
@@ -1874,7 +2109,7 @@ void fragment() {
 }"""
 	var g := Sprite2D.new()
 	g.texture = hero.sprite_frames.get_frame_texture(hero.animation, hero.frame)
-	g.centered = false
+	g.centered = hero.centered
 	g.scale = hero.scale
 	g.offset = hero.offset
 	g.position = hero.position
@@ -1921,9 +2156,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif not attacking:
 			var i: int = event.physical_keycode - KEY_1
 			if event.physical_keycode == KEY_Q:
-				_select((selected + 1) % hotbar.size())
+				_select(-1 if selected == hotbar.size()-1 else selected+1)
 			elif i >= 0 and i < hotbar.size():
-				_select(i)
+				_select(-1 if selected == i else i)
 	if event is InputEventMouseButton and event.pressed:
 		if aiming:
 			if event.button_index == MOUSE_BUTTON_LEFT and aim_valid:
@@ -1956,6 +2191,12 @@ func _process(delta: float) -> void:
 	fade.visible = fade.color.a > 0.0  # el fundido transparente ocupa toda la pantalla: oculto no se pinta
 	var casting: bool = attacking and current.get("anim", "") == "cast"
 	var light_target := 0.45 if (casting or burn_t > 0.0 or mega_active) and not dying else 0.0
+	if casting and spell_light.color == Color("#b89564"):
+		light_target *= 0.35
+	elif casting and spell_light.color == Color("#9adfff"):
+		light_target *= 0.75 if not struck else 0.25
+	elif not casting and (burn_t > 0.0 or mega_active):
+		spell_light.color = Color("#ff943f")
 	spell_light.energy = lerpf(spell_light.energy, light_target, 1.0 - exp(-12.0 * delta))
 	spell_light.position = (pos - Vector2(0, 24)) * SCALE
 	if aiming:
@@ -2040,7 +2281,7 @@ func _physics_process(delta: float) -> void:
 			for e in targets():  # el mega dash daña (una vez) a todo lo que atraviesa
 				if e.alive and not mega_hits.has(e) and preload("res://scripts/hitbox.gd").dist(e, pos - Vector2(0, 40)) < 10.0:
 					mega_hits.append(e)
-					combat.hit(e, roundi(mega_spec["damage"] * prog.melee_mult()), "heavy", pos, false)
+					combat.hit(e, roundi(mega_spec["damage"] * prog.melee_mult()), "heavy", pos, false, mega_spec.get("weapon_id", prog.weapon))
 					shake(8.0)
 		if dash_t >= dash_time_cur:
 			dashing = false
@@ -2123,13 +2364,9 @@ func _place() -> void:
 	hero.position = (pos - FEET) * SCALE
 	hero.z_index = int(pos.y)
 	if is_instance_valid(contact_shadow):
-		var sh: Dictionary = clock.shadow() if clock.outdoors else {"dx": 0.0, "len": 1.0, "alpha": 1.0}
-		contact_shadow.position = pos * SCALE + Vector2(float(sh["dx"]) * 10.0 * SCALE, 0.0)
-		contact_shadow.scale = Vector2(float(sh["len"]), 1.0)
-		contact_shadow.modulate.a = float(sh["alpha"])
+		contact_shadow.position = pos * SCALE
 	if equip_aura:
 		equip_aura.position = (pos - Vector2(0, 34)) * SCALE
-		contact_shadow.z_index = hero.z_index - 1
 
 # --- creación: estaciones del mundo, recolección y mina (data/crafting.json)
 var stations: Array = []     # {station, scene, tile, reach, label}: dónde se usa cada oficio
@@ -2286,8 +2523,49 @@ func _hand_item(id: String) -> Dictionary:  # entrada tipo items.json para una h
 var tool_seen := {}    # ranura de herramienta -> última equipada que ya se colocó en la barra
 var hotbar_sig := ""
 
+func active_hand() -> String:
+	return prog.weapon if selected < 0 or hotbar[selected] == "" else hotbar[selected]
+
+func weapon_attack(mode: String, id := "") -> Dictionary:
+	if id.is_empty():
+		id = prog.weapon
+	var spec: Dictionary = items[id][mode].duplicate()
+	var state: Dictionary = prog.training(id)
+	spec.weapon_id = id
+	if spec.has("damage"):
+		var multiplier: float = 1 + 0.1 * (state.level-1)
+		if "power" in state.nodes and mode == "heavy":
+			multiplier += 0.25
+		if "master" in state.nodes:
+			multiplier += 0.2
+		spec.damage = roundi(spec.damage * multiplier)
+	if "discipline" in state.nodes:
+		for cost in ["mana","stamina"]:
+			if spec.has(cost):
+				spec[cost] *= 0.85
+	if "technique" in state.nodes:
+		if spec.has("arc"):
+			spec.arc += 25
+		elif id == "grimorio_escarcha" and spec.type == "ice_spike":
+			spec.area_size = 3
+		elif spec.has("speed") and id != "grimorio_escarcha":
+			spec.speed *= 1.25
+		elif spec.type == "stone_fist":
+			spec.fist_radius = 1.7
+	return spec
+
+func wield(id: String) -> bool:
+	if attacking or dashing or gathering or not prog.wield(id):
+		return false
+	buf = ""
+	_select(-1)
+	_apply_stats()
+	refresh_weapon_hud()
+	save_game()
+	return true
+
 func can_hotbar(id: String) -> bool:  # qué puede ir en la barra: armas base, consumibles y herramientas que tengas
-	return (WEAPONS.has(id) and prog.books.has(id)) or crafting.is_consumable(id) or (prog.equipment.has(id) and prog.equipment[id].has("tool") and prog.owned.has(id))
+	return crafting.is_consumable(id) or (prog.equipment.has(id) and prog.equipment[id].has("tool") and prog.owned.has(id))
 
 func icon_of(id: String) -> String:
 	return items[id]["icon"] if WEAPONS.has(id) else crafting.icon(id)
@@ -2390,7 +2668,7 @@ func _refresh_hotbar(force := false) -> void:
 			count_labels[hotbar[i]] = cnt
 		slots.append(panel)
 	_update_counts()
-	_select(clampi(selected, 0, HOTBAR_MAX - 1))
+	_select(clampi(selected, -1, HOTBAR_MAX - 1))
 
 func _update_counts() -> void:
 	for id: String in count_labels:
@@ -2428,7 +2706,7 @@ func _build_lamps() -> void:  # farolas en las puertas de las casas y junto a lo
 	lamps.set_script(load("res://scripts/lamps.gd"))
 	lamps.main = self
 	lamps.points = pts
-	add_child(lamps)
+	world.add_child(lamps)
 
 func fishing_node() -> Node2D:  # se crea al usarlo por primera vez
 	if fishing == null:
@@ -2489,6 +2767,7 @@ func enter_mine() -> void:
 	_transition(_enter_mine)
 
 func _enter_mine() -> void:
+	next_spawn_slot = 1
 	var cfg: Dictionary = crafting.cfg["mine"]
 	in_dungeon = true  # fauna, civiles y el dragón se pausan igual que bajo tierra
 	in_mine = true
@@ -2679,6 +2958,8 @@ func _zones_visible(v: bool) -> void:  # las zonas se ven junto al valle, salvo 
 		node.process_mode = Node.PROCESS_MODE_INHERIT if node.visible else Node.PROCESS_MODE_DISABLED
 
 func _switch_region(id: String) -> void:  # cruzar caminando de una región a otra: sin fundido ni salto
+	next_spawn_slot = 1
+	buf = ""
 	if zone_id != "":  # la zona que se deja atrás se lleva sus monstruos y su cofre
 		for c: Node in [zone_chest, zone_chest_door]:
 			if is_instance_valid(c):
@@ -2919,7 +3200,6 @@ func _open_zone_chest() -> void:
 		lines.append("%s ×%d" % [crafting.item_name(item), int(ch["items"][item])])
 	if ch.has("book") and not prog.books.has(str(ch["book"])):
 		prog.books.append(str(ch["book"]))
-		hotbar_add(str(ch["book"]))
 		lines.append("¡%s!" % name_of(str(ch["book"])))
 	if ch.has("skill_points"):
 		prog.skill_points += int(ch["skill_points"])

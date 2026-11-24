@@ -114,7 +114,7 @@ func _tick() -> void:
 		return
 	var HB := preload("res://scripts/hitbox.gd")
 	var chest: Vector2 = main.pos - Vector2(0, 40)
-	var reach: float = main.items[main.hotbar[main.selected]]["light"]["reach"]
+	var reach: float = main.weapon_attack("light")["reach"]
 	if HB.dist(t, chest) > reach - 8.0 and not main.attacking and not main.dashing:  # acércate hasta tener su cuerpo al alcance
 		var way: Vector2 = main.world.next_waypoint(main.pos, t.pos, main.HERO_R_T)  # rodea los muros del piso generado
 		var dir: Vector2 = (way - main.pos).normalized() if main.pos.distance_to(t.pos) > 60.0 else (HB.center(t) - chest).normalized()

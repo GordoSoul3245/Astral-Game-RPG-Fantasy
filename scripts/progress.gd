@@ -20,6 +20,38 @@ var level := 1
 var xp := 0
 var points := 0
 var books: Array = ["katana_ceniza", "grimorio_ignis"]  # armas base que posees (los grimorios nuevos se compran o se ganan)
+var weapon := "katana_ceniza"
+var mastery := {}
+
+func weapon_gear(id: String) -> bool:
+	return equipment.has(id) and equipment[id].slot in ["sword", "grimoire"]
+
+func owns_weapon(id: String) -> bool:
+	return books.has(id) or (owned.has(id) and weapon_gear(id))
+
+func wield(id: String) -> bool:
+	if not owns_weapon(id):
+		return false
+	equipped.erase("sword")
+	equipped.erase("grimoire")
+	weapon = id
+	if weapon_gear(id):
+		equipped[equipment[id].slot] = id
+	return true
+
+func training(id: String) -> Dictionary:
+	if not mastery.has(id):
+		mastery[id] = {"level":1, "kills":0, "orbs":0, "nodes":[]}
+	return mastery[id]
+
+func credit_weapon(id: String) -> void:
+	if owns_weapon(id):
+		var state := training(id)
+		state.kills += 1
+		if state.kills == 10:
+			state.kills = 0
+			state.orbs += 1
+
 var tool_up := {}            # mejoras de herramientas en la forja: id -> nivel (+1..+3)
 var skills := {}             # arbol de habilidades del grimorio: id -> rango
 var skill_points := 0        # 1 por nivel y 1 por jefe de dungeon
@@ -36,7 +68,7 @@ var equipment := {}
 var material_names := {}
 var blueprints: Array = []   # planos de alquimia aprendidos (data/crafting.json)
 var buffs: Array = []        # bonus temporales de comida y elixires: {stat, amount, t}
-var slots: Array = ["katana_ceniza", "grimorio_ignis", "pocion_vida", "", "", ""]  # barra de objetos (6 casillas; "" = vacía)
+var slots: Array = ["", "", "pocion_vida", "", "", ""]  # barra de objetos (6 casillas; "" = vacía)
 
 func _init(data: Dictionary) -> void:
 	equipment = data["items"]
@@ -154,7 +186,10 @@ func attack_speed() -> float:
 	return 1.0 + 0.05 * stat("attack_speed")
 
 func equip(id: String) -> void:
-	equipped[equipment[id]["slot"]] = id
+	if weapon_gear(id):
+		wield(id)
+	else:
+		equipped[equipment[id]["slot"]] = id
 
 func unequip(slot: String) -> void:
 	equipped.erase(slot)
@@ -163,6 +198,8 @@ func unequip(slot: String) -> void:
 func add_item(id: String) -> bool:
 	if not owned.has(id):
 		owned.append(id)
+	if weapon_gear(id):
+		return false
 	var cur: String = equipped.get(equipment[id]["slot"], "")
 	if cur == "" or equipment[id]["tier"] > equipment[cur]["tier"]:
 		equip(id)

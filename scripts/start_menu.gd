@@ -64,7 +64,9 @@ func _resume() -> void:
 	get_tree().paused = false
 
 func _quit() -> void:
-	main.save_game()
+	if not main.save_game():
+		title.text = "Error al guardar. Reintentá."
+		return
 	get_tree().quit()
 
 func _input(event: InputEvent) -> void:
@@ -73,6 +75,10 @@ func _input(event: InputEvent) -> void:
 			if not startup:
 				_resume()
 		elif not get_tree().paused and not main.transitioning:
+			if main._fishing():
+				main.fishing.cancel()
+				get_viewport().set_input_as_handled()
+				return
 			main._cancel_aim()
 			_show(false)
 		else:
@@ -82,7 +88,9 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func _return_to_title() -> void:
-	main.save_game()
+	if not main.save_game():
+		title.text = "Error al guardar. Reintentá."
+		return
 	get_tree().paused = false
 	var error := get_tree().change_scene_to_file("res://scenes/title_menu.tscn")
 	if error != OK:

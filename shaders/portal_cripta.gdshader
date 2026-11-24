@@ -66,5 +66,9 @@ void fragment() {
 			result.rgb = bar == 0.0 || pixel.y == 81.0 ? vec3(0.16, 0.16, 0.19) : vec3(0.055, 0.05, 0.065);
 		}
 	}
+	// Rebote violeta en el labio interior de piedra y el escalón.
+	float rim = min(abs(abs(pixel.x - 80.0) - 19.0), abs(pixel.y - 147.0));
+	float spill = (1.0 - smoothstep(1.0, 8.0, rim)) * step(95.0,pixel.y) * step(pixel.y,154.0) * step(abs(pixel.x-80.0),26.0);
+	result.rgb += vec3(0.12,0.034,0.18) * spill * (0.85 + 0.15*sin(phase*6.0));
 	COLOR = result * tint;
 }

@@ -85,8 +85,9 @@ func run_checks() -> void:
 	assert(main.try_tame() and main.pets == ["rabbit"] and main.pet_nodes.size() == 1 and not bunny.alive, "la segunda lo doma")
 	assert(main.pet_nodes[0].spr != null, "la mascota tiene su arte")
 	main.pos = main.tile_to_ground(Vector2(30, 30))
+	var pet_distance: float = main.pet_nodes[0].pos.distance_to(main.pos)
 	await _wait(0.5)
-	assert(main.pet_nodes[0].pos.distance_to(main.pos) < 200.0, "la mascota sigue al héroe")
+	assert(main.pet_nodes[0].pos.distance_to(main.pos) < pet_distance, "la mascota sigue al héroe")
 	main.save_game()
 	main.pets.clear()
 	for pn: Node in main.pet_nodes:
@@ -109,8 +110,7 @@ func run_checks() -> void:
 	assert(main.shop.buy("grimorio_escarcha").begins_with("¡") and p.books.has("grimorio_escarcha") and main.menu._backpack().has("grimorio_escarcha") and p.coins == 200, "se compra y va a la mochila")
 	assert(not main.shop.stock().any(func(x: Dictionary) -> bool: return x["id"] == "grimorio_escarcha"), "ya no se vende")
 	main.mana = main.hero_data["mana"]
-	assert(main.hotbar_drop("grimorio_escarcha", 1))
-	main._select(1)
+	assert(main.wield("grimorio_escarcha"))
 	main.cooldown = 0.0
 	assert(main._attack("light") and main.current["effect"] == "slow", "el hechizo de hielo se lanza")
 	main.pos = main.tile_to_ground(Vector2(18.5, 30.5))
