@@ -35,7 +35,7 @@ func run_checks() -> void:
 	assert(main.buf == "heavy")
 
 	# caduca: tras BUFFER_MS no ejecuta aunque ya se pueda actuar
-	main.buf_until = Time.get_ticks_msec() - 1
+	main.buf_left = -0.001  # ya venció (cuenta tiempo de juego, no de reloj)
 	main.cooldown = 0.0
 	main._physics_process(0.016)
 	assert(main.buf == "" and main.cooldown == 0.0 and not main.attacking, "caducada: no ataca")

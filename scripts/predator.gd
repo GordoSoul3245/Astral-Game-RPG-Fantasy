@@ -181,7 +181,7 @@ func _face(dx: float) -> void:
 		face = signf(dx)
 
 func _step(to: Vector2, speed: float, delta: float) -> void:
-	var d := (to - pos).normalized()
+	var d: Vector2 = (world.way(pos, to, R_T, self) - pos).normalized()  # rodea casas, árboles y agua
 	_face(d.x)
 	if d != Vector2.ZERO:
 		look = d

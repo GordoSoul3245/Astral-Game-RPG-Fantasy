@@ -27,11 +27,11 @@ func _physics_process(delta: float) -> void:
 		pos = goal
 	elif d.length() > 26.0:
 		var speed := 120.0 if d.length() < 140.0 else 190.0
-		var next: Vector2 = goal
-		if main.world.blocked(main.ground_to_tile(pos.move_toward(goal, minf(24, d.length()))), 0.12):
-			next = main.world.next_waypoint(pos, goal, 0.12)
+		var next: Vector2 = main.world.way(pos, goal, 0.12, self)
+		var v := next - pos
+		var k := v.length() / maxf(0.001, Vector2(v.x, v.y / 0.6).length())  # en vertical avanza ×0.6, como el héroe
 		var previous := pos
-		pos = main.world.move_collide(pos, pos.move_toward(next, speed * delta), 0.12)
+		pos = main.world.move_collide(pos, pos.move_toward(next, speed * k * delta), 0.12)
 		moving = not previous.is_equal_approx(pos)
 		if moving:
 			look = pos - previous

@@ -95,7 +95,7 @@ func _physics_process(delta: float) -> void:
 		if trail_points.size() > 7:
 			trail_points.pop_back()
 	queue_redraw()
-	var step := dir * speed * delta
+	var step := dir * speed * delta / maxf(1.0, Vector2(dir.x, dir.y / 0.6).length())  # en vertical avanza ×0.6, como caminar
 	# subdivide para no atravesar obstáculos a velocidad alta
 	var n := maxi(1, ceili(step.length() / 4.0))
 	for i in n:
@@ -111,7 +111,7 @@ func _physics_process(delta: float) -> void:
 						_burn(e)
 					_explode()
 					return
-		elif not main.dashing and HB.dist(main, air) < radius:  # en dash la bola lo atraviesa
+		elif not main.dash_iframes() and HB.dist(main, air) < radius:  # en dash la bola lo atraviesa
 			main.damage_hero(damage)
 			_explode()
 			return

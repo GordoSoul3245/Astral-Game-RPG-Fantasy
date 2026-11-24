@@ -70,7 +70,7 @@ func _search(delta: float) -> void:  # sin ver al héroe: va a donde lo vio por 
 		_slime(d, d.length(), delta)
 	elif d.length() > 6.0:
 		look = d
-		_move(d.normalized(), 1.0, delta)
+		_move(_toward(last_seen), 1.0, delta)
 		_anim("walk")
 	else:
 		_anim("idle")
@@ -115,7 +115,7 @@ func _stagger() -> void:
 	main.combat.play("blast")
 	main.combat.flash(pos, Color(1.0, 0.85, 0.3), 1.0, 2.5, 0.35)
 
-func knock(v: Vector2, heavy: bool) -> void:  # empuje (menos en los pesados) y, en los ligeros, interrumpe el aviso
+func knock(v: Vector2, heavy: bool) -> void:  # empuje; los pesados interrumpen el aviso de los que se pueden aturdir
 	kb = v * (1.0 - data.get("knock_resist", 0.0))
 	if heavy and data.get("staggerable", false) and state == "windup":
 		state = "recover"
@@ -190,6 +190,7 @@ func _physics_process(delta: float) -> void:
 	alert_t = maxf(0.0, alert_t - delta)
 	cd = maxf(0.0, cd - delta)
 	contact_cd = maxf(0.0, contact_cd - delta)
+	slow_t = maxf(0.0, slow_t - delta)
 	var to: Vector2 = main.pos - pos
 	var dist := to.length()
 	var sees := _sees(dist)
@@ -245,15 +246,32 @@ func _physics_process(delta: float) -> void:
 	queue_redraw()
 
 func _move(dir: Vector2, mult: float, delta: float) -> void:
-	slow_t = maxf(0.0, slow_t - delta)
 	if slow_t > 0.0:
 		mult *= 0.5
 	var p: Vector2 = main.world.move_collide(pos, pos + dir * data["speed"] * mult * delta * Vector2(1, 0.6), data["r_t"])
 	var off: Vector2 = p - main.pos
 	var min_d: float = radius + main.HERO_RADIUS
 	if not main.dashing and off.length() < min_d:  # el héroe en dash los atraviesa
-		p = main.pos + off.normalized() * min_d
+		p = main.world.move_collide(pos, main.pos + (off.normalized() if off.length() > 0.01 else Vector2.RIGHT) * min_d, data["r_t"])
 	pos = p
+
+func _slot(dist: float) -> Vector2:  # hueco propio alrededor del héroe (8 puestos): de cerca va directo
+	if dist < 70.0:
+		return main.pos
+	return main.pos + Vector2.from_angle((get_instance_id() % 8) * TAU / 8.0) * 45.0 * Vector2(1, 0.6)
+
+func _away(to: Vector2) -> Vector2:  # se aleja en diagonal; si detrás hay pared, cambia de lado
+	var side := Vector2(to.y, -to.x).normalized() * strafe_side
+	var d := (-to.normalized() + side * 0.6).normalized()
+	var probe: Vector2 = pos + d * 14.0 * Vector2(1, 0.6)
+	if main.world.move_collide(pos, probe, data["r_t"]).distance_to(probe) > 1.0:
+		strafe_side = -strafe_side
+		d = (-to.normalized() - side * 0.6).normalized()
+	return d
+
+func _toward(target: Vector2) -> Vector2:  # dirección para llegar rodeando muros y estructuras
+	var d: Vector2 = main.world.way(pos, target, data["r_t"], self) - pos
+	return d.normalized() if d.length() > 0.5 else (target - pos).normalized()
 
 func _separate() -> void:  # los enemigos no se montan unos sobre otros
 	for o in main.enemies:
@@ -262,7 +280,7 @@ func _separate() -> void:  # los enemigos no se montan unos sobre otros
 		var d: Vector2 = pos - o.pos
 		var min_d: float = radius + o.radius
 		if d.length() < min_d:
-			pos += (d.normalized() if d.length() > 0.01 else Vector2.RIGHT) * (min_d - d.length()) * 0.5
+			pos = main.world.move_collide(pos, pos + (d.normalized() if d.length() > 0.01 else Vector2.RIGHT) * (min_d - d.length()) * 0.5, data["r_t"])
 
 func _spawn_zone(center: Vector2, r: float, delay: float, dmg: int, bolt: bool, col: Color) -> void:
 	var z := Node2D.new()
@@ -292,7 +310,7 @@ func _slime(to: Vector2, dist: float, delta: float) -> void:
 			else:
 				_anim("idle")
 	if hopping:
-		_move(to.normalized(), 2.0, delta)
+		_move(_toward(_slot(dist)), 2.0, delta)
 	if dist < radius + main.HERO_RADIUS + 4.0 and contact_cd == 0.0:
 		main.damage_hero(data["contact_damage"])
 		contact_cd = data["contact_cooldown"]
@@ -321,10 +339,10 @@ func _archer(to: Vector2, dist: float, delta: float) -> void:
 			t = data.get("recover", 0.4) * (1.5 if fan_shot else 1.0)  # el abanico deja más tiempo para castigarlo
 		return
 	if dist < data["flee_distance"]:
-		_move(-to.normalized(), 1.1, delta)
+		_move(_away(to), 1.1, delta)
 		_anim("walk")
 	elif dist > data["keep_distance"] + 15.0:
-		_move(to.normalized(), 1.0, delta)
+		_move(_toward(main.pos), 1.0, delta)
 		_anim("walk")
 	else:
 		_anim("idle")
@@ -374,7 +392,7 @@ func _brute(to: Vector2, dist: float, delta: float) -> void:
 			cd = data["attack_cooldown"]
 			_play_attack(to, 5, t)
 			return
-		_move(to.normalized(), 1.0, delta)
+		_move(_toward(_slot(dist)), 1.0, delta)
 		_anim("walk")
 	elif cd == 0.0 and main.can_prepare(self):
 		state = "windup"
@@ -382,7 +400,7 @@ func _brute(to: Vector2, dist: float, delta: float) -> void:
 		t = data["windup"]
 		cd = data["attack_cooldown"]
 		_play_attack(to, 5, data["windup"])
-		_spawn_zone(pos + to.normalized() * 32.0, data["slam_radius"], data["windup"], data["slam_damage"], false, Color(1.0, 0.35, 0.2))
+		_spawn_zone(pos + Vector2(to.x, to.y / 0.6).normalized() * 32.0 * Vector2(1, 0.6), data["slam_radius"], data["windup"], data["slam_damage"], false, Color(1.0, 0.35, 0.2))
 	else:
 		_anim("idle")
 
@@ -466,18 +484,22 @@ func _pattern(to: Vector2, dist: float, delta: float) -> void:
 	var side := Vector2(to.y, -to.x).normalized() * strafe_side
 	var lat := 0.45 if _elite() else 0.0  # los jefes rodean al héroe en curva, no van en línea recta
 	if keep > 0.0 and dist < keep - 30.0:
-		_move((-to.normalized() + side * lat).normalized(), 1.0, delta)
+		_move(_away(to), 1.0, delta)
 		_anim("walk")
 	elif dist > (keep + 20.0 if keep > 0.0 else reach * 0.8):
-		_move((to.normalized() + side * lat).normalized(), 1.0, delta)
+		_move((_toward(_slot(dist) if keep == 0.0 else main.pos) + side * lat).normalized(), 1.0, delta)
 		_anim("walk")
 	elif _elite():
 		_move(side, 0.7, delta)  # a su distancia: lo rodea mientras espera el siguiente golpe
 		_anim("walk")
 	else:
 		_anim("idle")
-	if cd == 0.0 and dist <= reach and main.can_prepare(self):
-		_begin_pattern(a, to)
+	if cd == 0.0 and main.can_prepare(self):
+		var ready_: Array = atks.filter(func(x: Dictionary) -> bool: return dist <= float(x.get("range", 40.0)))
+		if ready_.size() > 1:
+			ready_ = ready_.filter(func(x: Dictionary) -> bool: return x != cur)
+		if not ready_.is_empty():
+			_begin_pattern(ready_[randi() % ready_.size()], to)
 
 func _begin_pattern(a: Dictionary, to: Vector2) -> void:
 	cur = a
@@ -521,15 +543,15 @@ func _begin_pattern(a: Dictionary, to: Vector2) -> void:
 					_spawn_zone(pos + Vector2.from_angle(i * TAU / n + w * 0.3) * float(a.get("step", 34.0)) * (w + 1) * Vector2(1, 0.6), r, t + 0.25 * w, dmg, false, col)
 		"zone_hero":
 			for i in int(a.get("count", 1)):
-				var off := Vector2.ZERO if i == 0 else Vector2.from_angle(randf() * TAU) * float(a.get("spread", 50.0))
+				var off := Vector2.ZERO if i == 0 else Vector2.from_angle(randf() * TAU) * float(a.get("spread", 50.0)) * Vector2(1, 0.6)
 				_spawn_zone(main.pos + off, r, t + 0.15 * i, dmg, bool(a.get("bolt", false)), col)
 		"zone_line":
 			for i in int(a.get("count", 5)):
-				_spawn_zone(pos + aim * float(a.get("step", 26.0)) * (i + 1), r, t + 0.1 * i, dmg, false, col)
+				_spawn_zone(pos + Vector2(aim.x, aim.y / 0.6).normalized() * float(a.get("step", 26.0)) * (i + 1) * Vector2(1, 0.6), r, t + 0.1 * i, dmg, false, col)
 		"zone_ring":
 			var n := int(a.get("count", 1))
 			for i in n:
-				_spawn_zone(pos + Vector2.from_angle(i * TAU / n) * float(a.get("dist", 0.0)), r, t, dmg, false, col)
+				_spawn_zone(pos + Vector2.from_angle(i * TAU / n) * float(a.get("dist", 0.0)) * Vector2(1, 0.6), r, t, dmg, false, col)
 	_play_attack(to, 5, t)
 
 func _strike_pattern() -> void:
@@ -583,10 +605,10 @@ func _mage(to: Vector2, dist: float, delta: float) -> void:
 		return
 	var keep: float = data["keep_distance"]
 	if dist < keep - 30.0:
-		_move(-to.normalized(), 1.0, delta)
+		_move(_away(to), 1.0, delta)
 		_anim("walk")
 	elif dist > keep + 20.0:
-		_move(to.normalized(), 1.0, delta)
+		_move(_toward(main.pos), 1.0, delta)
 		_anim("walk")
 	else:
 		_anim("idle")

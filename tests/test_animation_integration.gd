@@ -51,6 +51,7 @@ func run_checks() -> void:
 	main.damage_hero(1)
 	assert(main.hero.animation == "hurt_S")
 	main.reaction_time = 0.0
+	main.hurt_iframes = 0.0  # golpe en otro momento
 	main.damage_hero(99999)
 	assert(main.dying and main.hero.animation == "death_S")
 	main._physics_process(1.01)

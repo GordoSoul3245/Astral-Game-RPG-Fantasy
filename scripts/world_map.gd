@@ -319,6 +319,32 @@ func move_collide(from_g: Vector2, to_g: Vector2, r: float) -> Vector2:
 		return main.tile_to_ground(slide_y)
 	return from_g
 
+# hacia dónde caminar para llegar a to_g: el destino si la línea está libre; si no, el siguiente punto del camino.
+# El camino se recalcula cada 15 cuadros por entidad (o al llegar al punto o cambiar de casilla destino).
+var _ways := {}
+func way(from_g: Vector2, to_g: Vector2, r: float, who: Object) -> Vector2:
+	var a: Vector2 = main.ground_to_tile(from_g)
+	var b: Vector2 = main.ground_to_tile(to_g)
+	var n := maxi(1, ceili(a.distance_to(b) * 2.0))
+	var clear := true
+	for i in range(1, n + 1):
+		if blocked(a.lerp(b, float(i) / n), r):
+			clear = false
+			break
+	var key := who.get_instance_id()
+	if clear:
+		_ways.erase(key)
+		return to_g
+	var goal := Vector2i(b.floor())
+	var frame := Engine.get_physics_frames()
+	var c: Array = _ways.get(key, [])
+	if c.is_empty() or frame - int(c[0]) >= 15 or c[1] != goal or from_g.distance_to(c[2]) < 2.0:
+		c = [frame, goal, next_waypoint(from_g, to_g, r)]
+		_ways[key] = c
+	return c[2]
+
+const BFS_MAX := 2500  # casillas exploradas como mucho: un destino inalcanzable no recorre todo el mapa unificado
+
 # siguiente punto de suelo en el camino (BFS sobre casillas) hacia to_g; si no hay camino, devuelve to_g
 func next_waypoint(from_g: Vector2, to_g: Vector2, r: float) -> Vector2:
 	var start := Vector2i(main.ground_to_tile(from_g).floor())
@@ -331,12 +357,14 @@ func next_waypoint(from_g: Vector2, to_g: Vector2, r: float) -> Vector2:
 	while head < queue.size():
 		var c: Vector2i = queue[head]
 		head += 1
-		if c == goal:
+		if c == goal or head > BFS_MAX:
 			break
 		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1)]:
 			var n: Vector2i = c + d
 			if prev.has(n) or (n != goal and blocked(Vector2(n) + Vector2(0.5, 0.5), r)):
 				continue
+			if d.x != 0 and d.y != 0 and (blocked(Vector2(c.x + d.x, c.y) + Vector2(0.5, 0.5), r) or blocked(Vector2(c.x, c.y + d.y) + Vector2(0.5, 0.5), r)):
+				continue  # en diagonal no corta esquinas: ese paso move_collide no lo puede seguir
 			prev[n] = c
 			queue.append(n)
 	if not prev.has(goal):

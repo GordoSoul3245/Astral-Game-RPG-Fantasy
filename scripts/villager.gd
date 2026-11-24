@@ -130,7 +130,7 @@ func _physics_process(delta: float) -> void:
 			elif hero_d > UNLOOK and state_t > MIN_STATE:
 				_to("walk")  # retoma el destino que tenía
 		"flee":
-			if pos.distance_to(rest) < 3.0:
+			if pos.distance_to(rest) < 3.0 or state_t > 10.0:  # si no llega a casa, se refugia donde está
 				_to("hide")
 			else:
 				_step(rest, RUN, delta)
@@ -144,11 +144,12 @@ func _physics_process(delta: float) -> void:
 	queue_redraw()
 
 func _step(to: Vector2, speed: float, delta: float) -> void:
-	var d := (to - pos).normalized()
+	var d: Vector2 = (world.way(pos, to, R_T, self) - pos).normalized()  # rodea casas, árboles y agua
 	if absf(d.x) > 0.1 and state != "look":
 		face = signf(d.x)
 	if d != Vector2.ZERO and state != "look":
 		look = d
+	speed *= clampf(pos.distance_to(to) / 10.0, 0.4, 1.0)  # llega frenando
 	var want := pos + d * minf(speed * delta, pos.distance_to(to)) * Vector2(1, 0.6)
 	if want.distance_to(to) < 0.5:
 		want = to

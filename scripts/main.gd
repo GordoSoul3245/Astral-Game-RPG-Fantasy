@@ -86,7 +86,7 @@ const BUFFER_MS := 100          # punto de partida del estudio (probar 70/130)
 var buf := ""                   # una sola acción anticipada: "light", "heavy" o "dash"
 var buffered_target := Vector2.INF
 var buffered_weapon := ""
-var buf_until := 0
+var buf_left := 0.0
 var dash_dir := Vector2.ZERO
 const DASH_GHOST_EVERY := 0.05  # s entre siluetas residuales del dash
 const DASH_GHOST_COL := Color(0.55, 0.8, 1.0)
@@ -1617,7 +1617,7 @@ const MAX_WINDUPS := 2  # preparaciones peligrosas simultáneas (punto de partid
 func can_prepare(e: Node) -> bool:  # un enemigo solo empieza su aviso si hay hueco; los demás siguen posicionándose
 	var n := 0
 	for o in enemies:
-		if o != e and o.alive and o.get("state") is String and o.state == "windup":
+		if o != e and o.alive and o.get("state") is String and (o.state in ["windup", "charge"] or (o.state == "air" and o.air_hit)):
 			n += 1
 	return n < MAX_WINDUPS
 
@@ -1649,13 +1649,22 @@ func _perfect_dodge() -> void:  # un ataque habría golpeado durante el dash: es
 	combat.flash(pos, Color(0.5, 0.9, 1.0), 0.9, 2.0, 0.25)
 	combat.play("light")
 
+const DASH_IFRAME_FRAC := 0.7  # el dash protege hasta el 70 % de su recorrido; el frenado final ya es vulnerable
+
+func dash_iframes() -> bool:
+	return dashing and (mega_active or dash_t < dash_time_cur * DASH_IFRAME_FRAC)
+
+const HURT_IFRAMES := 0.25  # tras un golpe, ningún otro en este tiempo (varias zonas del mismo ataque cuentan una vez)
+var hurt_iframes := 0.0
+
 func damage_hero(n: int) -> void:
 	if _fishing() and not dashing:
 		fishing.cancel("¡Te hieren!")
-	if dashing and not mega_active and dodge_cd <= 0.0 and not dying:
+	if dash_iframes() and not mega_active and dodge_cd <= 0.0 and not dying:
 		_perfect_dodge()
-	if dashing or dying or reaction_time > 0.0:
+	if dash_iframes() or dying or reaction_time > 0.0 or hurt_iframes > 0.0:
 		return
+	hurt_iframes = HURT_IFRAMES
 	n = maxi(1, roundi(n * prog.defense_mult()))
 	hero_hp = maxi(0, hero_hp - n)
 	hero.modulate = Color(1.0, 0.4, 0.4)
@@ -1887,12 +1896,13 @@ func _press(action: String) -> void:
 		buf = action
 		buffered_target = _mouse() / SCALE
 		buffered_weapon = active_hand()
-		buf_until = Time.get_ticks_msec() + BUFFER_MS
+		buf_left = BUFFER_MS / 1000.0
 
 func _try_buffer() -> void:
 	if buf == "":
 		return
-	if Time.get_ticks_msec() > buf_until or buffered_weapon != active_hand():
+	buf_left -= get_physics_process_delta_time()
+	if buf_left < 0.0 or buffered_weapon != active_hand():
 		buf = ""
 		return
 	var started: bool = _dash() if buf == "dash" else _attack(buf, buffered_target)
@@ -2214,6 +2224,7 @@ func _process(delta: float) -> void:
 
 func _physics_process(delta: float) -> void:
 	_check_edges(delta)
+	hurt_iframes = maxf(0.0, hurt_iframes - delta)
 	if reaction_time > 0.0:
 		buf = ""  # herido o muerto: la acción anticipada se pierde
 		reaction_time = maxf(0.0, reaction_time - delta)

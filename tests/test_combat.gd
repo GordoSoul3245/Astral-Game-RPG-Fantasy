@@ -102,6 +102,7 @@ func run_checks() -> void:
 	for case in [[Vector2(zr + 8.0 - 1.0, 0), true], [Vector2(zr + 9.0, 0), false], [Vector2(0, (zr + 8.0) * 0.6 - 1.0), true], [Vector2(0, (zr + 8.0) * 0.6 + 1.0), false]]:
 		main.hero_hp = main.hero_max_hp
 		main.reaction_time = 0.0
+		main.hurt_iframes = 0.0  # golpe en otro momento
 		var z := Node2D.new()
 		z.set_script(load("res://scripts/zone.gd"))
 		z.main = main

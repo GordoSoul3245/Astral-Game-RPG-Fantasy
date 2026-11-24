@@ -8,6 +8,7 @@ const CALM := 160.0        # deja de observar (más lejos que NOTICE: histéresi
 const FLEE := 75.0         # huye
 const SAFE_TIME := 3.0     # escondido, sale tras este tiempo con el héroe lejos (> CALM)
 const MIN_STATE := 0.6     # s mínimos en cada estado antes de cambiar (salvo huir)
+const FLEE_MAX := 6.0      # s corriendo como mucho: si no llega, se agazapa donde está
 const GRAZE_R := 45.0      # radio de pasto alrededor de la madriguera
 const WALK := 18.0
 const RUN := 115.0
@@ -107,9 +108,11 @@ func _physics_process(delta: float) -> void:
 				_flee()
 			elif d > CALM and state_t > MIN_STATE:
 				_to("graze")
-		"flee":
-			if pos.distance_to(home) < 3.0:
+		"flee":  # a la madriguera; si el héroe está más cerca de ella, primero se aparta; si no llega, se esconde donde esté
+			if pos.distance_to(home) < 3.0 or state_t > FLEE_MAX:
 				_to("hidden")
+			elif main.pos.distance_to(home) < pos.distance_to(home) and pos.distance_to(main.pos) < FLEE:
+				_step(pos + (pos - main.pos).normalized() * 30.0, RUN, delta)
 			else:
 				_step(home, RUN, delta)
 		"hidden":
@@ -149,14 +152,17 @@ func _graze(delta: float) -> void:
 		_step(goal, WALK, delta)
 	elif wait <= 0.0:  # pausa variable y nuevo bocado cerca de casa
 		wait = randf_range(1.0, 2.5)
-		goal = home + Vector2.from_angle(randf() * TAU) * randf_range(10.0, GRAZE_R)
+		goal = pos + Vector2.from_angle(look.angle() + randf_range(-1.2, 1.2)) * randf_range(8.0, 22.0)  # sigue más o menos hacia donde iba
+		if goal.distance_to(home) > GRAZE_R:
+			goal = home + (goal - home).normalized() * GRAZE_R * 0.7
 
 func _step(to: Vector2, speed: float, delta: float) -> void:
-	var dir := (to - pos).normalized()
+	var dir: Vector2 = (world.way(pos, to, R_T, self) - pos).normalized()  # rodea casas, árboles y agua
 	if absf(dir.x) > 0.1:
 		face = signf(dir.x)
 	if dir != Vector2.ZERO:
 		look = dir
+	speed *= clampf(pos.distance_to(to) / 10.0, 0.4, 1.0)  # llega frenando
 	var want := pos + dir * minf(speed * delta, pos.distance_to(to)) * Vector2(1, 0.6)  # suelo aplastado en Y, como los enemigos
 	if want.distance_to(to) < 0.5:
 		want = to
